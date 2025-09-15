@@ -10,4 +10,3 @@ phyloseq_ITS <- readRDS("phyloseq_ITS.rds")
 phyloseq_16S <- readRDS("phyloseq_16S.rds")
 ```
 _NOTE_ The ITS and 16S dataset are clean out of contaminant OTUs (using `decontam` R package), non-target taxa (e.g. mitochondria), and control samples. The taxonomy and the metadata have been cleaned for ease to use as well. 
-
