@@ -1,11 +1,6 @@
-# Plot_ordered_bar function 
-# (name kept the same for back compatibility
-# may want to change to avoid confusion!)
-#Note: There may be some hangovers 
-# from another script I was writing 
-# that I pillaged for this one
+###### plot_ordered_bar() ######
 
-###### Start of Function Here ######
+# Modified from: https://github.com/DanielSprockett/reltools/blob/master/R/microbiome_tools.R
 
 plot_ordered_bar<-function (physeq, x = "Sample", 
                                     y = "Abundance", 
