@@ -10,7 +10,7 @@
 # PMID: 	    30288545.
 # **********************************************************************--------
 
-#rm(list = ls())
+#rm(list = ls())it config pull.rebase false
 options(scipen = 9999, pillar.sigfig = 6, digits = 6, max.print = 10000000)
 
 # Check the lib paths ----------------------------------------------------------
@@ -63,142 +63,24 @@ results_path <-
 
 # Import datasets --------------------------------------------------------------
 
+# _NOTE_ These datasets are clean to number and filtered from non-target, mitochondria 
+# and chloroplast sequences. Contaminants were checked by PCR on negative control
+# samples. 
+
+phyloseq_ITS <- readRDS(file = file.path(data_path, "phyloseq_ITS.RDS"))
+phyloseq_ITS
+
+phyloseq_ITS <- readRDS(file = file.path(data_path, "phyloseq_ITS.RDS"))
+phyloseq_LSU
+
+phyloseq_ITS <- readRDS(file = file.path(data_path, "phyloseq_ITS.RDS"))
+phyloseq_16S
+
+
+# REPRODUCING THE ANALYSYS -----------------------------------------------------
 
 
 
-
-
-# install metagenomeSeq can be a trouble 
-# running biocValid(fix=TRUE) sorted it out
-
-
-### IMPORTING DATA IN R -----------------------------------------------------------------------------
-
-# 1) imoprt from .biom 
-#importing ITS biom data
-
-#names(bs1) <- gsub("\\s.+$", "", names(bs1)) #rename otus sequence header if longer than OTU_###
-
-biom_ITS = import_biom("otu_table_ITS.biom")
-map_ITS = import_qiime_sample_data("mapping_ITS.txt")
-sample_data(biom_ITS) <- map_ITS
-colnames(tax_table(biom_ITS)) = c(k = "Kingdom", p = "Phylum", c = "Class", o = "Order", f = "Family", g = "Genus", s = "Species")
-otus_rep_ITS <- readDNAStringSet("otus_ITS.fasta", format="fasta", seek.first.rec=TRUE, use.names=TRUE)
-biom_ITS <- merge_phyloseq(biom_ITS, otus_rep_ITS)
-biom_ITS
-sample_data(biom_ITS)
-head(tax_table(biom_ITS))
-refseq(biom_ITS)
-
-biom_LSU = import_biom("otu_table_LSU.biom")
-map_LSU = import_qiime_sample_data("mapping_LSU.txt")
-sample_data(biom_LSU) <- map_LSU
-colnames(tax_table(biom_LSU)) = c(k = "Kingdom", p = "Phylum", c = "Class", o = "Order", f = "Family", g = "Genus")
-otus_rep_LSU <- readDNAStringSet("otus_LSU.fasta", format="fasta", seek.first.rec=TRUE, use.names=TRUE)
-biom_LSU <- merge_phyloseq(biom_LSU, otus_rep_LSU)
-biom_LSU
-sample_data(biom_LSU)
-head(tax_table(biom_LSU))
-
-biom_16s = import_biom("otu_table_16s.biom")
-map_16s = import_qiime_sample_data("mapping_16s.txt")
-sample_data(biom_16s) <- map_16s
-colnames(tax_table(biom_16s)) = c(k = "Kingdom", p = "Phylum", c = "Class", o = "Order", f = "Family", g = "Genus", s = "Species")
-otus_rep_16s <- readDNAStringSet("otus_16s.fasta", format="fasta", seek.first.rec=TRUE, use.names=TRUE)
-biom_16s <- merge_phyloseq(biom_16s, otus_rep_16s)
-biom_16s
-sample_data(biom_16s)
-head(tax_table(biom_16s))
-
-
-
-### data PREFILTERING --------------------------------------------------------------------------------------------------------------------
-
-# cleaning ITS taxonomy from extra characters
-tax_table(biom_ITS)[, "Kingdom"] <- gsub("PMI", "", tax_table(biom_ITS)[, "Kingdom"])
-tax_table(biom_ITS)[, "Kingdom"] <- gsub("NVP", "", tax_table(biom_ITS)[, "Kingdom"])
-
-tax_table(biom_ITS)[, "Kingdom"] <- gsub("k__", "", tax_table(biom_ITS)[, "Kingdom"])
-tax_table(biom_ITS)[, "Phylum"] <- gsub("p__", "", tax_table(biom_ITS)[, "Phylum"])
-tax_table(biom_ITS)[, "Class"] <- gsub("c__", "", tax_table(biom_ITS)[, "Class"])
-tax_table(biom_ITS)[, "Order"] <- gsub("o__", "", tax_table(biom_ITS)[, "Order"])
-tax_table(biom_ITS)[, "Family"] <- gsub("f__", "", tax_table(biom_ITS)[, "Family"])
-tax_table(biom_ITS)[, "Genus"] <- gsub("g__", "", tax_table(biom_ITS)[, "Genus"])
-tax_table(biom_ITS)[, "Species"] <- gsub("s__", "", tax_table(biom_ITS)[, "Species"])
-
-head(otu_table(biom_ITS))
-head(tax_table(biom_ITS))
-head(sample_data(biom_ITS))
-
-write.csv(otu_table(biom_ITS), "otu_table_ITS_test.csv")
-write.csv(tax_table(biom_ITS), "tax_table_ITS_test.csv")
-
-
-tax_table(biom_LSU)[, "Kingdom"] <- gsub("k__", "", tax_table(biom_LSU)[, "Kingdom"])
-tax_table(biom_LSU)[, "Phylum"] <- gsub("p__", "", tax_table(biom_LSU)[, "Phylum"])
-tax_table(biom_LSU)[, "Class"] <- gsub("c__", "", tax_table(biom_LSU)[, "Class"])
-tax_table(biom_LSU)[, "Order"] <- gsub("o__", "", tax_table(biom_LSU)[, "Order"])
-tax_table(biom_LSU)[, "Family"] <- gsub("f__", "", tax_table(biom_LSU)[, "Family"])
-tax_table(biom_LSU)[, "Genus"] <- gsub("g__", "", tax_table(biom_LSU)[, "Genus"])
-tax_table(biom_LSU)[, "Species"] <- gsub("s__", "", tax_table(biom_LSU)[, "Species"])
-
-head(otu_table(biom_LSU))
-head(tax_table(biom_LSU))
-head(sample_data(biom_LSU))
-
-
-tax_table(biom_16s)[, "Kingdom"] <- gsub("k__", "", tax_table(biom_16s)[, "Kingdom"])
-tax_table(biom_16s)[, "Phylum"] <- gsub("p__", "", tax_table(biom_16s)[, "Phylum"])
-tax_table(biom_16s)[, "Class"] <- gsub("c__", "", tax_table(biom_16s)[, "Class"])
-tax_table(biom_16s)[, "Order"] <- gsub("o__", "", tax_table(biom_16s)[, "Order"])
-tax_table(biom_16s)[, "Family"] <- gsub("f__", "", tax_table(biom_16s)[, "Family"])
-tax_table(biom_16s)[, "Genus"] <- gsub("g__", "", tax_table(biom_16s)[, "Genus"])
-tax_table(biom_16s)[, "Species"] <- gsub("s__", "", tax_table(biom_16s)[, "Species"])
-
-head(otu_table(biom_16s))
-head(tax_table(biom_16s))
-head(sample_data(biom_16s))
-
-
-# filtering out non-fungal OTUs
-biom_ITS <- subset_taxa(biom_ITS, Kingdom == "Fungi")
-biom_ITS
-
-biom_LSU <- subset_taxa(biom_LSU, Kingdom == "Fungi")
-biom_LSU
-
-# filtering out non-bacterial OTUs
-# pay attention here if you want to keep Archaea!!
-biom_16s <- subset_taxa(biom_16s, Kingdom == "Bacteria")
-
-biom_16s <- subset_taxa(biom_16s, Phylum!="Chloroplast")
-biom_16s <- subset_taxa(biom_16s, Class!="Chloroplast")
-biom_16s <- subset_taxa(biom_16s, Order!="Chloroplast")
-biom_16s <- subset_taxa(biom_16s, Family!="Chloroplast")
-biom_16s <- subset_taxa(biom_16s, Genus!="Chloroplast")
-biom_16s <- subset_taxa(biom_16s, Phylum!="chloroplast")
-biom_16s <- subset_taxa(biom_16s, Class!="chloroplast")
-biom_16s <- subset_taxa(biom_16s, Order!="chloroplast")
-biom_16s <- subset_taxa(biom_16s, Family!="chloroplast")
-biom_16s <- subset_taxa(biom_16s, Genus!="chloroplast")
-
-biom_16s <- subset_taxa(biom_16s, Phylum!="Mitochondria")
-biom_16s <- subset_taxa(biom_16s, Class!="Mitochondria")
-biom_16s <- subset_taxa(biom_16s, Order!="Mitochondria")
-biom_16s <- subset_taxa(biom_16s, Family!="Mitochondria")
-biom_16s <- subset_taxa(biom_16s, Genus!="Mitochondria")
-biom_16s <- subset_taxa(biom_16s, Phylum!="mitochondria")
-biom_16s <- subset_taxa(biom_16s, Class!="mitochondria")
-biom_16s <- subset_taxa(biom_16s, Order!="mitochondria")
-biom_16s <- subset_taxa(biom_16s, Family!="mitochondria")
-biom_16s <- subset_taxa(biom_16s, Genus!="mitochondria")
-
-biom_16s
-
-# manual correction of the tax_table - OPTIONAL!
-write.csv(tax_table(biom_ITS) , file = "tax_tab_biom_ITS.csv")
-tax_tab_biom_ITS <- read.csv("tax_tab_biom_ITS.csv", header=T, row.names =1)
-tax_table(biom_ITS) <- tax_table(as.matrix(tax_tab_biom_ITS))
 
 
 ### PRELIMINARY DATA VISUALIZATION ----------------------------------------------------------------------------------------------------------------------------------
