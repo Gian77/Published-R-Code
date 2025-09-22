@@ -1,91 +1,70 @@
+#************************************************************************-------
+# Manuscript Title: Fungal, Bacterial, and Archaeal Diversity in Soils Beneath Native
+#                   and Introduced Plants in Fiji, South Pacifics
+# Authors:          Benucci GMN, Bonito V, Bonito G
+# Code Developer:   Gian MN Benucci 2018
+# Citation:         Benucci GMN, Bonito V, Bonito G (2018) Fungal, Bacterial, and Archaeal 
+#                   Diversity in Soils Beneath Native and Introduced Plants in Fiji, 
+#                   South Pacific. Microb Ecol. 78(1):136-146. 
+# DOI               10.1007/s00248-018-1266-1. 
+# PMID: 	    30288545.
+# **********************************************************************--------
 
----
-  title: "Scripts to Analyse Microbial Community Data"
-author: "Gian MN Benucci, Ph.D."
-date: "January 11th, 2017"
-output:
-  pdf_document:
-  latex_engine: xelatex
-html_document: default
----
-  
-  
-  ```{r, echo=FALSE, warning=FALSE, message=FALSE}
-```
+#rm(list = ls())
+options(scipen = 9999, pillar.sigfig = 6, digits = 6, max.print = 10000000)
 
-'''RANDOM FOREST https://rpubs.com/michberr/randomforestmicrobe
-https://www.r-bloggers.com/random-forest-classification-of-mushrooms/
-PHYLOSEQ function https://github.com/joey711/phyloseq/issues/442
-DESEQ DIFF ABUND http://joey711.github.io/phyloseq-extensions/DESeq2.html
-CO-OCCURRENCE https://cran.r-project.org/web/packages/EcoSimR/vignettes/CoOccurrenceVignette.html
-RANDOM FOREST https://rpubs.com/michberr/randomforestmicrobe
-Plotting READS https://rpubs.com/marschmi/133626
-BIOENV and ENVFIT http://menugget.blogspot.com/2011/06/clarke-and-ainsworths-bioenv-and-bvstep.html
-https://github.com/joey711/phyloseq/issues/105
-http://stackoverflow.com/questions/14711470/plotting-envfit-vectors-vegan-package-in-ggplot2/25425258#25425258
-Rmarkdown for RStudio http://rmarkdown.rstudio.com/html_document_format.html
-RAM package https://cran.r-project.org/web/packages/RAM/RAM.pdf
-http://rpackages.ianhowson.com/cran/RAM/
-http://fuzzysim.r-forge.r-project.org/fuzzySim-tutorial.html
+# Check the lib paths ----------------------------------------------------------
+.libPaths()
 
-'''
+# **********************************************************************--------
+# ***** SETUP ***** ------------------------------------------------------------
+
+# Load R packages --------------------------------------------------------------
+if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")
+
+pacman::p_load(
+  styler,
+  magrittr,
+  Biostrings,
+  ape,
+  decontam,
+  phyloseq,
+  speedyseq,
+  tidysq,
+  vegan,
+  AICcPermanova,
+  tidyverse,
+  ggtext,
+  ggpubr,
+  cowplot,
+  gridExtra,
+  ggrepel,
+  scales,
+  agricolae
+)
+
+# Session Info -----------------------------------------------------------------
+sessionInfo()
+
+# **********************************************************************--------
+# ***** PATHS ***** ------------------------------------------------------------
+# datasets ---------------------------------------------------------------------
+
+data_path <- 
+  ("/home/gian/Data/github_repos/Published-R-Code/Benucci_etal_2018_FijiSoilMicrobiome/datasets")
+
+# results ----------------------------------------------------------------------
+
+results_path <- 
+  ("/home/gian/Data/github_repos/Published-R-Code/Benucci_etal_2018_FijiSoilMicrobiome/results/")
+
+# **********************************************************************--------
+# ***** IMPORT ***** -----------------------------------------------------------
+
+# Import datasets --------------------------------------------------------------
 
 
-### PRELIMINARY SETUP ------------------------------------------------------------------------------------------------------
 
-# setting the work environment 
-rm(list = ls(all=TRUE)) # removes all variables in the global environment so you start fresh
-Sys.time() # prints out the time and date you ran the code
-options(scipen = 999) #to use decimals
-options(max.print=100000000) # to print more lines on the display
-set.seed(1977) #to make reproduceble results
-detach(package:phyloseq, unload=TRUE) #to reorder packages
-search() #to search into the environment
-rm(list= ls()[!(ls() %in% c('keepThis','andThis'))]) #remove all but ...
-
-session.info() #to get session information
-
-#shiny-phyloseq: web-based phyloseq resource for plotting 
-install.packages("shiny")
-shiny::runGitHub("shiny-phyloseq","joey711")
-
-# load previous data
-load(".RData")
-
-### NECESSARY PACKAGES -----------------------------------------------------------------------------------------
-library(phyloseq)
-library(Biostrings)
-library(ggplot2)
-library(plyr)
-library(dplyr)
-library(ggrepel)
-library(vegan)
-library(DESeq2)
-library(metagenomeSeq)
-library(indicspecies)
-library(limma)
-
-library(microbiome)
-library(RAM)
-library(BiodiversityR)
-library(biom)
-library(gplots)
-library(RVAideMemoire)
-library(lavdsv)
-library(mvabund)
-library(boral)
-
-library(RColorBrewer)
-library(interactiveDisplay)
-library(picante)
-library(grid)
-library(Hmisc)
-library(corrplot)
-library(psych)
-library(ggdendro)
-library(colorRamps)
-library(multtest)
-library(data.table)
 
 
 
@@ -93,7 +72,7 @@ library(data.table)
 # running biocValid(fix=TRUE) sorted it out
 
 
-### IMPORTING DATA into R ----------------------------------------------------------------------------------------------------------------------
+### IMPORTING DATA IN R -----------------------------------------------------------------------------
 
 # 1) imoprt from .biom 
 #importing ITS biom data
@@ -3785,7 +3764,40 @@ superheat(t(dune), left.label.size = 0.3, bottom.label.size = 0.1,
           
           
          
+### NECESSARY PACKAGES -----------------------------------------------------------------------------------------
+library(phyloseq)
+library(Biostrings)
+library(ggplot2)
+library(plyr)
+library(dplyr)
+library(ggrepel)
+library(vegan)
+library(DESeq2)
+library(metagenomeSeq)
+library(indicspecies)
+library(limma)
 
+library(microbiome)
+library(RAM)
+library(BiodiversityR)
+library(biom)
+library(gplots)
+library(RVAideMemoire)
+library(lavdsv)
+library(mvabund)
+library(boral)
+
+library(RColorBrewer)
+library(interactiveDisplay)
+library(picante)
+library(grid)
+library(Hmisc)
+library(corrplot)
+library(psych)
+library(ggdendro)
+library(colorRamps)
+library(multtest)
+library(data.table)
 
 
 
