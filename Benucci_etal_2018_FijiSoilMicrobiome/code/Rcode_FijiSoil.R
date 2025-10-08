@@ -69,227 +69,179 @@ results_path <-
 
 phyloseq_ITS <- readRDS(file = file.path(data_path, "phyloseq_ITS.RDS"))
 phyloseq_ITS
+sample_sums(phyloseq_ITS)
 
-phyloseq_ITS <- readRDS(file = file.path(data_path, "phyloseq_ITS.RDS"))
+phyloseq_LSU <- readRDS(file = file.path(data_path, "phyloseq_LSU.RDS"))
 phyloseq_LSU
+sample_sums(phyloseq_LSU)
 
-phyloseq_ITS <- readRDS(file = file.path(data_path, "phyloseq_ITS.RDS"))
+phyloseq_16S <- readRDS(file = file.path(data_path, "phyloseq_16S.RDS"))
 phyloseq_16S
+sample_sums(phyloseq_16S)
 
 
 # REPRODUCING THE ANALYSYS -----------------------------------------------------
 
+# PRELIMINARY DATA VISUALIZATION -----------------------------------------------
+
+library_depth_ITS <- data.frame(LibSize = colSums(otu_table(phyloseq_ITS))) 
+
+library_depth_ITS %>% 
+  mutate(SampleID = rownames(library_depth_ITS), 
+         NameID = phyloseq_ITS@sam_data$Description, 
+         SiteID = phyloseq_ITS@sam_data$Site2) %>% 
+  arrange(desc(NameID))
+
+# plotting library Size distribution function
+plot_libsize <- function(physeq) {
+  library_depth <- data.frame(LibSize = colSums(otu_table(physeq, taxa_are_rows = TRUE))) %>%
+    rownames_to_column("SampleID") %>%
+    mutate(
+      NameID = physeq@sam_data$Description,
+      SiteID = physeq@sam_data$Site2
+    ) %>%
+    arrange(desc(NameID))
+
+  ggarrange(
+  library_depth %>%
+    ggplot(aes(x = reorder(NameID, LibSize), y = LibSize)) +
+    ylab("Number of Sequences per Sample") +
+    geom_bar(stat = "identity", colour = "black", fill = "cornflowerblue") +
+    theme(axis.text.x = element_text(size = 8, angle = 90, hjust = 0.5, vjust = 0.5),
+          axis.text.y = element_text(size = 10, angle = 90, hjust = 1, vjust = 1)
+          ) +
+    labs(
+      title = "Total Number of Sequences per Sample",
+      x = "Sample Name",
+      y = "Number of Sequences per Sample"), 
+
+  library_depth %>%
+    ggplot(aes(x = reorder(SiteID, LibSize), y = LibSize)) +
+    geom_boxplot(outlier.colour = "red", outlier.shape = 16, outlier.size = 4) +
+    geom_point() +
+    geom_text_repel(aes(label = SampleID), size = 3) +
+    theme(axis.text.x = element_text(size = 8, angle = 33, hjust = 1, vjust = 1),
+          axis.text.y = element_text(size = 10, angle =90, hjust = 1, vjust = 1)
+          ) +
+    labs(title = "Distribution of samples",
+         x = "Sample Replicate", 
+         y = "Read Number"),
+  
+  ncol = 1)
+  
+}
+
+# >>>> FIGURE S1 <<<< ----------------------------------------------------------
+plot_libsize(phyloseq_ITS)
+plot_libsize(phyloseq_LSU)
+plot_libsize(phyloseq_16S)
+
+
+# >>>> FIGURE 2 <<<<< ----------------------------------------------------------
+# Barplots of fungal genera relative abundance based on the ITS rDNA region and 
+# divided by ecological guild. (a) Putative mycorrhizal (including ecto, arbuscular, 
+# ericoid, and orchid mycorrhizas); (b)endophytic (top 30 genera) and (c) pathogenic
+# (top 30 genera) fungi.Habitats dominated by introduced plant hosts are denoted
+# in bold.
+
+# Guilds extracted with funguild
+phyloseq_endo <- readRDS(file = file.path(data_path, "phyloseq_endophytic.RDS"))
+phyloseq_pato <- readRDS(file = file.path(data_path, "phyloseq_pathogenic.RDS"))
+phyloseq_symb <- readRDS(file = file.path(data_path, "phyloseq_symbiont.RDS"))
+
+source(file = "Benucci_etal_2018_FijiSoilMicrobiome/functions/plot_ordered_bar_byGian.R")
+
+# 1) endophytes
+phyloseq_endo_gen = tax_glom(phyloseq_endo, "Genus")
+phyloseq_endo_gen_merg = merge_samples(phyloseq_endo_gen, "Site1")
+sample_data(phyloseq_endo_gen_merg)$SiteID <- levels(as.factor(sample_data(phyloseq_endo_gen)$Site1))
+phyloseq_endo_gen_merg_ab = transform_sample_counts(phyloseq_endo_gen_merg, function(x) 100 * x/sum(x))
+
+phyloseq_endo@tax_table
+phyloseq_endo@otu_table
+
+phyloseq_endo_ab = transform_sample_counts(phyloseq_endo, function(x) 100 * x/sum(x))
+
+df_endo <- psmelt(phyloseq_endo_ab)
+df_endo
+
+df_endo %>% 
+  mutate(RelAbund = Abundance / sum(Abundance)) %>% 
+  ggplot(aes(x= Site1, y = RelAbund, fill=Genus)) +
+  geom_bar(stat = "identity", position = "stack", color = "black", size=0.1) +
+  scale_fill_manual(values = c("Annulohypoxylon" = "#560d0d",
+                               "Anthostomella" = "#a35151",
+                               "Camarosporium" = "#dba4a4", 
+                               "Capronia" = "#cc1c1c",
+                               "Chalara"="#111b77",
+                               "Cladosporium"="#283dff", 
+                               "Colletotrichum"="#636bb7",
+                               "Cytospora"="#bfc5ff",
+                               "Diaporthe"="#014443",
+                               "Kabatiella"="#195637",
+                               "Lecythophora"="#117744",
+                               "Microdochium"="#60ffaf",
+                               "Paecilomyces"="#b7ffdb",
+                               "Periconia"="#825121",
+                               "Phialophora"="#ea7f17",
+                               "Phomopsis"="#fcb067",
+                               "Torula"="#ffe8d3",
+                               "Trichoderma"="#d8d6d4",
+                               "Williopsis"="#82807f",
+                               "Xylaria" = "#3f3e3d")) +
+  theme(axis.text.y = element_text(size = 10, hjust = 0.5, vjust = 0.5),
+        axis.text.x = element_text(size = 10, angle = 33, hjust = 1, vjust = 1)) +
+  labs(
+    title = "Endophytes",
+    x = "Site",
+    y = "Relative abundance")
 
 
 
+p2 <- plot_ordered_bar(phyloseq_endo_gen_merg_ab, x = "Site1", fill="Genus", leg_size = 0.4, title="(B)")
+p2
 
-### PRELIMINARY DATA VISUALIZATION ----------------------------------------------------------------------------------------------------------------------------------
-
-# check the ITS sequencing depth of each sample 
-library(plyr)
-
-sums_biom_ITS <- data.frame(colSums(otu_table(biom_ITS)))
-colnames(sums_biom_ITS) <- "Sample_TotalSeqs"
-sums_biom_ITS$sample <- row.names(sums_biom_ITS)
-sums_biom_ITS$Description <- sample_data(biom_ITS)$Description
-sums_biom_ITS$Site2 <- sample_data(biom_ITS)$Site2 # if you want to add another variable to use further
-sums_biom_ITS <- arrange(sums_biom_ITS, Sample_TotalSeqs)
-#sums_biom_ITS <- arrange(sums_biom_ITS, Description) # to order according another variable in the mapping
-sums_biom_ITS
-
-write.csv(sums_biom_ITS, file = "library_ITS.csv")
-
-# create a plot of the number of ITS sequences per sample
-library(ggplot2)
-sums_biom_ITS <- sums_biom_ITS[order(sums_biom_ITS$Description), ]
-sums_biom_ITS$Description <- factor(sums_biom_ITS$Description, levels = sums_biom_ITS$Description[order(sums_biom_ITS$Description)])
-sums_biom_ITS$Description
-
-ggplot(sums_biom_ITS, aes(x=reorder(Description, Sample_TotalSeqs), y = Sample_TotalSeqs)) + 
-  ylab("Number of Sequences per Sample") +
-  geom_bar(stat = "identity", colour="black",fill="cornflowerblue")  + xlab("Sample Name") + 
-  ggtitle("Total Number of Sequences per Sample ITS") + 
-  theme(axis.text.x = element_text(colour = "black", size=10, angle=90, hjust = 1, vjust = 1)) 
-
-# plot boxplots to see outliers rep according an a priori variable 
-ggplot(sums_biom_ITS, aes(x=reorder(Description, Sample_TotalSeqs), y = Sample_TotalSeqs)) + 
-  geom_boxplot(outlier.colour="red", outlier.shape=16, outlier.size=4) +
-  geom_jitter(shape=2, position=position_jitter(0.2), aes(colour = Description)) + 
-  geom_text(aes(label=sample), size = 3) +
-  theme(axis.text.x=element_text(angle=90, hjust=1))
-
-# adding samples name and labels
-library("ggrepel")
-
-ggplot(sums_biom_ITS, aes(x=reorder(Site2, Sample_TotalSeqs), y = Sample_TotalSeqs)) + 
-  geom_boxplot(outlier.colour="red", outlier.shape=16, outlier.size=4) +
-  geom_point() + geom_text_repel(aes(label=sample), size = 3) + 
-  theme(axis.text.x=element_text(angle=90, hjust=1)) +
-  labs(x = "Sample Replicate", y = "Read Number") +
-  ggtitle("Sample distribution ITS")
-
-
-# create a plot of the number of LSU sequences per sample
-sums_biom_LSU <- data.frame(colSums(otu_table(biom_LSU)))
-colnames(sums_biom_LSU) <- "Sample_TotalSeqs"
-sums_biom_LSU$sample <- row.names(sums_biom_LSU)
-sums_biom_LSU$Description <- sample_data(biom_LSU)$Description
-sums_biom_LSU$Site2 <- sample_data(biom_LSU)$Site2 # if you want to add another variable to use further
-sums_biom_LSU <- arrange(sums_biom_LSU, Sample_TotalSeqs)
-#sums_biom_LSU <- arrange(sums_biom_LSU, Description) # to order according another variable in the mapping
-sums_biom_LSU
-
-
-library(ggplot2)
-sums_biom_LSU <- sums_biom_LSU[order(sums_biom_LSU$Description), ]
-sums_biom_LSU$Description <- factor(sums_biom_LSU$Description, levels = sums_biom_LSU$Description[order(sums_biom_LSU$Description)])
-sums_biom_LSU$Description
-
-ggplot(sums_biom_LSU, aes(x=reorder(Description, Sample_TotalSeqs), y = Sample_TotalSeqs)) + 
-  ylab("Number of Sequences per Sample") +
-  geom_bar(stat = "identity", colour="black",fill="cornflowerblue")  + xlab("Sample Name") + 
-  ggtitle("Total Number of Sequences per Sample LSU") + 
-  theme(axis.text.x = element_text(colour = "black", size=10, angle=90, hjust = 1, vjust = 1)) 
-
-# plot boxplots to see outliers rep according an a priori variable 
-ggplot(sums_biom_LSU, aes(x=reorder(Description, Sample_TotalSeqs), y = Sample_TotalSeqs)) + 
-  geom_boxplot(outlier.colour="red", outlier.shape=16, outlier.size=4) +
-  geom_jitter(shape=2, position=position_jitter(0.2), aes(colour = Description)) + 
-  geom_text(aes(label=sample), size = 3) +
-  theme(axis.text.x=element_text(angle=90, hjust=1))
-
-# adding samples name and labels
-library("ggrepel")
-
-ggplot(sums_biom_LSU, aes(x=reorder(Site2, Sample_TotalSeqs), y = Sample_TotalSeqs)) + 
-  geom_boxplot(outlier.colour="red", outlier.shape=16, outlier.size=4) +
-  geom_point() + geom_text_repel(aes(label=sample), size = 3) + 
-  theme(axis.text.x=element_text(angle=90, hjust=1)) +
-  labs(x = "Sample Replicate", y = "Read Number") +
-  ggtitle("Sample distribution LSU")
-
-
-
-# check the 16S sequencing depth of each sample 
-sums_biom_16s <- data.frame(colSums(otu_table(biom_16s)))
-colnames(sums_biom_16s) <- "Sample_TotalSeqs"
-sums_biom_16s$sample <- row.names(sums_biom_16s)
-sums_biom_16s$Description <- sample_data(biom_16s)$Description
-sums_biom_16s$Site2 <- sample_data(biom_16s)$Site2
-sums_biom_16s <- arrange(sums_biom_16s, Sample_TotalSeqs)
-sums_biom_16s
-
-write.csv(sums_biom_16s, file = "library_16s.csv")
-
-# create a plot of the number of 16s sequences per sample
-ggplot(sums_biom_16s, aes(x=reorder(Description, Sample_TotalSeqs), y = Sample_TotalSeqs)) +
-  ylab("Number of Sequences per Sample") +
-  geom_bar(stat = "identity", colour="black",fill="cornflowerblue")  + xlab("Sample Name") + 
-  ggtitle("Total Number of Sequences per Sample 16S") + 
-  theme(axis.text.x = element_text(colour = "black", size=10, angle=90, hjust = 1, vjust = 1))
-
-# plot boxplots to see outliers rep
-ggplot(sums_biom_16s, aes(x=reorder(Description, Sample_TotalSeqs), y = Sample_TotalSeqs)) + 
-  geom_boxplot(outlier.colour="red", outlier.shape=16, outlier.size=4) +
-  geom_jitter(shape=2, position=position_jitter(0.2), aes(colour = Description)) + 
-  geom_text(aes(label=sample), size = 3) +
-  theme(axis.text.x = element_text(colour = "black", size=10, angle=90, hjust = 1, vjust = 1))
-
-# adding samples name and labels
-ggplot(sums_biom_16s, aes(x=reorder(Site2, Sample_TotalSeqs), y = Sample_TotalSeqs)) + 
-  geom_boxplot(outlier.colour="red", outlier.shape=16, outlier.size=4) +
-  geom_point() + geom_text_repel(aes(label=sample), size = 3) +
-  theme(axis.text.x = element_text(colour = "black", size=10, angle=90, hjust = 1, vjust = 1)) +
-  labs(x = "Sample Replicate", y = "Read Number") +
-  ggtitle("Sample distribution 16S")  
-
-
-# check distribution of sampling depth 
-
-ggplot(sums_biom_ITS, aes(x = Sample_TotalSeqs)) + # Histogram of sample read counts
-  geom_histogram(color = "black", fill = "indianred", binwidth = 25) +
-  ggtitle("Distribution of sample sequencing depth") + 
-  xlab("Read counts") +
-  theme(axis.title.y = element_blank()) +
-  scale_color_manual(values="green")
-
-ggplot(sums_biom_16s, aes(x = Sample_TotalSeqs)) + # Histogram of sample read counts
-  geom_histogram(color = "black", fill = "indianred", binwidth = 25) +
-  ggtitle("Distribution of sample sequencing depth") + 
-  xlab("Read counts") +
-  theme(axis.title.y = element_blank()) +
-  scale_color_manual(values="green")
-
-
-# check also here for library exploration
-# http://joey711.github.io/phyloseq-demo/Restroom-Biogeography.html
-
-# check OTUs included in this dataset that have no counted reads
-any(taxa_sums(biom_ITS) == 0)
-
-readsumsdf_ITS = data.frame(nreads = sort(taxa_sums(biom_ITS), TRUE), sorted = 1:ntaxa(biom_ITS), type = "OTUs")
-readsumsdf_ITS = rbind(readsumsdf_ITS, data.frame(nreads = sort(sample_sums(biom_ITS), TRUE), sorted = 1:nsamples(biom_ITS), type = "Samples"))
-
-title = "Total number of reads"
-head(readsumsdf_ITS)
-
-p = ggplot(readsumsdf_ITS, aes(x = sorted, y = nreads)) + geom_bar(stat = "identity")
-p + ggtitle(title) + scale_y_log10() + facet_wrap(~type, 1, scales = "free")
-
-set.seed(2) # set seed 
-# rarefy at even depth of 1000 reads - best to find a random number see below!
-biom_ITS_ev = rarefy_even_depth(biom_ITS, sample.size = 10000)
-# And now an alternative to random subsampling, a simple proportional transformation
-biom_ITS_prop = transform_sample_counts(biom_ITS, function(x) 1000 * x/sum(x))
-
-# let's replot the sample sums of each of these new data objects,
-# to convince ourselves that all of the samples now sum to 500.
-par(mfrow = c(1, 2)) # don't forget to close device at the end of plotting
-title = "Sum of reads for each sample, biom_ITS even depth"
-plot(sort(sample_sums(biom_ITS_ev), TRUE), type = "h", main = title, ylab = "reads", 
-     ylim = c(0, 1000))
-title = "Sum of reads for each sample, biom_ITS proportional abundances"
-plot(sort(sample_sums(biom_ITS_prop), TRUE), type = "h", main = title, ylab = "reads", 
-     ylim = c(0, 1000))
-
-dev.off() # to set par() to original default values
+endo_bar = p2 + theme(legend.text = element_text(face="italic")) + 
+  scale_fill_manual(values = c("Annulohypoxylon" = "#560d0d",
+                               "Anthostomella" = "#a35151",
+                               "Camarosporium" = "#dba4a4", 
+                               "Capronia" = "#cc1c1c",
+                               "Chalara"="#111b77",
+                               "Cladosporium"="#283dff", 
+                               "Colletotrichum"="#636bb7",
+                               "Cytospora"="#bfc5ff",
+                               "Diaporthe"="#014443",
+                               "Kabatiella"="#195637",
+                               "Lecythophora"="#117744",
+                               "Microdochium"="#60ffaf",
+                               "Paecilomyces"="#b7ffdb",
+                               "Periconia"="#825121",
+                               "Phialophora"="#ea7f17",
+                               "Phomopsis"="#fcb067",
+                               "Torula"="#ffe8d3",
+                               "Trichoderma"="#d8d6d4",
+                               "Williopsis"="#82807f",
+                               "Xylaria" = "#3f3e3d")) + 
+  theme(panel.background = element_blank()) + 
+  guides(fill=guide_legend(ncol=1,keywidth = 0.7, keyheight = 0.7)) +
+  theme(legend.position="right") + guides(fill=guide_legend(reverse = TRUE, ncol=1,keywidth = 0.7, keyheight = 0.7)) +
+  #facet_wrap(~Phylum, ncol=4) +
+  #facet_grid(~Phylum, nrow=2) +
+  ylim(0, 100) +
+  labs(title="Endophytic", x="Habitat", y="") +
+  theme(panel.background = element_blank()) + 
+  theme(axis.text.x = element_text(vjust=0.5, size=10)) +
+  theme(axis.text.y = element_text(hjust=0.5, size=10)) +
+  theme(plot.title = element_text(size = 12, face = "bold", hjust = 0.5)) +
+  theme(axis.line = element_line(colour = "black",size = 1, linetype = "solid")) +
+  theme(legend.position="right")
 
 
 
 
 
-### SUBSETTING TO SPECIFIC SAMPLES, OTUS, or TAXA --------------------------------------------------------------------------------------
-# http://joey711.github.io/phyloseq/preprocess
-# https://www.bioconductor.org/packages/devel/bioc/vignettes/phyloseq/inst/doc/phyloseq-basics.html
 
-# filtering samples with low sequencing depth form the otu_table
-#df[, !(colnames(df) %in% c("x","bar","foo"))]
-
-sample_data(biom_ITS)
-sample_data(biom_16s)
-sample_data(biom_LSU)
-
-biom_ITS_filt <- subset_samples(biom_ITS, Keep%in%c("keep"))
-otu_table(biom_ITS_filt) <- otu_table(biom_ITS_filt)[which(rowSums(otu_table(biom_ITS_filt)) > 1),] 
-biom_ITS_filt
-
-biom_LSU_filt <- subset_samples(biom_LSU, Keep%in%c("keep"))
-otu_table(biom_LSU_filt) <- otu_table(biom_LSU_filt)[which(rowSums(otu_table(biom_LSU_filt)) > 1),] 
-biom_LSU_filt
-
-biom_16s_filt <- subset_samples(biom_16s, Keep%in%c("keep"))
-otu_table(biom_16s_filt) <- otu_table(biom_16s_filt)[which(rowSums(otu_table(biom_16s_filt)) > 1),] 
-biom_16s_filt
-
-sample_data(biom_ITS_filt)
-sample_data(biom_LSU_filt)
-sample_data(biom_16s_filt)
-
-
-
-### FILTERING AND NORMALIZING DATA ----------------------------------------------------------------------------------------------
-
-library(dplyr)
+### FILTERING AND NORMALIZING DATA ---------------------------------------------
 
 # One approach for Fungi is to remove OTUs with less than 10 reads and less than 5 in at 
 # least one sample. Please check Peter Kennedy tougths in google drive doc and 
@@ -299,87 +251,80 @@ library(dplyr)
 #rows or columns. (MARGIN = 1 is rows, MARGIN = 2 is columns, etc). Use df[, -1] to 
 #ignore the id variable when doing the comparisons.
 
-any(taxa_sums(biom_ITS_filt) == 0)
-any(taxa_sums(biom_LSU_filt) == 0)
-any(taxa_sums(biom_16s_filt) == 0)
+any(taxa_sums(phyloseq_ITS) == 0)
+any(taxa_sums(phyloseq_LSU) == 0)
+any(taxa_sums(phyloseq_16S) == 0)
 
-biom_ITS_cv <- biom_ITS_filt
-otu_table(biom_ITS_cv) <- otu_table(biom_ITS_cv)[rowSums(otu_table(biom_ITS_cv) > 0) >= 5, ]
-otu_table(biom_ITS_cv) <- otu_table(biom_ITS_cv)[which(rowSums(otu_table(biom_ITS_cv)) >= 10),] 
-biom_ITS_cv
-sample_data(biom_ITS_cv)
+phyloseq_ITS_cv <- phyloseq_ITS
+otu_table(phyloseq_ITS_cv) <- otu_table(phyloseq_ITS_cv)[rowSums(otu_table(phyloseq_ITS_cv) > 0) >= 5, ]
+otu_table(phyloseq_ITS_cv) <- otu_table(phyloseq_ITS_cv)[which(rowSums(otu_table(phyloseq_ITS_cv)) >= 10),] 
+phyloseq_ITS_cv
 
-#another apprach below
-#apply(otu_table(biom_ITS_cv), 1, function(x) sum(x>0)) >= 5
-#otu_table(biom_ITS_cv) <- otu_table(biom_ITS_cv)[apply(otu_table(biom_ITS_cv), 1, function(x) sum(x>0)) >= 5, ]
+phyloseq_LSU_cv <- phyloseq_LSU
+otu_table(phyloseq_LSU_cv) <- otu_table(phyloseq_LSU_cv)[rowSums(otu_table(phyloseq_LSU_cv) > 0) >= 5, ]
+otu_table(phyloseq_LSU_cv) <- otu_table(phyloseq_LSU_cv)[which(rowSums(otu_table(phyloseq_LSU_cv)) >= 10),] 
+phyloseq_LSU_cv
 
+phyloseq_16s_cv <- phyloseq_16S
+otu_table(phyloseq_16s_cv) <- otu_table(phyloseq_16s_cv)[rowSums(otu_table(phyloseq_16s_cv) > 0) >= 5, ]
+otu_table(phyloseq_16s_cv) <- otu_table(phyloseq_16s_cv)[which(rowSums(otu_table(phyloseq_16s_cv)) >= 10),] 
+phyloseq_16s_cv
 
-biom_LSU_cv <- biom_LSU_filt
-otu_table(biom_LSU_cv) <- otu_table(biom_LSU_cv)[rowSums(otu_table(biom_LSU_cv) > 0) >= 5, ]
-otu_table(biom_LSU_cv) <- otu_table(biom_LSU_cv)[which(rowSums(otu_table(biom_LSU_cv)) >= 10),] 
-biom_LSU_cv
+# Adding alpha metrics ---------------------------------------------------------
 
+AlphaMetrics <- function(physeq) {
+  require(vegan)
+  require(tidyverse)
+  
+  sample_data(physeq)$ReadNo <- sample_sums(physeq)
+  sample_data(physeq)$hill_0 <- as.data.frame(as.matrix(t(physeq@otu_table))) %>% renyi(scale = c(0), hill = TRUE)
+  sample_data(physeq)$hill_1 <- as.data.frame(as.matrix(t(physeq@otu_table))) %>% renyi(scale = c(1), hill = TRUE)
+  sample_data(physeq)$hill_2 <- as.data.frame(as.matrix(t(physeq@otu_table))) %>% renyi(scale = c(2), hill = TRUE)
+  sample_data(physeq)$Richness <- specnumber(as.data.frame(otu_table(physeq)), MARGIN = 2)
+  sample_data(physeq)$invSimpson <- diversity(as.data.frame(otu_table(physeq)), index = "inv", MARGIN = 2)
+  sample_data(physeq)$Shannon <- diversity(as.data.frame(otu_table(physeq)), index = "shannon", MARGIN = 2)
+  sample_data(physeq)$EH <- 1 - sample_data(physeq)$Shannon / log(sample_data(physeq)$Richness)
+  
+  return(physeq)
+}
 
-#apply(otu_table(biom_ITS_cv), 1, function(x) sum(x!=0))
-#apply(otu_table(biom_ITS_cv), 1, function(x) sum(x>0))
-
-biom_16s_cv <- biom_16s_filt
-otu_table(biom_16s_cv) <- otu_table(biom_16s_cv)[rowSums(otu_table(biom_16s_cv) > 0) >= 5, ]
-otu_table(biom_16s_cv) <- otu_table(biom_16s_cv)[which(rowSums(otu_table(biom_16s_cv)) >= 10),] 
-biom_16s_cv
-biom_ITS_cv
-
-write.csv(otu_table(biom_ITS_cv), "1259otu_table_ITS.csv")
-write.csv(tax_table(biom_ITS_cv), "1259tax_table_ITS.csv")
-write.csv(sample_data(biom_ITS_cv), "map54_ITS.csv")
-write.table(refseq(biom_ITS_cv), "1259repseq_ITS.fasta")
-
-write.csv(otu_table(biom_LSU_cv), "1061otu_table_LSU.csv")
-write.csv(tax_table(biom_LSU_cv), "1061tax_table_LSU.csv")
-write.csv(sample_data(biom_LSU_cv), "map51_LSU.csv")
-write.table(refseq(biom_LSU_cv), "1061repseq_LSU.fasta")
-
-write.csv(otu_table(biom_16s_cv), "5791otu_table_16s.csv")
-write.csv(tax_table(biom_16s_cv), "5791tax_table_16s.csv")
-write.csv(sample_data(biom_16s_cv), "map54_16s.csv")
-write.table(refseq(biom_16s_cv), "5791repseq_16s.fasta")
+phyloseq_ITS_cv <-AlphaMetrics(phyloseq_ITS_cv)
+phyloseq_LSU_cv <-AlphaMetrics(phyloseq_LSU_cv)
+phyloseq_16s_cv <-AlphaMetrics(phyloseq_16s_cv)
 
 
-# Hellinger standardization
+# Hellinger standardization ----------------------------------------------------
 #Legendre, P. & Gallagher, E.D. (2001) Ecologically meaningful
 #transformations for ordination of species data. Oecologia 129; 271–280. 
 
+# NOTE could have rarefied the data here bit I decided not to. 
+
 library(vegan)
 
-biom_ITS_cv -> biom_ITS_hell
-otu_table(biom_ITS_hell) <- otu_table(decostand(otu_table(biom_ITS_cv), method = "hellinger"), taxa_are_rows=TRUE)
-otu_table(biom_ITS_hell)
+phyloseq_ITS_hell <- phyloseq_ITS_cv
+otu_table(phyloseq_ITS_hell) <- otu_table(decostand(otu_table(phyloseq_ITS_cv), method = "hellinger"), taxa_are_rows=TRUE)
+otu_table(phyloseq_ITS_hell)
 
-biom_LSU_cv -> biom_LSU_hell
-otu_table(biom_LSU_hell) <- otu_table(decostand(otu_table(biom_LSU_cv), method = "hellinger"), taxa_are_rows=TRUE)
-otu_table(biom_LSU_hell)
+phyloseq_LSU_hell <- phyloseq_LSU_cv
+otu_table(phyloseq_LSU_hell) <- otu_table(decostand(otu_table(phyloseq_LSU_cv), method = "hellinger"), taxa_are_rows=TRUE)
+otu_table(phyloseq_LSU_hell)
 
-biom_16s_cv -> biom_16s_hell
-otu_table(biom_16s_hell) <- otu_table(decostand(otu_table(biom_16s_cv), method = "hellinger"), taxa_are_rows=TRUE)
-otu_table(biom_16s_hell)
-
-biom_ITS_ecm -> biom_ITS_ecm_hell
-otu_table(biom_ITS_ecm_hell) <- otu_table(decostand(otu_table(biom_ITS_ecm), method = "hellinger"), taxa_are_rows=TRUE)
-otu_table(biom_ITS_ecm_hell)
-
+phyloseq_16s_hell <- phyloseq_16s_hell
+otu_table(phyloseq_16s_hell) <- otu_table(decostand(otu_table(phyloseq_16s_cv), method = "hellinger"), taxa_are_rows=TRUE)
+otu_table(phyloseq_16s_hell)
 
 # normalizing data counts into proportional relative abundances or OTUs frequencies
-biom_ITS_prop = transform_sample_counts(biom_ITS_cv, function(OTU) OTU/sum(OTU))
-biom_LSU_prop = transform_sample_counts(biom_LSU_cv, function(OTU) OTU/sum(OTU))
-biom_16s_prop = transform_sample_counts(biom_16s_cv, function(OTU) OTU/sum(OTU))
+phyloseq_ITS_prop = transform_sample_counts(phyloseq_ITS_cv, function(OTU) OTU/sum(OTU))
+phyloseq_LSU_prop = transform_sample_counts(phyloseq_LSU_cv, function(OTU) OTU/sum(OTU))
+phyloseq_16s_prop = transform_sample_counts(phyloseq_16s_cv, function(OTU) OTU/sum(OTU))
 
-biom_ITS_prop -> biom_ITS_hell2
-otu_table(biom_ITS_hell2) <- otu_table(decostand(otu_table(biom_ITS_prop), method = "hellinger"), taxa_are_rows=TRUE)
-otu_table(biom_ITS_hell2)
+phyloseq_ITS_prop -> phyloseq_ITS_hell2
+otu_table(phyloseq_ITS_hell2) <- otu_table(decostand(otu_table(phyloseq_ITS_prop), method = "hellinger"), taxa_are_rows=TRUE)
+otu_table(phyloseq_ITS_hell2)
 
-biom_LSU_prop -> biom_LSU_hell2
-otu_table(biom_LSU_hell2) <- otu_table(decostand(otu_table(biom_LSU_prop), method = "hellinger"), taxa_are_rows=TRUE)
-otu_table(biom_LSU_hell2)
+phyloseq_LSU_prop -> phyloseq_LSU_hell2
+otu_table(phyloseq_LSU_hell2) <- otu_table(decostand(otu_table(phyloseq_LSU_prop), method = "hellinger"), taxa_are_rows=TRUE)
+otu_table(phyloseq_LSU_hell2)
 
 
 
@@ -389,14 +334,14 @@ otu_table(biom_LSU_hell2)
 ### DATA COUNTS in COMMUNITY DATA -------------------------------------------------------------------------------------------
 
 #### >> Extracting relative abundances ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-biom_ITS_cv_phy = tax_glom(biom_ITS_cv, "Phylum")
-otu_table(biom_ITS_cv_phy)
-tax_table(biom_ITS_cv_phy)
+phyloseq_ITS_cv_phy = tax_glom(phyloseq_ITS_cv, "Phylum")
+otu_table(phyloseq_ITS_cv_phy)
+tax_table(phyloseq_ITS_cv_phy)
 
-otu_ITS_cv_phy = taxa_sums(biom_ITS_cv_phy)/sum(taxa_sums(biom_ITS_cv_phy))*100
+otu_ITS_cv_phy = taxa_sums(phyloseq_ITS_cv_phy)/sum(taxa_sums(phyloseq_ITS_cv_phy))*100
 as.data.frame(otu_ITS_cv_phy)
 as.vector(otu_ITS_cv_phy)
-tax_ITS_cv_phy <- data.frame(tax_table(biom_ITS_cv_phy))
+tax_ITS_cv_phy <- data.frame(tax_table(phyloseq_ITS_cv_phy))
 tax_ITS_cv_phy <- tax_ITS_cv_phy[c(1:2)]
 tax_ITS_cv_phy
 tax_ITS_cv_phy$abundance <- as.vector(otu_ITS_cv_phy)
@@ -405,14 +350,14 @@ tax_ITS_cv_phy
 
 
 
-biom_LSU_cv_phy = tax_glom(biom_LSU_cv, "Phylum")
-otu_table(biom_LSU_cv_phy)
-tax_table(biom_LSU_cv_phy)
+phyloseq_LSU_cv_phy = tax_glom(phyloseq_LSU_cv, "Phylum")
+otu_table(phyloseq_LSU_cv_phy)
+tax_table(phyloseq_LSU_cv_phy)
 
-otu_LSU_cv_phy = taxa_sums(biom_LSU_cv_phy)/sum(taxa_sums(biom_LSU_cv_phy))*100
+otu_LSU_cv_phy = taxa_sums(phyloseq_LSU_cv_phy)/sum(taxa_sums(phyloseq_LSU_cv_phy))*100
 as.data.frame(otu_LSU_cv_phy)
 as.vector(otu_LSU_cv_phy)
-tax_LSU_cv_phy <- data.frame(tax_table(biom_LSU_cv_phy))
+tax_LSU_cv_phy <- data.frame(tax_table(phyloseq_LSU_cv_phy))
 tax_LSU_cv_phy <- tax_LSU_cv_phy[c(1:2)]
 tax_LSU_cv_phy
 tax_LSU_cv_phy$abundance <- as.vector(otu_LSU_cv_phy)
@@ -421,15 +366,15 @@ tax_LSU_cv_phy
 
 
 
-biom_16s_cv_phy = tax_glom(biom_16s_cv, "Phylum")
-otu_table(biom_16s_cv_phy)
-tax_table(biom_16s_cv_phy)
+phyloseq_16s_cv_phy = tax_glom(phyloseq_16s_cv, "Phylum")
+otu_table(phyloseq_16s_cv_phy)
+tax_table(phyloseq_16s_cv_phy)
 
-otu_16s_cv_phy = taxa_sums(biom_16s_cv_phy)/sum(taxa_sums(biom_16s_cv_phy))*100
+otu_16s_cv_phy = taxa_sums(phyloseq_16s_cv_phy)/sum(taxa_sums(phyloseq_16s_cv_phy))*100
 as.data.frame(otu_16s_cv_phy)
 as.vector(otu_16s_cv_phy)
 
-tax_16s_cv_phy <- data.frame(tax_table(biom_16s_cv_phy))
+tax_16s_cv_phy <- data.frame(tax_table(phyloseq_16s_cv_phy))
 tax_16s_cv_phy <- tax_16s_cv_phy[c(1:2)]
 tax_16s_cv_phy
 tax_16s_cv_phy$abundance <- as.vector(otu_16s_cv_phy)
@@ -438,10 +383,10 @@ tax_16s_cv_phy
 
 
 
-biom_16s_cv_gen = tax_glom(biom_16s_cv, "Genus")
-otu_16s_cv_gen = taxa_sums(biom_16s_cv_gen)/sum(taxa_sums(biom_16s_cv_gen))*100
+phyloseq_16s_cv_gen = tax_glom(phyloseq_16s_cv, "Genus")
+otu_16s_cv_gen = taxa_sums(phyloseq_16s_cv_gen)/sum(taxa_sums(phyloseq_16s_cv_gen))*100
 
-tax_16s_cv_gen <- data.frame(tax_table(biom_16s_cv_gen))
+tax_16s_cv_gen <- data.frame(tax_table(phyloseq_16s_cv_gen))
 tax_16s_cv_gen <- tax_16s_cv_gen[c(5:6)]
 tax_16s_cv_gen
 tax_16s_cv_gen$abundance <- as.vector(otu_16s_cv_gen)
@@ -451,13 +396,13 @@ tax_16s_cv_gen
 #####
 
 
-biom_ITS_cv_gen = tax_glom(biom_ITS_cv, "Genus")
-biom_ITS_cv_gen
+phyloseq_ITS_cv_gen = tax_glom(phyloseq_ITS_cv, "Genus")
+phyloseq_ITS_cv_gen
 
 
-otu_ITS_aus_gen = taxa_sums(biom_ITS_AU)/sum(taxa_sums(biom_ITS_AU))*100
+otu_ITS_aus_gen = taxa_sums(phyloseq_ITS_AU)/sum(taxa_sums(phyloseq_ITS_AU))*100
 otu_ITS_aus_gen
-tax_ITS_aus_gen <- data.frame(tax_table(biom_ITS_aus_gen))
+tax_ITS_aus_gen <- data.frame(tax_table(phyloseq_ITS_aus_gen))
 tax_ITS_aus_gen <- tax_ITS_aus_gen[c(1:7)]
 tax_ITS_aus_gen
 tax_ITS_aus_gen$abundance <- as.vector(otu_ITS_aus_gen)
@@ -465,38 +410,38 @@ tax_ITS_aus_gen <- tax_ITS_aus_gen[order(tax_ITS_aus_gen$abundance, decreasing =
 tax_ITS_aus_gen
 
 ## OTUs abundances and data counts fungi
-biom_ITS_ab <- transform_sample_counts(biom_ITS_cv, function(x) x/sum(x))
-biom_ITS_ab
+phyloseq_ITS_ab <- transform_sample_counts(phyloseq_ITS_cv, function(x) x/sum(x))
+phyloseq_ITS_ab
 
-otu_table(biom_ITS_ab)
+otu_table(phyloseq_ITS_ab)
 taxa_sums(fungi_top100)/54 # abundance of each of the first 50 top OTUs
 sum(taxa_sums(fungi_top100)/54)  # total abundance of the first 50 top OTUs
-sum(taxa_sums(biom_ITS_ab)/54) # sum of total abundance must be 1
-sample_sums(biom_ITS_ab) # total abundace of each sample must be 1
+sum(taxa_sums(phyloseq_ITS_ab)/54) # sum of total abundance must be 1
+sample_sums(phyloseq_ITS_ab) # total abundace of each sample must be 1
 
-otus_ITS <- data.frame(tax_table(biom_ITS_ab))
+otus_ITS <- data.frame(tax_table(phyloseq_ITS_ab))
 otus_ITS <- otus_ITS[c(2:7)]
-otus_ITS$abundance <- as.vector(taxa_sums(biom_ITS_ab)/54)
+otus_ITS$abundance <- as.vector(taxa_sums(phyloseq_ITS_ab)/54)
 otus_ITS <- otus_ITS[order(otus_ITS$abundance, decreasing = TRUE),] 
 otus_ITS[1:50,] # select first 50 rows
 otus_ITS
 
 #tax_Gen <- arrange(tax_Gen, abundance, decreasing=TRUE)
-#top100ITS <- names(sort(taxa_sums(biom_ITS_ab), TRUE)[1:50]) # sampling first 50 taxa
-#fungi_top100 <- prune_taxa(top100ITS, biom_ITS_ab)
+#top100ITS <- names(sort(taxa_sums(phyloseq_ITS_ab), TRUE)[1:50]) # sampling first 50 taxa
+#fungi_top100 <- prune_taxa(top100ITS, phyloseq_ITS_ab)
 #fungi_top100
 
 write.csv(taxa_sums(fungi_top100) , file = "fungi_taxonomy.csv")
 write.csv(tax_table(fungi_top100)/54, file = "fungi_top100.csv")
 
-biom_ITS_Phy = tax_glom(biom_ITS_cv, "Phylum")
-biom_ITS_Phy_ab = transform_sample_counts(biom_ITS_Phy, function(x) x/sum(x))
-biom_ITS_Phy_ab
-sum(taxa_sums(biom_ITS_Phy_ab)/54)
-sample_sums(biom_ITS_Phy_ab)
-tax_Phy <- data.frame(tax_table(biom_ITS_Phy))
+phyloseq_ITS_Phy = tax_glom(phyloseq_ITS_cv, "Phylum")
+phyloseq_ITS_Phy_ab = transform_sample_counts(phyloseq_ITS_Phy, function(x) x/sum(x))
+phyloseq_ITS_Phy_ab
+sum(taxa_sums(phyloseq_ITS_Phy_ab)/54)
+sample_sums(phyloseq_ITS_Phy_ab)
+tax_Phy <- data.frame(tax_table(phyloseq_ITS_Phy))
 tax_Phy <- tax_Phy[c(2)]
-tax_Phy$abundance <- as.vector(taxa_sums(biom_ITS_Phy_ab)/54)
+tax_Phy$abundance <- as.vector(taxa_sums(phyloseq_ITS_Phy_ab)/54)
 tax_Phy <- tax_Phy[order(tax_Phy$abundance, decreasing = TRUE),] 
 #tax_Phy <- arrange(tax_Phy, "abundance", decreasing=TRUE)
 tax_Phy
@@ -505,45 +450,45 @@ arrange(tax_Phy, tax_Phy$abundance)
 
 #you can use now the custom function I have made 
 source("../abund_Phy.R")
-abund_Phy(biom_ITS, 54)
-abund_Phy(biom_16s, 54)
+abund_Phy(phyloseq_ITS, 54)
+abund_Phy(phyloseq_16s, 54)
 
-biom_ITS_Phy = tax_glom(biom_ITS_cv, "Phylum")
-write.table(otu_table(biom_ITS_cv), file = "ITS_phy.txt", sep="\t", eol="\n")
+phyloseq_ITS_Phy = tax_glom(phyloseq_ITS_cv, "Phylum")
+write.table(otu_table(phyloseq_ITS_cv), file = "ITS_phy.txt", sep="\t", eol="\n")
 
 
 
 source("../rel_abund.R")
-rel_abund(biom_ITS, 54, "Phylum")
+rel_abund(phyloseq_ITS, 54, "Phylum")
 
 
 
-biom_ITS_Ord = tax_glom(biom_ITS_cv, "Order")
-tax_table(biom_ITS_Ord)
+phyloseq_ITS_Ord = tax_glom(phyloseq_ITS_cv, "Order")
+tax_table(phyloseq_ITS_Ord)
 
 
-biom_ITS_Ord_ab = transform_sample_counts(biom_ITS_Ord, function(x) x/sum(x))
-taxa_sums(biom_ITS_Ord_ab)/54
-sum(taxa_sums(biom_ITS_Ord_ab)/54)
-sample_sums(biom_ITS_Ord_ab)
-tax_table(biom_ITS_Ord_ab)
-tax_Ord <- data.frame(tax_table(biom_ITS_Ord))
+phyloseq_ITS_Ord_ab = transform_sample_counts(phyloseq_ITS_Ord, function(x) x/sum(x))
+taxa_sums(phyloseq_ITS_Ord_ab)/54
+sum(taxa_sums(phyloseq_ITS_Ord_ab)/54)
+sample_sums(phyloseq_ITS_Ord_ab)
+tax_table(phyloseq_ITS_Ord_ab)
+tax_Ord <- data.frame(tax_table(phyloseq_ITS_Ord))
 tax_Ord <- tax_Ord[c(4)]
 tax_Ord
-tax_Ord$abundance <- as.vector(taxa_sums(biom_ITS_Ord_ab)/54)
+tax_Ord$abundance <- as.vector(taxa_sums(phyloseq_ITS_Ord_ab)/54)
 #tax_Ord <- arrange(tax_Ord, abundance, decreasing=TRUE)
 tax_Ord <- tax_Ord[order(tax_Ord$abundance, decreasing = TRUE),] 
 
 
-biom_ITS_Gen = tax_glom(biom_ITS_cv, "Genus")
-biom_ITS_Gen_ab = transform_sample_counts(biom_ITS_Gen, function(x) x/sum(x))
-tax_table(biom_ITS_Gen_ab)
-taxa_sums(biom_ITS_Gen_ab)/54
-sum(taxa_sums(biom_ITS_Gen_ab)/54) 
-sample_sums(biom_ITS_Gen_ab)
-tax_Gen <- data.frame(tax_table(biom_ITS_Gen))
+phyloseq_ITS_Gen = tax_glom(phyloseq_ITS_cv, "Genus")
+phyloseq_ITS_Gen_ab = transform_sample_counts(phyloseq_ITS_Gen, function(x) x/sum(x))
+tax_table(phyloseq_ITS_Gen_ab)
+taxa_sums(phyloseq_ITS_Gen_ab)/54
+sum(taxa_sums(phyloseq_ITS_Gen_ab)/54) 
+sample_sums(phyloseq_ITS_Gen_ab)
+tax_Gen <- data.frame(tax_table(phyloseq_ITS_Gen))
 tax_Gen <- tax_Gen[c(6)]
-tax_Gen$abundance <- as.vector(taxa_sums(biom_ITS_Gen_ab)/54)
+tax_Gen$abundance <- as.vector(taxa_sums(phyloseq_ITS_Gen_ab)/54)
 #tax_Gen <- arrange(tax_Gen, abundance, decreasing=TRUE)
 tax_Gen <- tax_Gen[order(tax_Gen$abundance, decreasing = TRUE),] 
 tax_Gen
@@ -551,51 +496,51 @@ tax_Gen
 
 # OTUs abundances and data counts fungal LSU
 
-biom_LSU_ab <- transform_sample_counts(biom_LSU_cv, function(x) x/sum(x))
-taxa_sums(biom_LSU_ab)/51 # abundance of each of the first 100 top OTUs
-sum(taxa_sums(biom_LSU_ab)/51) # sum of total abundance must be 1
-sample_sums(biom_LSU_ab) # total abundace of each sample must be 1
+phyloseq_LSU_ab <- transform_sample_counts(phyloseq_LSU_cv, function(x) x/sum(x))
+taxa_sums(phyloseq_LSU_ab)/51 # abundance of each of the first 100 top OTUs
+sum(taxa_sums(phyloseq_LSU_ab)/51) # sum of total abundance must be 1
+sample_sums(phyloseq_LSU_ab) # total abundace of each sample must be 1
 
-otus_LSU <- data.frame(tax_table(biom_LSU_ab))
+otus_LSU <- data.frame(tax_table(phyloseq_LSU_ab))
 otus_LSU <- otus_LSU[c(1:6)]
-otus_LSU$abundance <- as.vector(taxa_sums(biom_LSU_ab )/51)
+otus_LSU$abundance <- as.vector(taxa_sums(phyloseq_LSU_ab )/51)
 otus_LSU <- otus_LSU[order(otus_LSU$abundance, decreasing = TRUE),] 
 otus_LSU[1:50,]
 
 
-biom_LSU_Phy = tax_glom(biom_LSU_cv, "Phylum")
-biom_LSU_Phy_ab = transform_sample_counts(biom_LSU_Phy, function(x) x/sum(x))
-sum(taxa_sums(biom_LSU_Phy_ab)/51)
-sample_sums(biom_LSU_Phy_ab)
-tax_Phy <- data.frame(tax_table(biom_LSU_Phy))
+phyloseq_LSU_Phy = tax_glom(phyloseq_LSU_cv, "Phylum")
+phyloseq_LSU_Phy_ab = transform_sample_counts(phyloseq_LSU_Phy, function(x) x/sum(x))
+sum(taxa_sums(phyloseq_LSU_Phy_ab)/51)
+sample_sums(phyloseq_LSU_Phy_ab)
+tax_Phy <- data.frame(tax_table(phyloseq_LSU_Phy))
 tax_Phy <- tax_Phy[c(2)]
-tax_Phy$abundance <- as.vector(taxa_sums(biom_LSU_Phy_ab)/51)
+tax_Phy$abundance <- as.vector(taxa_sums(phyloseq_LSU_Phy_ab)/51)
 tax_Phy <- tax_Phy[order(tax_Phy$abundance, decreasing = TRUE),] 
 tax_Phy
 
 
-biom_LSU_Ord = tax_glom(biom_LSU_cv, "Order")
-biom_LSU_Ord_ab = transform_sample_counts(biom_LSU_Ord, function(x) x/sum(x))
-taxa_sums(biom_LSU_Ord_ab)/51
-sum(taxa_sums(biom_LSU_Ord_ab)/51)
-sample_sums(biom_LSU_Ord_ab)
-tax_table(biom_LSU_Ord_ab)
-tax_Ord <- data.frame(tax_table(biom_LSU_Ord))
+phyloseq_LSU_Ord = tax_glom(phyloseq_LSU_cv, "Order")
+phyloseq_LSU_Ord_ab = transform_sample_counts(phyloseq_LSU_Ord, function(x) x/sum(x))
+taxa_sums(phyloseq_LSU_Ord_ab)/51
+sum(taxa_sums(phyloseq_LSU_Ord_ab)/51)
+sample_sums(phyloseq_LSU_Ord_ab)
+tax_table(phyloseq_LSU_Ord_ab)
+tax_Ord <- data.frame(tax_table(phyloseq_LSU_Ord))
 tax_Ord <- tax_Ord[c(4)]
 tax_Ord
-tax_Ord$abundance <- as.vector(taxa_sums(biom_LSU_Ord_ab)/51)
+tax_Ord$abundance <- as.vector(taxa_sums(phyloseq_LSU_Ord_ab)/51)
 tax_Ord <- tax_Ord[order(tax_Ord$abundance, decreasing = TRUE),] 
 tax_Ord 
 
-biom_LSU_Gen = tax_glom(biom_LSU_cv, "Genus")
-biom_LSU_Gen_ab = transform_sample_counts(biom_LSU_Gen, function(x) x/sum(x))
-tax_table(biom_LSU_Gen_ab)
-taxa_sums(biom_LSU_Gen_ab)/51
-sum(taxa_sums(biom_LSU_Gen_ab)/51) 
-sample_sums(biom_LSU_Gen_ab)
-tax_Gen <- data.frame(tax_table(biom_LSU_Gen))
+phyloseq_LSU_Gen = tax_glom(phyloseq_LSU_cv, "Genus")
+phyloseq_LSU_Gen_ab = transform_sample_counts(phyloseq_LSU_Gen, function(x) x/sum(x))
+tax_table(phyloseq_LSU_Gen_ab)
+taxa_sums(phyloseq_LSU_Gen_ab)/51
+sum(taxa_sums(phyloseq_LSU_Gen_ab)/51) 
+sample_sums(phyloseq_LSU_Gen_ab)
+tax_Gen <- data.frame(tax_table(phyloseq_LSU_Gen))
 tax_Gen <- tax_Gen[c(6)]
-tax_Gen$abundance <- as.vector(taxa_sums(biom_LSU_Gen_ab)/51)
+tax_Gen$abundance <- as.vector(taxa_sums(phyloseq_LSU_Gen_ab)/51)
 tax_Gen <- tax_Gen[order(tax_Gen$abundance, decreasing = TRUE),] 
 tax_Gen
 
@@ -604,52 +549,52 @@ tax_Gen
 
 
 ## OTUs abundances and data counts bacteria
-biom_16s_ab <- transform_sample_counts(biom_16s_cv, function(x) x/sum(x))
-taxa_sums(biom_16s_ab)/54 # abundance of each of the first OTUs
-sum(taxa_sums(biom_16s_ab)/54) # sum of total abundance must be 1
-sample_sums(biom_16s_ab) # total abundace of each sample must be 1
+phyloseq_16s_ab <- transform_sample_counts(phyloseq_16s_cv, function(x) x/sum(x))
+taxa_sums(phyloseq_16s_ab)/54 # abundance of each of the first OTUs
+sum(taxa_sums(phyloseq_16s_ab)/54) # sum of total abundance must be 1
+sample_sums(phyloseq_16s_ab) # total abundace of each sample must be 1
 
-otus_bact <- data.frame(tax_table(biom_16s_ab))
+otus_bact <- data.frame(tax_table(phyloseq_16s_ab))
 otus_bact <- otus_bact[c(1:7)]
-otus_bact$abundance <- as.vector(taxa_sums(biom_16s_ab)/54)
+otus_bact$abundance <- as.vector(taxa_sums(phyloseq_16s_ab)/54)
 otus_bact <- otus_bact[order(otus_bact$abundance, decreasing = TRUE),] 
 otus_bact[1:50,]
 
 write.csv(taxa_sums(fungi_top100)/54 , file = "fungi_test.csv")
 write.csv(tax_table(fungi_top100), file = "fungi_test.csv")
 
-biom_16s_phyla = tax_glom(biom_16s_cv, "Phylum")
-biom_16s_phyla_ab = transform_sample_counts(biom_16s_phyla, function(x) x/sum(x))
-taxa_sums(biom_16s_phyla_ab)/54
-sum(taxa_sums(biom_16s_phyla_ab)/54)
-sample_sums(biom_16s_phyla_ab)
-tax_Phy <- data.frame(tax_table(biom_16s_phyla_ab))
+phyloseq_16s_phyla = tax_glom(phyloseq_16s_cv, "Phylum")
+phyloseq_16s_phyla_ab = transform_sample_counts(phyloseq_16s_phyla, function(x) x/sum(x))
+taxa_sums(phyloseq_16s_phyla_ab)/54
+sum(taxa_sums(phyloseq_16s_phyla_ab)/54)
+sample_sums(phyloseq_16s_phyla_ab)
+tax_Phy <- data.frame(tax_table(phyloseq_16s_phyla_ab))
 tax_Phy <- tax_Phy[c(2)]
-tax_Phy$abundance <- as.vector(taxa_sums(biom_16s_phyla_ab)/54)
+tax_Phy$abundance <- as.vector(taxa_sums(phyloseq_16s_phyla_ab)/54)
 tax_Phy <- tax_Phy[order(tax_Phy$abundance, decreasing = TRUE),] 
 tax_Phy
 
-biom_16s_Ord = tax_glom(biom_16s_cv, "Order")
-biom_16s_Ord_ab = transform_sample_counts(biom_16s_Ord, function(x) x/sum(x))
-taxa_sums(biom_16s_Ord_ab)/54
-sum(taxa_sums(biom_16s_Ord_ab)/54)
-sample_sums(biom_16s_Ord_ab)
-tax_Ord <- data.frame(tax_table(biom_16s_Ord_ab))
+phyloseq_16s_Ord = tax_glom(phyloseq_16s_cv, "Order")
+phyloseq_16s_Ord_ab = transform_sample_counts(phyloseq_16s_Ord, function(x) x/sum(x))
+taxa_sums(phyloseq_16s_Ord_ab)/54
+sum(taxa_sums(phyloseq_16s_Ord_ab)/54)
+sample_sums(phyloseq_16s_Ord_ab)
+tax_Ord <- data.frame(tax_table(phyloseq_16s_Ord_ab))
 tax_Ord <- tax_Ord[c(4)]
-tax_Ord$abundance <- as.vector(taxa_sums(biom_16s_Ord_ab)/51)
+tax_Ord$abundance <- as.vector(taxa_sums(phyloseq_16s_Ord_ab)/51)
 tax_Ord <- tax_Ord[order(tax_Ord$abundance, decreasing = TRUE),] 
 tax_Ord 
 
 
-biom_16s_gen = tax_glom(biom_16s_cv, "Genus")
-biom_16s_gen_ab = transform_sample_counts(biom_16s_gen, function(x) x/sum(x))
-tax_table(biom_16s_gen_ab)
-taxa_sums(biom_16s_gen_ab)/54
-sum(taxa_sums(biom_16s_gen_ab)/54) 
-sample_sums(biom_16s_gen_ab)
-tax_Gen <- data.frame(tax_table(biom_16s_gen_ab))
+phyloseq_16s_gen = tax_glom(phyloseq_16s_cv, "Genus")
+phyloseq_16s_gen_ab = transform_sample_counts(phyloseq_16s_gen, function(x) x/sum(x))
+tax_table(phyloseq_16s_gen_ab)
+taxa_sums(phyloseq_16s_gen_ab)/54
+sum(taxa_sums(phyloseq_16s_gen_ab)/54) 
+sample_sums(phyloseq_16s_gen_ab)
+tax_Gen <- data.frame(tax_table(phyloseq_16s_gen_ab))
 tax_Gen <- tax_Gen[c(6)]
-tax_Gen$abundance <- as.vector(taxa_sums(biom_16s_gen_ab)/51)
+tax_Gen$abundance <- as.vector(taxa_sums(phyloseq_16s_gen_ab)/51)
 tax_Gen <- tax_Gen[order(tax_Gen$abundance, decreasing = TRUE),] 
 tax_Gen
 
@@ -658,17 +603,17 @@ tax_Gen
 ### DATA EXPLORATION USING BARPLOTS ----------------------------------------------------------------------------------------------
 
 # basic exploratory barplots fungi
-plot_bar(biom_ITS_ab, x="Description", fill="Class")
+plot_bar(phyloseq_ITS_ab, x="Description", fill="Class")
 
-top50ITS <- names(sort(taxa_sums(biom_ITS_ab), TRUE)[1:50]) # first 50 top OTUs 
-biom_ITS_top50 <- prune_taxa(top50ITS, biom_ITS_ab)
-plot_bar(biom_ITS_top50, x="Site2", fill="Class")
+top50ITS <- names(sort(taxa_sums(phyloseq_ITS_ab), TRUE)[1:50]) # first 50 top OTUs 
+phyloseq_ITS_top50 <- prune_taxa(top50ITS, phyloseq_ITS_ab)
+plot_bar(phyloseq_ITS_top50, x="Site2", fill="Class")
 
 # plotting merged samples from mapping categories
-biom_ITS_des = merge_samples(biom_ITS, "Description") # merging samples
-sample_data(biom_ITS_des)$Description <- levels(sample_data(biom_ITS)$Description) # relabelling 
-biom_ITS_des = transform_sample_counts(biom_ITS_des, function(x) 100 * x/sum(x)) # calculating abundances
-plot_bar(biom_ITS_des, x="Description", fill="Class")
+phyloseq_ITS_des = merge_samples(phyloseq_ITS, "Description") # merging samples
+sample_data(phyloseq_ITS_des)$Description <- levels(sample_data(phyloseq_ITS)$Description) # relabelling 
+phyloseq_ITS_des = transform_sample_counts(phyloseq_ITS_des, function(x) 100 * x/sum(x)) # calculating abundances
+plot_bar(phyloseq_ITS_des, x="Description", fill="Class")
 
 
 
@@ -680,50 +625,50 @@ plot_bar(biom_ITS_des, x="Description", fill="Class")
 # plot_ordered_bar(physeq, x = "Sample", y = "Abundance", fill = NULL, leg_size = 0.5, title = NULL, facet_grid = NULL)
 source("../plot_ordered_bar.R")
 
-head(sample_data(biom_ITS_cv))
-tax_table(biom_ITS_cv)
+head(sample_data(phyloseq_ITS_cv))
+tax_table(phyloseq_ITS_cv)
 
-write.csv(tax_table(biom_ITS_cv) , file = "biom_ITS_cv.csv") #correct the tax_table
-taxonomy_ITS_cv <- read.csv("biom_ITS_cv_corrected.csv", header=T, row.names =1)
-tax_table(biom_ITS_cv) <- tax_table(as.matrix(taxonomy_ITS_cv))
+write.csv(tax_table(phyloseq_ITS_cv) , file = "phyloseq_ITS_cv.csv") #correct the tax_table
+taxonomy_ITS_cv <- read.csv("phyloseq_ITS_cv_corrected.csv", header=T, row.names =1)
+tax_table(phyloseq_ITS_cv) <- tax_table(as.matrix(taxonomy_ITS_cv))
 
 
-biom_ITS_tax = tax_glom(biom_ITS_cv, "Order")
-tax_table(biom_ITS_tax)
+phyloseq_ITS_tax = tax_glom(phyloseq_ITS_cv, "Order")
+tax_table(phyloseq_ITS_tax)
 
-biom_ITS_tax_mer = merge_samples(biom_ITS_tax, "Site1")
-sample_data(biom_ITS_tax_mer)$Site1 <- levels(sample_data(biom_ITS_tax)$Site1)
+phyloseq_ITS_tax_mer = merge_samples(phyloseq_ITS_tax, "Site1")
+sample_data(phyloseq_ITS_tax_mer)$Site1 <- levels(sample_data(phyloseq_ITS_tax)$Site1)
 
-biom_ITS_tax_mer_ab = transform_sample_counts(biom_ITS_tax_mer, function(x) 100 * x/sum(x))
-biom_ITS_tax_mer_ab
-tax_table(biom_ITS_tax_mer_ab)
-ITS_tax_mer_top20 <- names(sort(taxa_sums(biom_ITS_tax_mer_ab), TRUE)[1:20]) 
-biom_ITS_tax_mer_ab_top20 <- prune_taxa(ITS_tax_mer_top20, biom_ITS_tax_mer_ab)
-biom_ITS_tax_mer_ab_top20
+phyloseq_ITS_tax_mer_ab = transform_sample_counts(phyloseq_ITS_tax_mer, function(x) 100 * x/sum(x))
+phyloseq_ITS_tax_mer_ab
+tax_table(phyloseq_ITS_tax_mer_ab)
+ITS_tax_mer_top20 <- names(sort(taxa_sums(phyloseq_ITS_tax_mer_ab), TRUE)[1:20]) 
+phyloseq_ITS_tax_mer_ab_top20 <- prune_taxa(ITS_tax_mer_top20, phyloseq_ITS_tax_mer_ab)
+phyloseq_ITS_tax_mer_ab_top20
 
-write.csv(tax_table(biom_ITS_tax_mer_ab_top20) , file = "biom_ITS_tax_mer_ab_top20.csv") #correct the tax_table
-taxonomy_ITS_top20 <- read.csv("biom_ITS_tax_mer_ab_top20_corrected.csv", header=T, row.names =1)
-tax_table(biom_ITS_tax_mer_ab_top20) <- tax_table(as.matrix(taxonomy_ITS_top20))
+write.csv(tax_table(phyloseq_ITS_tax_mer_ab_top20) , file = "phyloseq_ITS_tax_mer_ab_top20.csv") #correct the tax_table
+taxonomy_ITS_top20 <- read.csv("phyloseq_ITS_tax_mer_ab_top20_corrected.csv", header=T, row.names =1)
+tax_table(phyloseq_ITS_tax_mer_ab_top20) <- tax_table(as.matrix(taxonomy_ITS_top20))
 
 #fungi_top100 <- subset_taxa(fungi_top100, Genus!="NA")
 #fungi_top100 <- subset_taxa(fungi_top100, Genus!="g__unidentified")
 
 # Changing order of levels
-#sample_data(biom_ITS)$Level<-factor(sample_data(biom_ITS)$Level, levels=c("0","10","50","100"))
-#levels(sample_data(biom_ITS)$Level)
-#sample_data(biom_ITS)
+#sample_data(phyloseq_ITS)$Level<-factor(sample_data(phyloseq_ITS)$Level, levels=c("0","10","50","100"))
+#levels(sample_data(phyloseq_ITS)$Level)
+#sample_data(phyloseq_ITS)
 # to extract a vector from the previously created dataframe
-#x_axis <- sums_biom_ITS[["Description"]]
+#x_axis <- sums_phyloseq_ITS[["Description"]]
 #str(x_axis)
 #x_axis
-#sample_data(biom_ITS)$Descritption<-factor(sample_data(biom_ITS)$Description, levels=x_axis)
+#sample_data(phyloseq_ITS)$Descritption<-factor(sample_data(phyloseq_ITS)$Description, levels=x_axis)
 
 
 facets <- c("Ascomycota", "Basidiomycota", "Chytridiomycota", "Glomeromycota", "Rozellomycota","ZUnlassified","Zygomycota")
-p_ITS <- plot_ordered_bar(biom_ITS_tax_mer_ab[tax_table(biom_ITS_tax_mer_ab)$Phylum %in% facets,],
+p_ITS <- plot_ordered_bar(phyloseq_ITS_tax_mer_ab[tax_table(phyloseq_ITS_tax_mer_ab)$Phylum %in% facets,],
                           x = "Site1", fill="Order", leg_size = 0.4, title="ITS")
 
-p_ITS <- plot_ordered_bar(biom_ITS_tax_mer_ab, x = "Site1", fill="Order", leg_size = 0.4, title="ITS")
+p_ITS <- plot_ordered_bar(phyloseq_ITS_tax_mer_ab, x = "Site1", fill="Order", leg_size = 0.4, title="ITS")
 
 
 p_ITS + ylim(0, 100) +
@@ -841,31 +786,31 @@ ITS_bar = p_ITS + scale_fill_manual(values = c("Agaricales"="#781156",
 #p1 + scale_fill_manual(values=custom_col21) + geom_bar(stat = "identity")
 
 
-head(sample_data(biom_LSU_cv))
-tax_table(biom_LSU_cv)
+head(sample_data(phyloseq_LSU_cv))
+tax_table(phyloseq_LSU_cv)
 
-write.csv(tax_table(biom_LSU_cv) , file = "biom_LSU_cv.csv") #correct the tax_table
-taxonomy_LSU_cv <- read.csv("biom_LSU_cv_corrected.csv", header=T, row.names =1)
-tax_table(biom_LSU_cv) <- tax_table(as.matrix(taxonomy_LSU_cv))
+write.csv(tax_table(phyloseq_LSU_cv) , file = "phyloseq_LSU_cv.csv") #correct the tax_table
+taxonomy_LSU_cv <- read.csv("phyloseq_LSU_cv_corrected.csv", header=T, row.names =1)
+tax_table(phyloseq_LSU_cv) <- tax_table(as.matrix(taxonomy_LSU_cv))
 
-biom_LSU_tax = tax_glom(biom_LSU_cv, "Order")
-biom_LSU_tax_mer = merge_samples(biom_LSU_tax, "Site1")
-sample_data(biom_LSU_tax_mer)$Site1 <- levels(sample_data(biom_LSU_tax)$Site1)
+phyloseq_LSU_tax = tax_glom(phyloseq_LSU_cv, "Order")
+phyloseq_LSU_tax_mer = merge_samples(phyloseq_LSU_tax, "Site1")
+sample_data(phyloseq_LSU_tax_mer)$Site1 <- levels(sample_data(phyloseq_LSU_tax)$Site1)
 
-biom_LSU_tax_mer_ab = transform_sample_counts(biom_LSU_tax_mer, function(x) 100 * x/sum(x))
-biom_LSU_tax_mer_ab
-tax_table(biom_LSU_tax_mer_ab)
+phyloseq_LSU_tax_mer_ab = transform_sample_counts(phyloseq_LSU_tax_mer, function(x) 100 * x/sum(x))
+phyloseq_LSU_tax_mer_ab
+tax_table(phyloseq_LSU_tax_mer_ab)
 
-write.csv(tax_table(biom_LSU_tax_mer_ab) , file = "biom_LSU_tax_mer_ab.csv") #correct the tax_table
-taxonomy_LSU_tax_mer_ab <- read.csv("biom_LSU_tax_mer_ab_corrected.csv", header=T, row.names =1)
-tax_table(biom_LSU_tax_mer_ab) <- tax_table(as.matrix(taxonomy_LSU_tax_mer_ab))
+write.csv(tax_table(phyloseq_LSU_tax_mer_ab) , file = "phyloseq_LSU_tax_mer_ab.csv") #correct the tax_table
+taxonomy_LSU_tax_mer_ab <- read.csv("phyloseq_LSU_tax_mer_ab_corrected.csv", header=T, row.names =1)
+tax_table(phyloseq_LSU_tax_mer_ab) <- tax_table(as.matrix(taxonomy_LSU_tax_mer_ab))
 
 
-#ITS_tax_mer_top20 <- names(sort(taxa_sums(biom_LSU_tax_mer_ab), TRUE)[1:20]) 
-#biom_LSU_tax_mer_ab_top20 <- prune_taxa(ITS_tax_mer_top20, biom_LSU_tax_mer_ab)
-#biom_LSU_tax_mer_ab_top20
+#ITS_tax_mer_top20 <- names(sort(taxa_sums(phyloseq_LSU_tax_mer_ab), TRUE)[1:20]) 
+#phyloseq_LSU_tax_mer_ab_top20 <- prune_taxa(ITS_tax_mer_top20, phyloseq_LSU_tax_mer_ab)
+#phyloseq_LSU_tax_mer_ab_top20
 
-p_LSU <- plot_ordered_bar(biom_LSU_tax_mer_ab, x = "Site1", fill="Order", leg_size = 0.4, title="LSU")
+p_LSU <- plot_ordered_bar(phyloseq_LSU_tax_mer_ab, x = "Site1", fill="Order", leg_size = 0.4, title="LSU")
 
 p_LSU + scale_fill_manual(values=palette3) + ylim(0, 100) #+ coord_flip() #+ theme_bw()
 
@@ -951,47 +896,47 @@ LSU_bar = p_LSU + scale_fill_manual(values = c("Agaricales"="#781156",
 
 
 #-#-#
-head(sample_data(biom_16s_cv))
-tax_table(biom_16s_cv)
+head(sample_data(phyloseq_16s_cv))
+tax_table(phyloseq_16s_cv)
 
-write.csv(tax_table(biom_16s_cv) , file = "biom_16s_cv.csv") #correct the tax_table
-taxonomy_16s_cv <- read.csv("biom_16s_cv_corrected.csv", header=T, row.names =1)
-tax_table(biom_16s_cv) <- tax_table(as.matrix(taxonomy_16s_cv))
+write.csv(tax_table(phyloseq_16s_cv) , file = "phyloseq_16s_cv.csv") #correct the tax_table
+taxonomy_16s_cv <- read.csv("phyloseq_16s_cv_corrected.csv", header=T, row.names =1)
+tax_table(phyloseq_16s_cv) <- tax_table(as.matrix(taxonomy_16s_cv))
 
 
-biom_16s_tax = tax_glom(biom_16s_cv, "Order")
-tax_table(biom_16s_tax)
+phyloseq_16s_tax = tax_glom(phyloseq_16s_cv, "Order")
+tax_table(phyloseq_16s_tax)
 
-biom_16s_tax_mer = merge_samples(biom_16s_tax, "Site1")
-sample_data(biom_16s_tax_mer)$Site1 <- levels(sample_data(biom_16s_tax)$Site1)
+phyloseq_16s_tax_mer = merge_samples(phyloseq_16s_tax, "Site1")
+sample_data(phyloseq_16s_tax_mer)$Site1 <- levels(sample_data(phyloseq_16s_tax)$Site1)
 
-biom_16s_tax_mer_ab = transform_sample_counts(biom_16s_tax_mer, function(x) 100 * x/sum(x))
-biom_16s_tax_mer_ab
-tax_table(biom_16s_tax_mer_ab)
-tax_16s_mer_top20 <- names(sort(taxa_sums(biom_16s_tax_mer_ab), TRUE)[1:50]) 
-biom_16s_tax_mer_ab_top20 <- prune_taxa(tax_16s_mer_top20, biom_16s_tax_mer_ab)
-biom_16s_tax_mer_ab_top20
+phyloseq_16s_tax_mer_ab = transform_sample_counts(phyloseq_16s_tax_mer, function(x) 100 * x/sum(x))
+phyloseq_16s_tax_mer_ab
+tax_table(phyloseq_16s_tax_mer_ab)
+tax_16s_mer_top20 <- names(sort(taxa_sums(phyloseq_16s_tax_mer_ab), TRUE)[1:50]) 
+phyloseq_16s_tax_mer_ab_top20 <- prune_taxa(tax_16s_mer_top20, phyloseq_16s_tax_mer_ab)
+phyloseq_16s_tax_mer_ab_top20
 
-write.csv(tax_table(biom_16s_tax_mer_ab_top20) , file = "biom_16s_tax_mer_ab_top20.csv") #correct the tax_table
-taxonomy_16s_top20 <- read.csv("biom_16s_tax_mer_ab_top20_corrected.csv", header=T, row.names =1)
-tax_table(biom_16s_tax_mer_ab_top20) <- tax_table(as.matrix(taxonomy_16s_top20))
+write.csv(tax_table(phyloseq_16s_tax_mer_ab_top20) , file = "phyloseq_16s_tax_mer_ab_top20.csv") #correct the tax_table
+taxonomy_16s_top20 <- read.csv("phyloseq_16s_tax_mer_ab_top20_corrected.csv", header=T, row.names =1)
+tax_table(phyloseq_16s_tax_mer_ab_top20) <- tax_table(as.matrix(taxonomy_16s_top20))
 
 #fungi_top100 <- subset_taxa(fungi_top100, Genus!="NA")
 #fungi_top100 <- subset_taxa(fungi_top100, Genus!="g__unidentified")
 
 # Changing order of levels
-#sample_data(biom_ITS)$Level<-factor(sample_data(biom_ITS)$Level, levels=c("0","10","50","100"))
-#levels(sample_data(biom_ITS)$Level)
-#sample_data(biom_ITS)
+#sample_data(phyloseq_ITS)$Level<-factor(sample_data(phyloseq_ITS)$Level, levels=c("0","10","50","100"))
+#levels(sample_data(phyloseq_ITS)$Level)
+#sample_data(phyloseq_ITS)
 # to extract a vector from the previously created dataframe
-#x_axis <- sums_biom_ITS[["Description"]]
+#x_axis <- sums_phyloseq_ITS[["Description"]]
 #str(x_axis)
 #x_axis
-#sample_data(biom_ITS)$Descritption<-factor(sample_data(biom_ITS)$Description, levels=x_axis)
+#sample_data(phyloseq_ITS)$Descritption<-factor(sample_data(phyloseq_ITS)$Description, levels=x_axis)
 
 
 
-p_16s <- plot_ordered_bar(biom_16s_tax_mer_ab_top20, x = "Site1", fill="Order", leg_size = 0.4, title="ITS")
+p_16s <- plot_ordered_bar(phyloseq_16s_tax_mer_ab_top20, x = "Site1", fill="Order", leg_size = 0.4, title="ITS")
 
 
 p_16s + ylim(0, 100) +
@@ -1086,28 +1031,28 @@ ggarrange(ITS_bar,LSU_bar,bar_16s,
 
 
 #-#-#
-head(sample_data(biom_16s_cv))
+head(sample_data(phyloseq_16s_cv))
 
-write.csv(tax_table(biom_16s_cv) , file = "biom_16s_cv.csv") #correct the tax_table
-taxonomy_16s_cv <- read.csv("biom_16s_cv_corrected.csv", header=T, row.names =1)
-tax_table(biom_16s_cv) <- tax_table(as.matrix(taxonomy_16s_cv))
+write.csv(tax_table(phyloseq_16s_cv) , file = "phyloseq_16s_cv.csv") #correct the tax_table
+taxonomy_16s_cv <- read.csv("phyloseq_16s_cv_corrected.csv", header=T, row.names =1)
+tax_table(phyloseq_16s_cv) <- tax_table(as.matrix(taxonomy_16s_cv))
 
 
-biom_16s_tax = tax_glom(biom_16s_cv, "Class")
-biom_16s_tax_mer = merge_samples(biom_16s_tax, "Site1")
-sample_data(biom_16s_tax_mer)$Site1 <- levels(sample_data(biom_16s_tax)$Site1)
+phyloseq_16s_tax = tax_glom(phyloseq_16s_cv, "Class")
+phyloseq_16s_tax_mer = merge_samples(phyloseq_16s_tax, "Site1")
+sample_data(phyloseq_16s_tax_mer)$Site1 <- levels(sample_data(phyloseq_16s_tax)$Site1)
 
-biom_16s_tax_mer_ab = transform_sample_counts(biom_16s_tax_mer, function(x) 100 * x/sum(x))
-biom_16s_tax_mer_ab
-ITS_tax_mer_top20 <- names(sort(taxa_sums(biom_16s_tax_mer_ab), TRUE)[1:50]) 
-biom_16s_tax_mer_ab_top20 <- prune_taxa(ITS_tax_mer_top20, biom_16s_tax_mer_ab)
-biom_16s_tax_mer_ab_top20
+phyloseq_16s_tax_mer_ab = transform_sample_counts(phyloseq_16s_tax_mer, function(x) 100 * x/sum(x))
+phyloseq_16s_tax_mer_ab
+ITS_tax_mer_top20 <- names(sort(taxa_sums(phyloseq_16s_tax_mer_ab), TRUE)[1:50]) 
+phyloseq_16s_tax_mer_ab_top20 <- prune_taxa(ITS_tax_mer_top20, phyloseq_16s_tax_mer_ab)
+phyloseq_16s_tax_mer_ab_top20
 
-write.csv(tax_table(biom_16s_tax_mer_ab_top20) , file = "biom_16s_tax_mer_ab_top20.csv") #correct the tax_table
-taxonomy_16s_top20 <- read.csv("biom_16s_tax_mer_ab_top20_corrected.csv", header=T, row.names =1)
-tax_table(biom_16s_tax_mer_ab_top20) <- tax_table(as.matrix(taxonomy_16s_top20))
+write.csv(tax_table(phyloseq_16s_tax_mer_ab_top20) , file = "phyloseq_16s_tax_mer_ab_top20.csv") #correct the tax_table
+taxonomy_16s_top20 <- read.csv("phyloseq_16s_tax_mer_ab_top20_corrected.csv", header=T, row.names =1)
+tax_table(phyloseq_16s_tax_mer_ab_top20) <- tax_table(as.matrix(taxonomy_16s_top20))
 
-p_16s <- plot_ordered_bar(biom_16s_tax_mer_ab, x = "Site1", fill="Class", leg_size = 0.4, title="16S")
+p_16s <- plot_ordered_bar(phyloseq_16s_tax_mer_ab, x = "Site1", fill="Class", leg_size = 0.4, title="16S")
 
 p_16s + scale_fill_manual(values=palette3) + ylim(0, 100) #+ coord_flip() #+ theme_bw()
 
@@ -1134,13 +1079,13 @@ p_16s  + ylim(0, 100) +
 # check for layers
 p1$layers
 
-p2 <- plot_ordered_bar(biom_ITS_gen_mer20, x="Soil", y="Abundance", fill="Family", leg_size=0.5)
+p2 <- plot_ordered_bar(phyloseq_ITS_gen_mer20, x="Soil", y="Abundance", fill="Family", leg_size=0.5)
 p2 + coord_flip() + scale_fill_manual(values=custom_col21)
 
-p3 <- plot_bar(biom_ITS_ev, "Genus", fill="Genus", facet_grid=Level~Soil)
+p3 <- plot_bar(phyloseq_ITS_ev, "Genus", fill="Genus", facet_grid=Level~Soil)
 p3 + geom_bar(aes(color=Genus, fill=Genus), stat="identity", position="stack") 
 
-p4 <-plot_bar(biom_ITS_top50, x="Soil", fill="Genus", facet_grid=~Soil)
+p4 <-plot_bar(phyloseq_ITS_top50, x="Soil", fill="Genus", facet_grid=~Soil)
 p4 + geom_bar(aes(color=Genus, fill=Genus), stat="identity", position="stack")
 
 
@@ -1157,25 +1102,25 @@ p <- plot_taxa_bar(ent10, "Genus", x = "SeqTech", fill = "TaxaGroup") + facet_wr
 
 
 ##exploratory barplots bacteria
-biom_16s_class = tax_glom(biom_16s, "Class")
-biom_16s_class_mer= merge_samples(biom_16s_class, "Description")
-sample_data(biom_16s_class_mer)$Description <- levels(sample_data(biom_16s_class)$Description)
-biom_16s_class_mer = transform_sample_counts(biom_16s_class_mer, function(x) 100 * x/sum(x))
-top20_16s <- names(sort(taxa_sums(biom_16s_class_mer), TRUE)[1:20])
-biom_16s_class_top20<- prune_taxa(top20_16s, biom_16s_class_mer)
-sum(sample_sums(biom_16s_class_top20)/34)
+phyloseq_16s_class = tax_glom(phyloseq_16s, "Class")
+phyloseq_16s_class_mer= merge_samples(phyloseq_16s_class, "Description")
+sample_data(phyloseq_16s_class_mer)$Description <- levels(sample_data(phyloseq_16s_class)$Description)
+phyloseq_16s_class_mer = transform_sample_counts(phyloseq_16s_class_mer, function(x) 100 * x/sum(x))
+top20_16s <- names(sort(taxa_sums(phyloseq_16s_class_mer), TRUE)[1:20])
+phyloseq_16s_class_top20<- prune_taxa(top20_16s, phyloseq_16s_class_mer)
+sum(sample_sums(phyloseq_16s_class_top20)/34)
 
 
-p1 <- plot_ordered_bar(biom_16s_class_top20, x = "Description", fill="Class", leg_size = 0.4, title="Bacteria Barplots") 
+p1 <- plot_ordered_bar(phyloseq_16s_class_top20, x = "Description", fill="Class", leg_size = 0.4, title="Bacteria Barplots") 
 p1 + coord_flip() + scale_fill_manual(values=custom_col21) + ylim(0, 100)
 p1 + scale_fill_manual(values=palette20) + ylim(0, 100) #+ theme_bw() + coord_flip() 
 
 ## there are plotted single otu abundances and grouped as fill= in the legend??
-level_16s = merge_samples(biom_16s, "Description")
-sample_data(level_16s)$Description <- levels(sample_data(biom_16s)$Description)
+level_16s = merge_samples(phyloseq_16s, "Description")
+sample_data(level_16s)$Description <- levels(sample_data(phyloseq_16s)$Description)
 level_16s = transform_sample_counts(level_16s, function(x) 100 * x/sum(x))
 level_16s
-top10016s <- names(sort(taxa_sums(biom_16s), TRUE)[1:100]) 
+top10016s <- names(sort(taxa_sums(phyloseq_16s), TRUE)[1:100]) 
 top10016s
 bact_top100 <- prune_taxa(top10016s, level_16s)
 bact_top100
@@ -1194,15 +1139,15 @@ p1 + facet_wrap(~Class) + ggtitle("Faceting is better than stacking...") + ylim(
 
 
 ### faceting most abundat otus
-TopOTUs <- names(sort(taxa_sums(biom_ITS_ab), TRUE)[1:10])
-fungi10 <- prune_taxa(TopOTUs, biom_ITS_ab)
+TopOTUs <- names(sort(taxa_sums(phyloseq_ITS_ab), TRUE)[1:10])
+fungi10 <- prune_taxa(TopOTUs, phyloseq_ITS_ab)
 p1 <- plot_ordered_bar(fungi10, x = "Description", fill="Species", leg_size = 0.4, title="Fungi Barplots") 
 p1 + scale_fill_manual(values=palette20) + ylim(0, 50) + facet_wrap(~Genus) #+ coord_flip() #+ theme_bw()
 
 plot_bar(fungi10, fill="Species", facet_grid = ~Species) + scale_fill_manual(values=palette20)
 
-TopOTUs <- names(sort(taxa_sums(biom_ITS_ab), TRUE)[1:10])
-fungi10 <- prune_taxa(TopOTUs, biom_ITS_ab)
+TopOTUs <- names(sort(taxa_sums(phyloseq_ITS_ab), TRUE)[1:10])
+fungi10 <- prune_taxa(TopOTUs, phyloseq_ITS_ab)
 plot_bar(fungi5, fill="Genus", facet_grid = ~Species) + scale_fill_manual(values=rainbow(10))
 
 
@@ -1214,19 +1159,19 @@ class_barITS
 
 ## faceting instead of staking barplots
 
-biom_ITS_fam = tax_glom(biom_ITS_cv, "Family")
-biom_ITS_fam_mer = merge_samples(biom_ITS_fam, "Site2")
-sample_data(biom_ITS_fam_mer)$Site2 <- levels(sample_data(biom_ITS_fam)$Site2)
-#sample_data(biom_ITS_fam_mer)$Treatment <- levels(sample_data(biom_ITS_fam)$Treatment)
-biom_ITS_fam_mer_ab = transform_sample_counts(biom_ITS_fam_mer, function(x) 100 * x/sum(x))
-top20ITS <- names(sort(taxa_sums(biom_ITS_fam_mer_ab), TRUE)[1:10]) 
-biom_ITS_fam_mer20 <- prune_taxa(top20ITS, biom_ITS_fam_mer_ab)
+phyloseq_ITS_fam = tax_glom(phyloseq_ITS_cv, "Family")
+phyloseq_ITS_fam_mer = merge_samples(phyloseq_ITS_fam, "Site2")
+sample_data(phyloseq_ITS_fam_mer)$Site2 <- levels(sample_data(phyloseq_ITS_fam)$Site2)
+#sample_data(phyloseq_ITS_fam_mer)$Treatment <- levels(sample_data(phyloseq_ITS_fam)$Treatment)
+phyloseq_ITS_fam_mer_ab = transform_sample_counts(phyloseq_ITS_fam_mer, function(x) 100 * x/sum(x))
+top20ITS <- names(sort(taxa_sums(phyloseq_ITS_fam_mer_ab), TRUE)[1:10]) 
+phyloseq_ITS_fam_mer20 <- prune_taxa(top20ITS, phyloseq_ITS_fam_mer_ab)
 
 
 
-plot_bar(biom_ITS_fam_mer20, "Site2", fill="Family", facet_grid=~Family)
+plot_bar(phyloseq_ITS_fam_mer20, "Site2", fill="Family", facet_grid=~Family)
 
-p = plot_bar(biom_ITS_gen_mer20,"Site1", fill="Phylum", facet_grid=~Site1)
+p = plot_bar(phyloseq_ITS_gen_mer20,"Site1", fill="Phylum", facet_grid=~Site1)
 p + geom_bar(aes(color=Phylum, fill=Phylum), stat="identity", position="stack")
 
 http://joey711.github.io/phyloseq-demo/Restroom-Biogeography
@@ -1240,22 +1185,22 @@ require(grDevices)
 library(graphics)
 library(plyr)
 
-biom_ITS_Site2 = merge_samples(biom_ITS_cv, "Site2") 
+phyloseq_ITS_Site2 = merge_samples(phyloseq_ITS_cv, "Site2") 
 
-biom_ITS_Cassava1 <- subset_samples(biom_ITS_Site2, Site2%in%c("3"))
-biom_ITS_Cassava1
-otu_table(biom_ITS_Cassava1)[apply(otu_table(biom_ITS_Cassava1), MARGIN = 1, function(x) any(x >= 5)), ]
-otu_table(biom_ITS_Cassava1) <- otu_table(biom_ITS_Cassava1)[which(rowSums(otu_table(biom_ITS_Cassava1)) > 10),] 
-biom_ITS_Cassava1
-tax_table(biom_ITS_Cassava1)
-biom_ITS_Cassava1_prop <- transform_sample_counts(biom_ITS_Cassava1, function(x) x/sum(x))
-top10_ITS_Cassava1 <- names(sort(taxa_sums(biom_ITS_Cassava1_prop), TRUE)[1:10]) # sampling first 10 taxa
-biom_ITS_Cassava1 <- prune_taxa(top10_ITS_Cassava1, biom_ITS_Cassava1_prop)
-tax_table(biom_ITS_Cassava1)
+phyloseq_ITS_Cassava1 <- subset_samples(phyloseq_ITS_Site2, Site2%in%c("3"))
+phyloseq_ITS_Cassava1
+otu_table(phyloseq_ITS_Cassava1)[apply(otu_table(phyloseq_ITS_Cassava1), MARGIN = 1, function(x) any(x >= 5)), ]
+otu_table(phyloseq_ITS_Cassava1) <- otu_table(phyloseq_ITS_Cassava1)[which(rowSums(otu_table(phyloseq_ITS_Cassava1)) > 10),] 
+phyloseq_ITS_Cassava1
+tax_table(phyloseq_ITS_Cassava1)
+phyloseq_ITS_Cassava1_prop <- transform_sample_counts(phyloseq_ITS_Cassava1, function(x) x/sum(x))
+top10_ITS_Cassava1 <- names(sort(taxa_sums(phyloseq_ITS_Cassava1_prop), TRUE)[1:10]) # sampling first 10 taxa
+phyloseq_ITS_Cassava1 <- prune_taxa(top10_ITS_Cassava1, phyloseq_ITS_Cassava1_prop)
+tax_table(phyloseq_ITS_Cassava1)
 
-fungi_ITS_Cassava1 <- data.frame(t(as.matrix(otu_table(biom_ITS_Cassava1))))
+fungi_ITS_Cassava1 <- data.frame(t(as.matrix(otu_table(phyloseq_ITS_Cassava1))))
 fungi_ITS_Cassava1
-fungi_ITS_Cassava1_tax <- data.frame(as.matrix(tax_table(biom_ITS_Cassava1)))
+fungi_ITS_Cassava1_tax <- data.frame(as.matrix(tax_table(phyloseq_ITS_Cassava1)))
 fungi_ITS_Cassava1_tax
 
 fungi_ITS_Cassava1 <- fungi_ITS_Cassava1[order(fungi_ITS_Cassava1$Cassava1, decreasing = TRUE),] 
@@ -1274,11 +1219,11 @@ https://rpubs.com/michberr/randomforestmicrobe
 pie(fungi_ITS_Cassava1$Cassava1, labels=fungi_ITS_Cassava1$Names, 
     col=custom_col21, cex=0.8, main="Cassava1")
 
-plot_bar(biom_ITS_Cassava1, x="Description", fill="Genus")
+plot_bar(phyloseq_ITS_Cassava1, x="Description", fill="Genus")
 
 
-biom_ITS_Site2 = merge_samples(biom_ITS_cv, "Site2") 
-biom_ITS_Cassava1_prop <- transform_sample_counts(biom_ITS_Cassava1, function(x) x/sum(x))
+phyloseq_ITS_Site2 = merge_samples(phyloseq_ITS_cv, "Site2") 
+phyloseq_ITS_Cassava1_prop <- transform_sample_counts(phyloseq_ITS_Cassava1, function(x) x/sum(x))
 
 
 ## for filtering look script
@@ -1286,7 +1231,7 @@ filetering_Site2.R
 
 
 # work on this 
-p = plot_bar(biom_ITS_Site2, "Genus", fill="Genus", facet_grid=~Site2)
+p = plot_bar(phyloseq_ITS_Site2, "Genus", fill="Genus", facet_grid=~Site2)
 p + geom_point(aes(x=Genus, y=Abundance), color="black", position="jitter", size=3)
 
 
@@ -1299,21 +1244,21 @@ p + geom_point(aes(x=Genus, y=Abundance), color="black", position="jitter", size
 #labels=y$Names, col=terrain.colors(nrow(y)) , main=c(y$country[1]))
 #colnames(fungi_ITS_Cassava1) <- "Taxonomy"
 
-sums_biom_ITS <- data.frame(colSums(otu_table(biom_ITS)))
-colnames(sums_biom_ITS) <- "Sample_TotalSeqs"
-sums_biom_ITS$sample <- row.names(sums_biom_ITS)
-sums_biom_ITS$Description <- sample_data(biom_ITS)$Description
-sums_biom_ITS$Site2 <- sample_data(biom_ITS)$Site2 # if you want to add another variable to use further
-sums_biom_ITS <- arrange(sums_biom_ITS, Sample_TotalSeqs)
-#sums_biom_ITS <- arrange(sums_biom_ITS, Description) # to order according another variable in the mapping
-str(sums_biom_ITS)
+sums_phyloseq_ITS <- data.frame(colSums(otu_table(phyloseq_ITS)))
+colnames(sums_phyloseq_ITS) <- "Sample_TotalSeqs"
+sums_phyloseq_ITS$sample <- row.names(sums_phyloseq_ITS)
+sums_phyloseq_ITS$Description <- sample_data(phyloseq_ITS)$Description
+sums_phyloseq_ITS$Site2 <- sample_data(phyloseq_ITS)$Site2 # if you want to add another variable to use further
+sums_phyloseq_ITS <- arrange(sums_phyloseq_ITS, Sample_TotalSeqs)
+#sums_phyloseq_ITS <- arrange(sums_phyloseq_ITS, Description) # to order according another variable in the mapping
+str(sums_phyloseq_ITS)
 
 pie <- ggplot(fungi_ITS_Cassava1, aes(x = factor(1), fill = factor(Cassava1))) + geom_bar(width = 1)
 pie + coord_polar(theta = "y")
 
 
 ### pie charts
-fungi_ITS_cv <- as.data.frame(t(as.matrix(otu_table(biom_ITS_cv))))
+fungi_ITS_cv <- as.data.frame(t(as.matrix(otu_table(phyloseq_ITS_cv))))
 fungi_ITS_cv
 
 
@@ -1330,13 +1275,13 @@ pie + coord_polar(theta = "y") + facet_wrap(~factor(gear))
 #indicator species analysis (isa) Fungi
 library(indicspecies)
 
-biom_ITS_symb
-biom_ITS_endo
-biom_ITS_pat
+phyloseq_ITS_symb
+phyloseq_ITS_endo
+phyloseq_ITS_pat
 
-otu_ITS_symb <- as.data.frame(t(otu_table(biom_ITS_symb)))
-metadata_ITS_symb <- as.data.frame(as.matrix(sample_data(biom_ITS_symb)[,4:9]))
-tax_table(biom_ITS_symb)
+otu_ITS_symb <- as.data.frame(t(otu_table(phyloseq_ITS_symb)))
+metadata_ITS_symb <- as.data.frame(as.matrix(sample_data(phyloseq_ITS_symb)[,4:9]))
+tax_table(phyloseq_ITS_symb)
 otu_ITS_symb
 metadata_ITS_symb
 
@@ -1345,9 +1290,9 @@ isa_fungi_its$sign$p.value<-p.adjust(isa_fungi_its$sign$p.value, "fdr")
 summary(isa_fungi_its)
 isa_fungi_its
 
-otu_ITS_endo <- as.data.frame(t(otu_table(biom_ITS_endo)))
-metadata_ITS_endo <- as.data.frame(as.matrix(sample_data(biom_ITS_endo)[,4:9]))
-tax_table(biom_ITS_endo)
+otu_ITS_endo <- as.data.frame(t(otu_table(phyloseq_ITS_endo)))
+metadata_ITS_endo <- as.data.frame(as.matrix(sample_data(phyloseq_ITS_endo)[,4:9]))
+tax_table(phyloseq_ITS_endo)
 otu_ITS_endo
 metadata_ITS_endo
 
@@ -1357,9 +1302,9 @@ summary(isa_fungi_its)
 
 
 
-otu_ITS_pat <- as.data.frame(t(otu_table(biom_ITS_pat)))
-metadata_ITS_pat <- as.data.frame(as.matrix(sample_data(biom_ITS_pat)[,4:9]))
-tax_table(biom_ITS_pat)
+otu_ITS_pat <- as.data.frame(t(otu_table(phyloseq_ITS_pat)))
+metadata_ITS_pat <- as.data.frame(as.matrix(sample_data(phyloseq_ITS_pat)[,4:9]))
+tax_table(phyloseq_ITS_pat)
 otu_ITS_pat
 metadata_ITS_pat
 
@@ -1460,8 +1405,8 @@ isa_fungi_sig
 
 
 #subset your table accordingly, here a phyloseq object, as an example
-biom_multipatt <- biom
-otu_table(biom_multipatt) <-otu_table(biom)[row.names(multipatt_sig), ]
+phyloseq_multipatt <- biom
+otu_table(phyloseq_multipatt) <-otu_table(biom)[row.names(multipatt_sig), ]
 
 
 
@@ -1541,13 +1486,13 @@ ggplot(fungi_melt, aes(x = Var2, y = Size)) +
 library(DESeq2)
 
 # subsetting to specific sample groups
-biom_ITS_nogenus <- subset_taxa(biom_ITS, Genus!="g__unidentified")
-biom_ITS_nogenus
+phyloseq_ITS_nogenus <- subset_taxa(phyloseq_ITS, Genus!="g__unidentified")
+phyloseq_ITS_nogenus
 
-biom_ITS_des2 = phyloseq_to_deseq2(biom_ITS_nogenus, ~ Level2)
-biom_ITS_des2
-biom_ITS_des2 = DESeq(biom_ITS_des2, test="Wald", fitType="parametric")
-res = results(biom_ITS_des2, cooksCutoff = FALSE)
+phyloseq_ITS_des2 = phyloseq_to_deseq2(phyloseq_ITS_nogenus, ~ Level2)
+phyloseq_ITS_des2
+phyloseq_ITS_des2 = DESeq(phyloseq_ITS_des2, test="Wald", fitType="parametric")
+res = results(phyloseq_ITS_des2, cooksCutoff = FALSE)
 res
 
 res.corrected = p.adjust(res$pvalue, "fdr")
@@ -1557,20 +1502,20 @@ alpha = res.corrected
 alpha = 0.01
 
 sigtab = res[which(res$padj < alpha), ]
-sigtab = cbind(as(sigtab, "data.frame"), as(tax_table(biom_ITS)[rownames(sigtab), ], "matrix"))
+sigtab = cbind(as(sigtab, "data.frame"), as(tax_table(phyloseq_ITS)[rownames(sigtab), ], "matrix"))
 head(sigtab)
 dim(sigtab)
 sigtab
 
 
-biom_ITS_des2 = phyloseq_to_deseq2(biom_16s, ~ Level2)
-biom_ITS_des2
-biom_ITS_des2 = DESeq(biom_ITS_des2, test="Wald", fitType="parametric")
-res = results(biom_ITS_des2, cooksCutoff = FALSE)
+phyloseq_ITS_des2 = phyloseq_to_deseq2(phyloseq_16s, ~ Level2)
+phyloseq_ITS_des2
+phyloseq_ITS_des2 = DESeq(phyloseq_ITS_des2, test="Wald", fitType="parametric")
+res = results(phyloseq_ITS_des2, cooksCutoff = FALSE)
 res
 alpha = 0.01
 sigtab = res[which(res$padj < alpha), ]
-sigtab = cbind(as(sigtab, "data.frame"), as(tax_table(biom_16s)[rownames(sigtab), ], "matrix"))
+sigtab = cbind(as(sigtab, "data.frame"), as(tax_table(phyloseq_16s)[rownames(sigtab), ], "matrix"))
 head(sigtab)
 dim(sigtab)
 sigtab
@@ -1619,11 +1564,11 @@ sort(posigtab$log2FoldChange, TRUE)
 
 ### HEATMAPS 
 
-biom_ITS_Ord = tax_glom(biom_ITS_cv, "Order")
-biom_ITS_Ord_ab = transform_sample_counts(biom_ITS_Ord, function(x) x/sum(x))
+phyloseq_ITS_Ord = tax_glom(phyloseq_ITS_cv, "Order")
+phyloseq_ITS_Ord_ab = transform_sample_counts(phyloseq_ITS_Ord, function(x) x/sum(x))
 
-biom_ITS_ab <- transform_sample_counts(biom_ITS_cv, function(x) x/sum(x))
-heat_ITS <- prune_taxa(names(sort(taxa_sums(biom_ITS_ab), TRUE)[1:30]), biom_ITS_cv)
+phyloseq_ITS_ab <- transform_sample_counts(phyloseq_ITS_cv, function(x) x/sum(x))
+heat_ITS <- prune_taxa(names(sort(taxa_sums(phyloseq_ITS_ab), TRUE)[1:30]), phyloseq_ITS_cv)
 
 write.csv(tax_table(heat_ITS) , file = "taxtab_ITS_top30.csv") #correct the tax_table
 taxtab_ITS_top30 <- read.csv("taxtab_ITS_top30.csv", header=T, row.names =1)
@@ -1699,23 +1644,23 @@ dev.off()
 
 
 #corr var columns of a matrix with var columns in a second matrix 
-biom_class<-t(read.table("class.txt", skip=1, comment.char = "", check.names = FALSE, header=TRUE, row.names=1, sep="\t")) #import QIIME class table
-class_table_corr.test<-corr.test(as.matrix(biom_class), as.matrix(table), adjust="fdr")
+phyloseq_class<-t(read.table("class.txt", skip=1, comment.char = "", check.names = FALSE, header=TRUE, row.names=1, sep="\t")) #import QIIME class table
+class_table_corr.test<-corr.test(as.matrix(phyloseq_class), as.matrix(table), adjust="fdr")
 corrplot(class_table_corr.test$r, p.mat = class_table_corr.test$p, sig.level = 0.05) #hybrid corrplot with significance test
 
 
 #corr one var with another
-corr_plot<-ggplot(data=table,aes(x=as.data.frame(biom_class)$`k__Bacteria;p__Bacteroidetes;c__Bacteroidia`, y=table$WHtR)) + theme_bw() + geom_point() + geom_smooth() + ylab("Bacteroidia") + xlab("WHtR")
-cor.test(as.data.frame(biom_class)$`k__Bacteria;p__Bacteroidetes;c__Bacteroidia`, table$WHtR)
+corr_plot<-ggplot(data=table,aes(x=as.data.frame(phyloseq_class)$`k__Bacteria;p__Bacteroidetes;c__Bacteroidia`, y=table$WHtR)) + theme_bw() + geom_point() + geom_smooth() + ylab("Bacteroidia") + xlab("WHtR")
+cor.test(as.data.frame(phyloseq_class)$`k__Bacteria;p__Bacteroidetes;c__Bacteroidia`, table$WHtR)
 
 
 #corr 2 matrices via Mantel test
-biom_table_ab<-biom_table/rowSums(biom_table)
-biom_table_log<-decostand(biom_table_ab, method="log")
-biom_table_bray<-vegdist(biom_table_log, method="bray")
-biom_class_log<-decostand(biom_class, method="log") #QIIME class table was already in % abundance
-biom_class_bray<-vegdist(biom_class_log, method="bray")
-mantel(biom_table_bray, biom_class_bray, method="pearson", permutations=9999, parallel=4)
+phyloseq_table_ab<-phyloseq_table/rowSums(phyloseq_table)
+phyloseq_table_log<-decostand(phyloseq_table_ab, method="log")
+phyloseq_table_bray<-vegdist(phyloseq_table_log, method="bray")
+phyloseq_class_log<-decostand(phyloseq_class, method="log") #QIIME class table was already in % abundance
+phyloseq_class_bray<-vegdist(phyloseq_class_log, method="bray")
+mantel(phyloseq_table_bray, phyloseq_class_bray, method="pearson", permutations=9999, parallel=4)
 
 -------
   #links
@@ -1741,28 +1686,28 @@ https://github.com/microbiome/microbiome/blob/master/vignettes/vignette.md
 library(microbiome)
 
 #abundance boxplot of specific OTUs in relation to max 3 variables at a time
-bp <-boxplot_abundance(biom_ITS, x = "Level", y = "OTU_117", line = "Level", color = "Level", log10 = TRUE)
+bp <-boxplot_abundance(phyloseq_ITS, x = "Level", y = "OTU_117", line = "Level", color = "Level", log10 = TRUE)
 bp
 
 #core heatmap
-biom_core_heatmapITS <- plot_core(Zygo, plot.type = "heatmap", palette = "spectral") #try also with biom_prop or biom_log or subset biom
+phyloseq_core_heatmapITS <- plot_core(Zygo, plot.type = "heatmap", palette = "spectral") #try also with phyloseq_prop or phyloseq_log or subset biom
 
-subset_ITS_Level <- subset_samples(biom_ITS, Level%in%Soil2) 
-subset_ITS_loam <- subset_samples(biom_ITS, Soil2=="loam")
+subset_ITS_Level <- subset_samples(phyloseq_ITS, Level%in%Soil2) 
+subset_ITS_loam <- subset_samples(phyloseq_ITS, Soil2=="loam")
 
-biom_core_heatmapITS <- plot_core(subset_ITS_Level, plot.type = "heatmap", palette = "spectral") #try also with biom_prop or biom_log or subset biom
+phyloseq_core_heatmapITS <- plot_core(subset_ITS_Level, plot.type = "heatmap", palette = "spectral") #try also with phyloseq_prop or phyloseq_log or subset biom
 
 
 #abundance boxplot of specific OTUs in relation to max 3 variables at a time
-boxplot_otu101<-boxplot_abundance(biom_ITS, x = "Level", y = "OTU_101", line = "Plant", color = "Soil2", log10 = TRUE)
+boxplot_otu101<-boxplot_abundance(phyloseq_ITS, x = "Level", y = "OTU_101", line = "Plant", color = "Soil2", log10 = TRUE)
 boxplot_otu101
 
 #core heatmap
-biom_core_heatmap<-plot_core(Zygo, plot.type = "heatmap", palette = "spectral") #try also with biom_prop or biom_log or subset biom
+phyloseq_core_heatmap<-plot_core(Zygo, plot.type = "heatmap", palette = "spectral") #try also with phyloseq_prop or phyloseq_log or subset biom
 
 
 #list of core OTUs with a given detection threshold
-otus_prevalence<-prevalence(biom_ITS, detection.threshold = 10, sort = TRUE)
+otus_prevalence<-prevalence(phyloseq_ITS, detection.threshold = 10, sort = TRUE)
 otus_prevalence
 
 #list the OTUs present over in a given fraction of the samples
@@ -1785,10 +1730,10 @@ test
 # Changing order of levels and transform into a character
 
 
-otu_ITS_cv <- as.data.frame(otu_table(biom_ITS_cv))
-metadata_ITS_cv <- as.data.frame(as.matrix(sample_data(biom_ITS_cv)[,4:9]))
+otu_ITS_cv <- as.data.frame(otu_table(phyloseq_ITS_cv))
+metadata_ITS_cv <- as.data.frame(as.matrix(sample_data(phyloseq_ITS_cv)[,4:9]))
 
-sums_ITS_cv <- data.frame(colSums(otu_table(biom_ITS_cv)))
+sums_ITS_cv <- data.frame(colSums(otu_table(phyloseq_ITS_cv)))
 colnames(sums_ITS_cv) <- "readNO"
 sums_ITS_cv$richness <- specnumber(otu_ITS_cv, MARGIN = 2)
 sums_ITS_cv$rarefied <- rarefy(otu_ITS_cv,2189, se = FALSE, MARGIN = 2)
@@ -1812,10 +1757,10 @@ labs(title="OTU", x="Habitat", y="Rarefied richness")
 
 
 
-otu_16s_cv <- as.data.frame(otu_table(biom_16s_cv))
-metadata_16s_cv <- as.data.frame(as.matrix(sample_data(biom_16s_cv)[,4:9]))
+otu_16s_cv <- as.data.frame(otu_table(phyloseq_16s_cv))
+metadata_16s_cv <- as.data.frame(as.matrix(sample_data(phyloseq_16s_cv)[,4:9]))
 
-sums_16s_cv <- data.frame(colSums(otu_table(biom_16s_cv)))
+sums_16s_cv <- data.frame(colSums(otu_table(phyloseq_16s_cv)))
 colnames(sums_16s_cv) <- "readNO"
 sums_16s_cv$richness <- specnumber(otu_16s_cv, MARGIN = 2)
 sums_16s_cv$rarefied <- rarefy(otu_16s_cv,17479, se = FALSE, MARGIN = 2)
@@ -1843,11 +1788,11 @@ plot_alpha_its
 
 
 
-sample_data(biom_ITS_cv)
-str(biom_ITS_cv)
+sample_data(phyloseq_ITS_cv)
+str(phyloseq_ITS_cv)
 
-plot_alpha_its <- plot_richness(biom_ITS_cv, x = "Site1", color = "Site1", shape= "Site1", measures = c("Observed","Shannon"))
-plot_alpha_its <- plot_richness(biom_ITS_cv, x = "Site2", color = "Site2", measures = c("Observed"))
+plot_alpha_its <- plot_richness(phyloseq_ITS_cv, x = "Site1", color = "Site1", shape= "Site1", measures = c("Observed","Shannon"))
+plot_alpha_its <- plot_richness(phyloseq_ITS_cv, x = "Site2", color = "Site2", measures = c("Observed"))
 
 plot_alpha_its + 
 geom_boxplot(outlier.colour="black", outlier.fill = "black") + 
@@ -1876,9 +1821,9 @@ theme(axis.text.x = element_text(angle = 90, hjust=0.5, size=10)) +
 theme(legend.position="none")
 
   
-plot_alpha_its <- plot_richness(biom_ITS_cv, x = "Site1", color = "Site1", measures = c("Observed","Shannon"), title="(A)")
-plot_alpha_lsu <- plot_richness(biom_LSU_cv, x = "Site1", color = "Site1", measures = c("Observed","Shannon"), title="(B)")
-plot_alpha_16s <- plot_richness(biom_16s_cv, x = "Site1", color = "Site1", measures = c("Observed","Shannon"), title="(C)")
+plot_alpha_its <- plot_richness(phyloseq_ITS_cv, x = "Site1", color = "Site1", measures = c("Observed","Shannon"), title="(A)")
+plot_alpha_lsu <- plot_richness(phyloseq_LSU_cv, x = "Site1", color = "Site1", measures = c("Observed","Shannon"), title="(B)")
+plot_alpha_16s <- plot_richness(phyloseq_16s_cv, x = "Site1", color = "Site1", measures = c("Observed","Shannon"), title="(C)")
 
 rich_its = plot_alpha_its + geom_boxplot(outlier.colour="black", outlier.shape = 8) +
   scale_colour_manual(values=palette_CB9) + 
@@ -1930,9 +1875,9 @@ plot_alpha_its$layers
 write.csv(plot_alpha_its$data, file = "observed_shannon_ITS.csv")
 
 
-plot_alpha_lsu <- plot_richness(biom_LSU_cv, x = "Site1", color = "Site1", measures = c("Observed","Shannon"))
+plot_alpha_lsu <- plot_richness(phyloseq_LSU_cv, x = "Site1", color = "Site1", measures = c("Observed","Shannon"))
 
-plot_alpha_lsu <- plot_richness(biom_LSU_cv, x = "Site2", color = "Site1", shape= "Site2", measures = c("Observed","Simpson"))
+plot_alpha_lsu <- plot_richness(phyloseq_LSU_cv, x = "Site2", color = "Site1", shape= "Site2", measures = c("Observed","Simpson"))
 plot_alpha_lsu + geom_boxplot() + 
   scale_colour_manual(values=palette_CB9) + 
   geom_point(size=2, alpha = 0.7) + 
@@ -1943,9 +1888,9 @@ plot_alpha_lsu + geom_boxplot() +
 
 write.csv(plot_alpha_lsu$data, file = "observed_shannon_LSU.csv")
 
-plot_alpha_16s <- plot_richness(biom_16s_cv, x = "Site1", color = "Site1", measures = c("Observed","Shannon"))
+plot_alpha_16s <- plot_richness(phyloseq_16s_cv, x = "Site1", color = "Site1", measures = c("Observed","Shannon"))
 
-plot_alpha_16s <- plot_richness(biom_16s_cv, x = "Site2", color = "Site1", shape= "Site2", measures = c("Observed","Simpson"))
+plot_alpha_16s <- plot_richness(phyloseq_16s_cv, x = "Site2", color = "Site1", shape= "Site2", measures = c("Observed","Simpson"))
 plot_alpha_16s + geom_boxplot() + scale_colour_manual(values=palette_CB9) + geom_point(size=2, alpha = 0.7) + 
   scale_shape_manual(values=0:26) + ggtitle("(C) Alpha Diversity 16S") +
   theme(axis.text.x = element_text(angle = 90, hjust=0.5, size=10)) + 
@@ -1957,41 +1902,41 @@ write.csv(plot_alpha_16s$data, file = "observed_shannon_16S.csv")
 
 
 #to plot more than 6 shapes
-scale_shape_manual(values=1:nlevels(sample_data(biom_ITS_ev)$chemical))
+scale_shape_manual(values=1:nlevels(sample_data(phyloseq_ITS_ev)$chemical))
 
 
-pr <- plot_richness(biom_ITS_cv, x = "Level", color = "Level", measures = c("Observed","Shannon"))
+pr <- plot_richness(phyloseq_ITS_cv, x = "Level", color = "Level", measures = c("Observed","Shannon"))
 pr + geom_boxplot(outlier.colour = "red") + scale_colour_manual(values=palette_CB4)
 
-pr <- plot_richness(biom_ITS_cv, x = "Level", color = "Level", shape="Soil", measures = c("Observed", "Shannon" ))
+pr <- plot_richness(phyloseq_ITS_cv, x = "Level", color = "Level", shape="Soil", measures = c("Observed", "Shannon" ))
 pr + theme(axis.text.x = element_text(angle = 90, hjust=0.5, size=12)) + scale_colour_manual(values=palette_CB4)
 
 
-pr <- plot_richness(biom_16s_cv, x = "Level", color = "Level", shape= "Soil", measures = c("Observed","Shannon"))
+pr <- plot_richness(phyloseq_16s_cv, x = "Level", color = "Level", shape= "Soil", measures = c("Observed","Shannon"))
 pr + geom_boxplot() + scale_colour_manual(values=palette_CB4) + geom_point(size=2, alpha = 0.7) + # coord_flip() + ggtitle("Alpha Diversity Bacteria")
   theme(axis.text.x = element_text(angle = 90, hjust=0.5, size=10))
 
-pr <- plot_richness(biom_16s_cv, x = "Level", color = "Level", measures = c("Observed","Shannon"))
+pr <- plot_richness(phyloseq_16s_cv, x = "Level", color = "Level", measures = c("Observed","Shannon"))
 pr + geom_boxplot(outlier.colour = "red") + scale_colour_manual(values=palette_CB4) +
   theme(axis.text.x = element_text(angle = 90, hjust=0.5, size=10))
 
 
 
 # transform back to numeric to use as continuous variable 
-sample_data(biom_ITS_cv)$Level <- as.numeric(as.character(sample_data(biom_ITS)$Level, levels=c("0","10","50","100")))
-sample_data(biom_16s_cv)$Level <- as.numeric(as.character(sample_data(biom_16s)$Level, levels=c("0","10","50","100")))
+sample_data(phyloseq_ITS_cv)$Level <- as.numeric(as.character(sample_data(phyloseq_ITS)$Level, levels=c("0","10","50","100")))
+sample_data(phyloseq_16s_cv)$Level <- as.numeric(as.character(sample_data(phyloseq_16s)$Level, levels=c("0","10","50","100")))
 
-pr <- plot_richness(biom_ITS_cv, x = "Level", color = "Level", shape="Soil", measures = c("Observed", "Shannon" ))
+pr <- plot_richness(phyloseq_ITS_cv, x = "Level", color = "Level", shape="Soil", measures = c("Observed", "Shannon" ))
 pr + theme(axis.text.x = element_text(angle = 90, hjust=0.5, size=10)) + stat_smooth(method = lm) #+ geom_boxplot()
 
-pr <- plot_richness(biom_ITS_cv, x = "Level", shape= "Soil", measures = c("Observed", "Shannon" ))
+pr <- plot_richness(phyloseq_ITS_cv, x = "Level", shape= "Soil", measures = c("Observed", "Shannon" ))
 pr + theme(axis.text.x = element_text(angle = 90, hjust=0.5, size=10)) + stat_smooth(method = lm)
 
-pr <- plot_richness(biom_16s_cv, x = "Level", color = "Level", shape="Soil", measures = c("Observed", "Shannon" ))
+pr <- plot_richness(phyloseq_16s_cv, x = "Level", color = "Level", shape="Soil", measures = c("Observed", "Shannon" ))
 pr + theme(axis.text.x = element_text(angle = 90, hjust=0.5, size=10)) + stat_smooth(method = lm) #+ geom_boxplot()
 
 
-pr <- plot_richness(biom_16s_cv, x = "Level", shape= "Soil", measures = c("Observed", "Shannon" ))
+pr <- plot_richness(phyloseq_16s_cv, x = "Level", shape= "Soil", measures = c("Observed", "Shannon" ))
 pr + theme(axis.text.x = element_text(angle = 90, hjust=0.5, size=10)) + stat_smooth(method = lm)
 
 
@@ -2005,26 +1950,26 @@ pr + theme(axis.text.x = element_text(angle = 90, hjust=0.5, size=10)) + stat_sm
 
 
 ### BETA DIVERSITY in Phyloseq -------------------------------------------------------------------------------------------
-write.csv(sample_data(biom_ITS_cv) , file = "map_chem.csv")
+write.csv(sample_data(phyloseq_ITS_cv) , file = "map_chem.csv")
 map_chem_new <- read.csv("map_chem_new.csv", header=T, row.names =1)
 map_chem_new
 
 # fungi ------
 
-sample_data(biom_ITS_cv) <- map_chem_new
-head(sample_data(biom_ITS_cv))
+sample_data(phyloseq_ITS_cv) <- map_chem_new
+head(sample_data(phyloseq_ITS_cv))
 
-biom_ITS_ev = rarefy_even_depth(biom_ITS_cv, sample.size = 1000)
+phyloseq_ITS_ev = rarefy_even_depth(phyloseq_ITS_cv, sample.size = 1000)
 
 
-biom_ITS_cv -> biom_ITS_hell
-otu_table(biom_ITS_hell) <- otu_table(decostand(otu_table(biom_ITS_cv), method = "hellinger"), taxa_are_rows=TRUE)
-otu_table(biom_ITS_hell)
-sample_data(biom_ITS_hell)
+phyloseq_ITS_cv -> phyloseq_ITS_hell
+otu_table(phyloseq_ITS_hell) <- otu_table(decostand(otu_table(phyloseq_ITS_cv), method = "hellinger"), taxa_are_rows=TRUE)
+otu_table(phyloseq_ITS_hell)
+sample_data(phyloseq_ITS_hell)
 
-otu_ITS_hell <- as.data.frame(otu_table(biom_ITS_cv))
-taxa_ITS_hell <- as.data.frame(as.matrix(tax_table(biom_ITS_hell)))
-metadata_ITS_hell <- as.data.frame(as.matrix(sample_data(biom_ITS_hell)))
+otu_ITS_hell <- as.data.frame(otu_table(phyloseq_ITS_cv))
+taxa_ITS_hell <- as.data.frame(as.matrix(tax_table(phyloseq_ITS_hell)))
+metadata_ITS_hell <- as.data.frame(as.matrix(sample_data(phyloseq_ITS_hell)))
 
 identical(colnames(otu_ITS_hell2), rownames(metadata_ITS_hell))
 
@@ -2055,15 +2000,15 @@ summary(bioenv_ITS)
 bioenv_ITS
 
 
-CAP_ITS <- ordinate(biom_ITS_hell, method = "CAP", distance = "bray", ~  K + Ca + Mn + NH4)
+CAP_ITS <- ordinate(phyloseq_ITS_hell, method = "CAP", distance = "bray", ~  K + Ca + Mn + NH4)
 CAP_ITS
 anova(CAP_ITS)
 
-plot_cap_ITS = plot_ordination(biom_ITS_ev, CAP_ITS, 
+plot_cap_ITS = plot_ordination(phyloseq_ITS_ev, CAP_ITS, 
                        color = "Site2", shape="Site2", title = "A.") + 
   geom_point(size=3.2) + 
   geom_point(aes(fill=Site2), stroke = 1.5) +
-  scale_shape_manual(values=setNames(c(0,1,2,6,4,3,7,8,9,10,11,12,13,14,15,18,16,20), sort(unique(sample_data(biom_ITS_hell)$Site2)))) + 
+  scale_shape_manual(values=setNames(c(0,1,2,6,4,3,7,8,9,10,11,12,13,14,15,18,16,20), sort(unique(sample_data(phyloseq_ITS_hell)$Site2)))) + 
   theme_bw() + 
   #geom_text_repel(aes(label=X.SampleID), size = 3) +
   scale_colour_manual(values = c("Beach_Intertidal1" = "#771155", "Beach_Intertidal2" = "#771155","Cassava1" = "#CC99BB", "Cassava2" = "#CC99BB",
@@ -2100,27 +2045,27 @@ plot_cap_ITS_arrow
 
 
 # bacteria -------
-identical(sample_data(biom_ITS_cv)$Site2, sample_data(biom_16s_cv)$Site2) 
+identical(sample_data(phyloseq_ITS_cv)$Site2, sample_data(phyloseq_16s_cv)$Site2) 
 
-write.csv(sample_data(biom_16s_cv) , file = "map_chem_16s.csv")
+write.csv(sample_data(phyloseq_16s_cv) , file = "map_chem_16s.csv")
 map_chem_new <- read.csv("map_chem_new_16s.csv", header=T, row.names =1)
 map_chem_new
 
 
-sample_data(biom_16s_cv) <- map_chem_new
-head(sample_data(biom_16s_cv))
+sample_data(phyloseq_16s_cv) <- map_chem_new
+head(sample_data(phyloseq_16s_cv))
 
-biom_16s_ev = rarefy_even_depth(biom_16s_cv, sample.size = 1000)
+phyloseq_16s_ev = rarefy_even_depth(phyloseq_16s_cv, sample.size = 1000)
 
 
-biom_16s_cv -> biom_16s_hell
-otu_table(biom_16s_hell) <- otu_table(vegan::decostand(otu_table(biom_16s_cv), method = "hellinger"), taxa_are_rows=TRUE)
-otu_table(biom_16s_hell)
-sample_data(biom_16s_hell)
+phyloseq_16s_cv -> phyloseq_16s_hell
+otu_table(phyloseq_16s_hell) <- otu_table(vegan::decostand(otu_table(phyloseq_16s_cv), method = "hellinger"), taxa_are_rows=TRUE)
+otu_table(phyloseq_16s_hell)
+sample_data(phyloseq_16s_hell)
 
-otu_16s_hell <- as.data.frame(otu_table(biom_16s_cv))
-taxa_16s_hell <- as.data.frame(as.matrix(tax_table(biom_16s_hell)))
-metadata_16s_hell <- as.data.frame(as.matrix(sample_data(biom_16s_hell)))
+otu_16s_hell <- as.data.frame(otu_table(phyloseq_16s_cv))
+taxa_16s_hell <- as.data.frame(as.matrix(tax_table(phyloseq_16s_hell)))
+metadata_16s_hell <- as.data.frame(as.matrix(sample_data(phyloseq_16s_hell)))
 
 # transform factor in numeric -------
 
@@ -2147,15 +2092,15 @@ bioenv_16s <- vegan::bioenv(t(otu_16s_hell) ~ P + K + Ca + Mg + Zn + Mn + Fe + N
 summary(bioenv_16s)
 bioenv_16s
 
-CAP_16s <- ordinate(biom_16s_hell, method = "CAP", distance = "bray", ~  P + K + Ca + Mn + Fe + NH4)
+CAP_16s <- ordinate(phyloseq_16s_hell, method = "CAP", distance = "bray", ~  P + K + Ca + Mn + Fe + NH4)
 CAP_16s
 anova(CAP_16s)
 
 
-plot_cap_16s = plot_ordination(biom_16s_hell, CAP_16s, color = "Site2", shape="Site2", title = "B.") +
+plot_cap_16s = plot_ordination(phyloseq_16s_hell, CAP_16s, color = "Site2", shape="Site2", title = "B.") +
   geom_point(size=3.2) + 
   geom_point(aes(fill=Site2), stroke = 1.5) +
-  scale_shape_manual(values=setNames(c(0,1,2,6,4,3,7,8,9,10,11,12,13,14,15,18,16,20), sort(unique(sample_data(biom_16s_hell)$Site2)))) + 
+  scale_shape_manual(values=setNames(c(0,1,2,6,4,3,7,8,9,10,11,12,13,14,15,18,16,20), sort(unique(sample_data(phyloseq_16s_hell)$Site2)))) + 
   theme_bw() + 
   #geom_text_repel(aes(label=Description), size = 3) +
   scale_colour_manual(values = c("Beach_Intertidal1" = "#771155",
@@ -2201,13 +2146,13 @@ ggarrange(plot_cap_ITS_arrow, plot_cap_16s_arrow,
 
 
 # >>> CLUSTERING  ------------
-chemical_data <- as.data.frame(as.matrix(sample_data(biom_ITS_hell)[c(1,4,7,10,13,16,19,22,25,28,31,34,37,40,43,46,49,52),c(6,10:18)]))                
+chemical_data <- as.data.frame(as.matrix(sample_data(phyloseq_ITS_hell)[c(1,4,7,10,13,16,19,22,25,28,31,34,37,40,43,46,49,52),c(6,10:18)]))                
 chemical_data        
 
-chemical_data <- as.data.frame(as.matrix(sample_data(biom_ITS_hell)[,c(6,10:18)]))                
+chemical_data <- as.data.frame(as.matrix(sample_data(phyloseq_ITS_hell)[,c(6,10:18)]))                
 chemical_data  
 
-chemical_data$Site1 <- sample_data(biom_ITS_hell)$Site1
+chemical_data$Site1 <- sample_data(phyloseq_ITS_hell)$Site1
 
 
 distance_soil <- dist(as.matrix(chemical_data))   # find distance matrix 
@@ -2226,13 +2171,13 @@ write.csv(chemical_data, "Table_soil.csv")
 
 
 # fungi ITS
-#NMDS_ITS_ev <- ordinate(biom_ITS_ev, method ="NMDS", distance="bray", try=100)
+#NMDS_ITS_ev <- ordinate(phyloseq_ITS_ev, method ="NMDS", distance="bray", try=100)
 
-#nmds_ev = plot_ordination(biom_ITS_ev, NMDS_ITS_ev, type="sites", color="Site2", shape="Site2", title=" (A) NMDS Fungi ITS - stress 0.169")
+#nmds_ev = plot_ordination(phyloseq_ITS_ev, NMDS_ITS_ev, type="sites", color="Site2", shape="Site2", title=" (A) NMDS Fungi ITS - stress 0.169")
 
 #nmds_ev + geom_point(size=3.2) + 
  # geom_point(aes(fill=Site2), stroke = 1.5) +
-#  scale_shape_manual(values=setNames(c(0,1,2,6,4,3,7,8,9,10,11,12,13,14,15,18,16,20), sort(unique(sample_data(biom_ITS_hell)$Site2)))) + 
+#  scale_shape_manual(values=setNames(c(0,1,2,6,4,3,7,8,9,10,11,12,13,14,15,18,16,20), sort(unique(sample_data(phyloseq_ITS_hell)$Site2)))) + 
  # theme_bw() + geom_text_repel(aes(label=X.SampleID), size = 3) +
 #  scale_colour_manual(values = c("Beach_Intertidal1" = "#771155", "Beach_Intertidal2" = "#771155","Cassava1" = "#CC99BB", "Cassava2" = "#CC99BB",
 #                                 "Cassuarina1"="#114477","Cassuarina2"="#114477", "Grassland2"="#4477AA","Mohogany1"="#117744",
@@ -2242,17 +2187,17 @@ write.csv(chemical_data, "Table_soil.csv")
 
 library("ggrepel")
 
-NMDS_ITS_hell <- ordinate(biom_ITS_hell, method ="NMDS", distance="bray", try=100)
+NMDS_ITS_hell <- ordinate(phyloseq_ITS_hell, method ="NMDS", distance="bray", try=100)
 
-sample_data(biom_ITS_hell)$Site2  <- with(biom_ITS_hell, reorder(sample_data(biom_ITS_hell)$Site2)) # to reorder before plotting
-sample_data(biom_ITS_hell)
+sample_data(phyloseq_ITS_hell)$Site2  <- with(phyloseq_ITS_hell, reorder(sample_data(phyloseq_ITS_hell)$Site2)) # to reorder before plotting
+sample_data(phyloseq_ITS_hell)
 
 NMDS_ITS_hell
-nmds_hell = plot_ordination(biom_ITS_hell, NMDS_ITS_hell, type="sites", color="Site2", shape="Site2", title=" (A) NMDS Fungi ITS - stress 0.169")
+nmds_hell = plot_ordination(phyloseq_ITS_hell, NMDS_ITS_hell, type="sites", color="Site2", shape="Site2", title=" (A) NMDS Fungi ITS - stress 0.169")
 
 nmds_hell + geom_point(size=3.2) + 
 geom_point(aes(fill=Site2), stroke = 1.5) +
-scale_shape_manual(values=setNames(c(0,1,2,6,4,3,7,8,9,10,11,12,13,14,15,18,16,20), sort(unique(sample_data(biom_ITS_hell)$Site2)))) + 
+scale_shape_manual(values=setNames(c(0,1,2,6,4,3,7,8,9,10,11,12,13,14,15,18,16,20), sort(unique(sample_data(phyloseq_ITS_hell)$Site2)))) + 
 theme_bw() + geom_text_repel(aes(label=X.SampleID), size = 3) +
 scale_colour_manual(values = c("Beach_Intertidal1" = "#771155", "Beach_Intertidal2" = "#771155","Cassava1" = "#CC99BB", "Cassava2" = "#CC99BB",
                                  "Cassuarina1"="#114477","Cassuarina2"="#114477", "Grassland2"="#4477AA","Mohogany1"="#117744",
@@ -2264,27 +2209,27 @@ scale_colour_manual(values = c("Beach_Intertidal1" = "#771155", "Beach_Intertida
 
 #scale_shape_manual(values=0:25) + 
 #+ theme(plot.title = element_text(hjust = 0.5)) # to center the title
-#+ scale_shape_manual(values=setNames(c(0,1,2,3,4,6,7,8,9,10,11,12,13,14,15,16,18), sort(unique(sample_data(biom_ITS_hell)$Site2)))) # Assign value pairs for scale_color_manual and scale_shape_manual in ggplot
+#+ scale_shape_manual(values=setNames(c(0,1,2,3,4,6,7,8,9,10,11,12,13,14,15,16,18), sort(unique(sample_data(phyloseq_ITS_hell)$Site2)))) # Assign value pairs for scale_color_manual and scale_shape_manual in ggplot
 #scale_color_manual(values=custom_col21) +
 
-pcoa_ITS <- ordinate(biom_ITS_hell, method ="PCoA", distance="bray")
-pcoa_ITS <- ordinate(biom_ITS_hell, method ="PCoA", distance(biom_ITS_hell, method = "jaccard", binary = TRUE))
+pcoa_ITS <- ordinate(phyloseq_ITS_hell, method ="PCoA", distance="bray")
+pcoa_ITS <- ordinate(phyloseq_ITS_hell, method ="PCoA", distance(phyloseq_ITS_hell, method = "jaccard", binary = TRUE))
 
-p_pcoa_ITS = plot_ordination(biom_ITS_hell, pcoa_ITS, type="sites", color="Site2", shape="Site2", title=" (A) PCoA Fungi ITS")
+p_pcoa_ITS = plot_ordination(phyloseq_ITS_hell, pcoa_ITS, type="sites", color="Site2", shape="Site2", title=" (A) PCoA Fungi ITS")
 p_pcoa_ITS + geom_point(size=3) + geom_point(aes(fill=Site2), stroke = 1.5) + scale_shape_manual(values=0:25) + 
   scale_color_manual(values=custom_col21) + theme_bw() + geom_text_repel(aes(label=X.SampleID), size = 3)
 
 
 ###
-NMDS_LSU_hell <- ordinate(biom_LSU_hell, method ="NMDS", distance="bray", try=100)
-NMDS_LSU_hell <- ordinate(biom_LSU_hell, method ="NMDS", distance(biom_LSU_hell, method = "jaccard", binary = TRUE), try=100)
+NMDS_LSU_hell <- ordinate(phyloseq_LSU_hell, method ="NMDS", distance="bray", try=100)
+NMDS_LSU_hell <- ordinate(phyloseq_LSU_hell, method ="NMDS", distance(phyloseq_LSU_hell, method = "jaccard", binary = TRUE), try=100)
 
 NMDS_LSU_hell
-nmds_LSU = plot_ordination(biom_LSU_hell, NMDS_LSU_hell, type="sites", color="Site2", shape="Site2", title=" (B) NMDS Fungi LSU - stress 0.159")
+nmds_LSU = plot_ordination(phyloseq_LSU_hell, NMDS_LSU_hell, type="sites", color="Site2", shape="Site2", title=" (B) NMDS Fungi LSU - stress 0.159")
 
 nmds_LSU + geom_point(size=3.2) + 
 geom_point(aes(fill=Site2), stroke = 1.5) + 
-scale_shape_manual(values=setNames(c(0,1,2,6,4,7,8,9,10,11,12,13,14,15,18,16,20), sort(unique(sample_data(biom_LSU_hell)$Site2)))) + 
+scale_shape_manual(values=setNames(c(0,1,2,6,4,7,8,9,10,11,12,13,14,15,18,16,20), sort(unique(sample_data(phyloseq_LSU_hell)$Site2)))) + 
 theme_bw() + geom_text_repel(aes(label=X.SampleID), size = 3) +
 scale_colour_manual(values = c("Beach_Intertidal1" = "#771155","Beach_Intertidal2" = "#771155","Cassava1" = "#CC99BB", "Cassava2" = "#CC99BB",
                                  "Cassuarina1"="#114477", "Grassland2"="#4477AA","Mohogany1"="#117744",
@@ -2294,7 +2239,7 @@ scale_colour_manual(values = c("Beach_Intertidal1" = "#771155","Beach_Intertidal
 
 
 nmds_lsu = nmds_LSU + geom_point(size=3) + geom_point(aes(fill=Site2), stroke = 1.5) + #scale_shape_manual(values=0:25) + 
-  scale_shape_manual(values=setNames(c(0,1,2,3,4,6,7,8,9,10,11,12,13,14,15,16,17), sort(unique(sample_data(biom_LSU_hell)$Site2)))) + #scale_color_manual(values=custom_col21) + 
+  scale_shape_manual(values=setNames(c(0,1,2,3,4,6,7,8,9,10,11,12,13,14,15,16,17), sort(unique(sample_data(phyloseq_LSU_hell)$Site2)))) + #scale_color_manual(values=custom_col21) + 
   scale_color_manual(values=c("#771155","#AA4488", "#CC99BB", "#114477", "#4477AA", "#117777", "#44AAAA", "#77CCCC", "#117744", 
                               "#44AA77", "#88CCAA", "#777711", "#AAAA44", "#DDDD77", "#774411", "#AA7744", "#DDAA77", "#771122", "#AA4455","#DD7788")) +
   theme_bw() + geom_text_repel(aes(label=X.SampleID), size = 3) 
@@ -2303,24 +2248,24 @@ nmds_lsu = nmds_LSU + geom_point(size=3) + geom_point(aes(fill=Site2), stroke = 
 
 
 
-pcoa_LSU <- ordinate(biom_LSU_hell, method ="PCoA", distance="bray")
-pcoa_LSU <- ordinate(biom_LSU_hell, method ="PCoA", distance(biom_LSU_hell, method = "jaccard", binary = TRUE))
+pcoa_LSU <- ordinate(phyloseq_LSU_hell, method ="PCoA", distance="bray")
+pcoa_LSU <- ordinate(phyloseq_LSU_hell, method ="PCoA", distance(phyloseq_LSU_hell, method = "jaccard", binary = TRUE))
 
-p_prop_LSU = plot_ordination(biom_LSU_hell, pcoa_LSU, type="sites", color="Site2", shape="Site2", title=" (B) PCoA Fungi LSU")
+p_prop_LSU = plot_ordination(phyloseq_LSU_hell, pcoa_LSU, type="sites", color="Site2", shape="Site2", title=" (B) PCoA Fungi LSU")
 p_prop_LSU + geom_point(size=3) + geom_point(aes(fill=Site2), stroke = 1.5) + scale_shape_manual(values=0:25) + 
   scale_color_manual(values=custom_col21) + theme_bw() + geom_text_repel(aes(label=X.SampleID), size = 3)
 
 
 ###
-NMDS_16s_hell <- ordinate(biom_16s_hell, method ="NMDS", distance="bray", try=200)
-NMDS_16s_hell <- ordinate(biom_16s_hell, method ="NMDS", distance(biom_16s_hell, method = "jaccard", binary = TRUE), try=100)
+NMDS_16s_hell <- ordinate(phyloseq_16s_hell, method ="NMDS", distance="bray", try=200)
+NMDS_16s_hell <- ordinate(phyloseq_16s_hell, method ="NMDS", distance(phyloseq_16s_hell, method = "jaccard", binary = TRUE), try=100)
 
 NMDS_16s_hell
-bact_hell = plot_ordination(biom_16s_hell, NMDS_16s_hell, type="sites", color="Site2", shape="Site2", title=" (C) NMDS Bacteria 16S - stress 0.08")
+bact_hell = plot_ordination(phyloseq_16s_hell, NMDS_16s_hell, type="sites", color="Site2", shape="Site2", title=" (C) NMDS Bacteria 16S - stress 0.08")
 
 nmds_16s = bact_hell + geom_point(size=3.2) + 
 geom_point(aes(fill=Site2), stroke = 1.5) + 
-scale_shape_manual(values=setNames(c(0,1,2,6,4,3,7,8,9,10,11,12,13,14,15,18,16,20), sort(unique(sample_data(biom_16s_hell)$Site2)))) + 
+scale_shape_manual(values=setNames(c(0,1,2,6,4,3,7,8,9,10,11,12,13,14,15,18,16,20), sort(unique(sample_data(phyloseq_16s_hell)$Site2)))) + 
 theme_bw() + geom_text_repel(aes(label=Description), size = 3) +
 scale_colour_manual(values = c("Beach_Intertidal1" = "#771155",
                                    "Beach_Intertidal2" = "#771155","Cassava1" = "#CC99BB", "Cassava2" = "#CC99BB",
@@ -2331,10 +2276,10 @@ scale_colour_manual(values = c("Beach_Intertidal1" = "#771155",
 
 nmds_16s
 
-pcoa_16s <- ordinate(biom_16s_hell, method ="PCoA", distance="bray")
-pcoa_16s <- ordinate(biom_16s_hell, method ="PCoA", distance(biom_16s_hell, method = "jaccard", binary = TRUE))
+pcoa_16s <- ordinate(phyloseq_16s_hell, method ="PCoA", distance="bray")
+pcoa_16s <- ordinate(phyloseq_16s_hell, method ="PCoA", distance(phyloseq_16s_hell, method = "jaccard", binary = TRUE))
 
-p_prop_16s = plot_ordination(biom_16s_hell, pcoa_16s, type="sites", color="Site2", shape="Site2", title="(C) PCoA Bacteria 16S")
+p_prop_16s = plot_ordination(phyloseq_16s_hell, pcoa_16s, type="sites", color="Site2", shape="Site2", title="(C) PCoA Bacteria 16S")
 p_prop_16s + geom_point(size=3) + geom_point(aes(fill=Site2), stroke = 1.5) + scale_shape_manual(values=0:25) + 
   scale_color_manual(values=custom_col21) + theme_bw() + geom_text_repel(aes(label=Description), size = 3)
 
@@ -2347,19 +2292,19 @@ dev.off()
 
 
 # cap analysis
-CAP_ITS <- ordinate(biom_ITS_hell, method ="CAP", distance="bray", ~ Site2) 
-CAP_ITS = plot_ordination(biom_ITS_hell, CAP_ITS, type="sites", color="Site2", shape="Site2", title=" CAP Fungi ITS")
+CAP_ITS <- ordinate(phyloseq_ITS_hell, method ="CAP", distance="bray", ~ Site2) 
+CAP_ITS = plot_ordination(phyloseq_ITS_hell, CAP_ITS, type="sites", color="Site2", shape="Site2", title=" CAP Fungi ITS")
 CAP_ITS + geom_point(size=3) + geom_point(aes(fill=Site2), stroke = 1.5) + 
   scale_shape_manual(values=0:25) + scale_color_manual(values=custom_col21) + theme_bw()
 
 # trying to do plot the same ordinations with Phyloseq
-RDA_ITS <- ordinate(biom_ITS_prop, method = "RDA", ~ Site2)
-RDA_ITS = plot_ordination(biom_ITS_prop, RDA_ITS, type="sites", color="Site2", shape="Site2", title=" RDA Fungi ITS")
+RDA_ITS <- ordinate(phyloseq_ITS_prop, method = "RDA", ~ Site2)
+RDA_ITS = plot_ordination(phyloseq_ITS_prop, RDA_ITS, type="sites", color="Site2", shape="Site2", title=" RDA Fungi ITS")
 RDA_ITS + geom_point(size=3) + geom_point(aes(fill=Site2), stroke = 1.5) + scale_shape_manual(values=0:25) + 
   scale_color_manual(values=custom_col21) + theme_bw() + geom_text_repel(aes(label=X.SampleID), size = 3)
 
-RDA_LSU <- ordinate(biom_LSU_hell, method = "RDA", ~ Site2)
-RDA_LSU = plot_ordination(biom_LSU_hell, RDA_LSU, type="sites", color="Site2", shape="Site2", title=" RDA Fungi LSU")
+RDA_LSU <- ordinate(phyloseq_LSU_hell, method = "RDA", ~ Site2)
+RDA_LSU = plot_ordination(phyloseq_LSU_hell, RDA_LSU, type="sites", color="Site2", shape="Site2", title=" RDA Fungi LSU")
 RDA_LSU + geom_point(size=3) + geom_point(aes(fill=Site2), stroke = 1.5) + scale_shape_manual(values=0:25) + 
   scale_color_manual(values=custom_col21) + theme_bw() + geom_text_repel(aes(label=X.SampleID), size = 3)
 
@@ -2369,22 +2314,22 @@ RDA_LSU + geom_point(size=3) + geom_point(aes(fill=Site2), stroke = 1.5) + scale
 # CALCULATING NETWEORK network with the merged fasta
 # still working on MERGING FUNGI AND BACTERIA
 
-biom_ITS_net <- make_network(biom_ITS_cv, dist.fun = "jaccard", max.dist = 0.90, line_weight = 0.2, label=NULL)
-biom_ITS_net_plot <-plot_network(biom_ITS_net, biom_ITS_cv, color="Site2", shape="Site2")
-biom_ITS_net_plot + scale_colour_manual(values=custom_col21) + scale_shape_manual(values=0:25) + 
+phyloseq_ITS_net <- make_network(phyloseq_ITS_cv, dist.fun = "jaccard", max.dist = 0.90, line_weight = 0.2, label=NULL)
+phyloseq_ITS_net_plot <-plot_network(phyloseq_ITS_net, phyloseq_ITS_cv, color="Site2", shape="Site2")
+phyloseq_ITS_net_plot + scale_colour_manual(values=custom_col21) + scale_shape_manual(values=0:25) + 
   theme(plot.title = element_text(hjust = 0.5)) + ggtitle("(C) Network Fungi ITS")
 
-biom_LSU_net <- make_network(biom_LSU_cv, dist.fun = "jaccard", max.dist = 0.80, line_weight = 0.2, label=NULL)
-biom_LSU_net_plot <-plot_network(biom_LSU_net, biom_LSU_cv, color="Site2", shape="Site2")
-biom_LSU_net_plot + scale_colour_manual(values=custom_col21) + scale_shape_manual(values=0:25) + 
+phyloseq_LSU_net <- make_network(phyloseq_LSU_cv, dist.fun = "jaccard", max.dist = 0.80, line_weight = 0.2, label=NULL)
+phyloseq_LSU_net_plot <-plot_network(phyloseq_LSU_net, phyloseq_LSU_cv, color="Site2", shape="Site2")
+phyloseq_LSU_net_plot + scale_colour_manual(values=custom_col21) + scale_shape_manual(values=0:25) + 
   theme(plot.title = element_text(hjust = 0.5)) + ggtitle("(C) Network Fungi LSU")
 
 
 
 ## new version
-biom_ITS_net_plot2 <- plot_net(biom_ITS_cv, distance = "jaccard", type = "samples", maxdist = 0.90, color = "Site2", shape = "Site2", rescale=TRUE)
+phyloseq_ITS_net_plot2 <- plot_net(phyloseq_ITS_cv, distance = "jaccard", type = "samples", maxdist = 0.90, color = "Site2", shape = "Site2", rescale=TRUE)
 
-biom_ITS_net_plot2 + scale_colour_manual(values=custom_col21) + scale_shape_manual(values=0:25) + 
+phyloseq_ITS_net_plot2 + scale_colour_manual(values=custom_col21) + scale_shape_manual(values=0:25) + 
   theme(plot.title = element_text(hjust = 0.5)) + ggtitle("(C) Network Fungi ITS")
 
 
@@ -2399,19 +2344,19 @@ sample_data(merged_ITS)
 
 plot_bar(merged_ITS, x="Site1", fill="Class")
 
-biom_ITS_des = merge_samples(merged_ITS, "Site1") # merging samples
-sample_data(biom_ITS_des)$Site1 <- levels(sample_data(merged_ITS)$Site1) # relabelling 
-biom_ITS_des = transform_sample_counts(biom_ITS_des, function(x) 100 * x/sum(x)) # calculating abundances
-plot_bar(biom_ITS_des, x="Site1", fill="Class")
+phyloseq_ITS_des = merge_samples(merged_ITS, "Site1") # merging samples
+sample_data(phyloseq_ITS_des)$Site1 <- levels(sample_data(merged_ITS)$Site1) # relabelling 
+phyloseq_ITS_des = transform_sample_counts(phyloseq_ITS_des, function(x) 100 * x/sum(x)) # calculating abundances
+plot_bar(phyloseq_ITS_des, x="Site1", fill="Class")
 
-top20ITS <- names(sort(taxa_sums(biom_ITS_des), TRUE)[1:20]) 
-biom_ITS_des <- prune_taxa(top20ITS, biom_ITS_des)
-biom_ITS_des
+top20ITS <- names(sort(taxa_sums(phyloseq_ITS_des), TRUE)[1:20]) 
+phyloseq_ITS_des <- prune_taxa(top20ITS, phyloseq_ITS_des)
+phyloseq_ITS_des
 
-p1 <- plot_ordered_bar(biom_ITS_des, x = "Site1", fill="Genus", leg_size = 0.4, title="Fungi ITS Barplots")
+p1 <- plot_ordered_bar(phyloseq_ITS_des, x = "Site1", fill="Genus", leg_size = 0.4, title="Fungi ITS Barplots")
 p1 + scale_fill_manual(values=custom_col21) + ylim(0, 90)
 
-tax_table(biom_ITS_des)
+tax_table(phyloseq_ITS_des)
 
 ##################################################################
 
@@ -2423,50 +2368,50 @@ tax_table(biom_ITS_des)
 
 
 
-biom_ITS_ecm = import_biom("otu_table_ITS_LAST_guilds_json.biom")
+phyloseq_ITS_ecm = import_biom("otu_table_ITS_LAST_guilds_json.biom")
 map_ITS = import_qiime_sample_data("mapping_ITS.txt")
-sample_data(biom_ITS_ecm) <- map_ITS
-colnames(tax_table(biom_ITS_ecm)) = c(k = "Kingdom", p = "Phylum", c = "Class", o = "Order", f = "Family", g = "Genus", s = "Species")
+sample_data(phyloseq_ITS_ecm) <- map_ITS
+colnames(tax_table(phyloseq_ITS_ecm)) = c(k = "Kingdom", p = "Phylum", c = "Class", o = "Order", f = "Family", g = "Genus", s = "Species")
 otus_rep_ITS_ecm <- readDNAStringSet("otus_ITS.fasta", format="fasta", seek.first.rec=TRUE, use.names=TRUE)
-biom_ITS_ecm <- merge_phyloseq(biom_ITS_ecm, otus_rep_ITS_ecm)
-biom_ITS_ecm
-sample_data(biom_ITS_ecm)
-head(tax_table(biom_ITS_ecm))
-refseq(biom_ITS_ecm)
+phyloseq_ITS_ecm <- merge_phyloseq(phyloseq_ITS_ecm, otus_rep_ITS_ecm)
+phyloseq_ITS_ecm
+sample_data(phyloseq_ITS_ecm)
+head(tax_table(phyloseq_ITS_ecm))
+refseq(phyloseq_ITS_ecm)
 
 
-biom_ITS_pat = import_biom("otu_table_ITS_pathogen_json.biom")
+phyloseq_ITS_pat = import_biom("otu_table_ITS_pathogen_json.biom")
 map_ITS = import_qiime_sample_data("mapping_ITS.txt")
-sample_data(biom_ITS_pat) <- map_ITS
-colnames(tax_table(biom_ITS_pat)) = c(k = "Kingdom", p = "Phylum", c = "Class", o = "Order", f = "Family", g = "Genus", s = "Species")
+sample_data(phyloseq_ITS_pat) <- map_ITS
+colnames(tax_table(phyloseq_ITS_pat)) = c(k = "Kingdom", p = "Phylum", c = "Class", o = "Order", f = "Family", g = "Genus", s = "Species")
 otus_rep_ITS_pat <- readDNAStringSet("otus_ITS.fasta", format="fasta", seek.first.rec=TRUE, use.names=TRUE)
-biom_ITS_pat <- merge_phyloseq(biom_ITS_pat, otus_rep_ITS_pat)
-biom_ITS_pat
-sample_data(biom_ITS_pat)
-head(tax_table(biom_ITS_pat))
-refseq(biom_ITS_pat)
+phyloseq_ITS_pat <- merge_phyloseq(phyloseq_ITS_pat, otus_rep_ITS_pat)
+phyloseq_ITS_pat
+sample_data(phyloseq_ITS_pat)
+head(tax_table(phyloseq_ITS_pat))
+refseq(phyloseq_ITS_pat)
 
 
 
 
-#tax_table(biom_ITS_ecm)
-#tax_table(biom_ITS_ecm) <- tax_table(biom_ITS_ecm)[-which(row.names(tax_table(biom_ITS_ecm)) == "OTU_1162"), ] 
-#otu_table(biom_ITS_ecm) <- otu_table(biom_ITS_ecm)[which(rowSums(otu_table(biom_ITS_ecm)) > 2),] 
+#tax_table(phyloseq_ITS_ecm)
+#tax_table(phyloseq_ITS_ecm) <- tax_table(phyloseq_ITS_ecm)[-which(row.names(tax_table(phyloseq_ITS_ecm)) == "OTU_1162"), ] 
+#otu_table(phyloseq_ITS_ecm) <- otu_table(phyloseq_ITS_ecm)[which(rowSums(otu_table(phyloseq_ITS_ecm)) > 2),] 
 
-biom_ITS_ecm_gen = tax_glom(biom_ITS_ecm, "Genus")
-biom_ITS_ecm_gen
-as.data.frame(otu_table(biom_ITS_ecm_gen))
-tax_table(biom_ITS_ecm_gen)
+phyloseq_ITS_ecm_gen = tax_glom(phyloseq_ITS_ecm, "Genus")
+phyloseq_ITS_ecm_gen
+as.data.frame(otu_table(phyloseq_ITS_ecm_gen))
+tax_table(phyloseq_ITS_ecm_gen)
 
-biom_ITS_pat_gen = tax_glom(biom_ITS_pat, "Genus")
-biom_ITS_pat_gen
-as.data.frame(otu_table(biom_ITS_pat_gen))
-tax_table(biom_ITS_pat_gen)
+phyloseq_ITS_pat_gen = tax_glom(phyloseq_ITS_pat, "Genus")
+phyloseq_ITS_pat_gen
+as.data.frame(otu_table(phyloseq_ITS_pat_gen))
+tax_table(phyloseq_ITS_pat_gen)
 
 
 
-write.csv(as.data.frame(otu_table(biom_ITS_ecm_gen)), file = "ecm_noabund.csv")
-write.csv(as.data.frame(tax_table(biom_ITS_ecm_gen)), file = "ecm_noabund_tax.csv")
+write.csv(as.data.frame(otu_table(phyloseq_ITS_ecm_gen)), file = "ecm_noabund.csv")
+write.csv(as.data.frame(tax_table(phyloseq_ITS_ecm_gen)), file = "ecm_noabund_tax.csv")
 
 
 read.table("ecm_otus.csv", header=TRUE, row.names = 1, sep = ",") -> ecm_otus
@@ -2475,27 +2420,27 @@ ecm_otus
 endo_otus
 
 as.matrix(ecm_otus)
-otu_table(biom_ITS_ecm_gen)
+otu_table(phyloseq_ITS_ecm_gen)
 
-otu_table(biom_ITS_ecm_gen) <- otu_table(as.matrix(endo_otus), taxa_are_rows = TRUE)
-otu_table(biom_ITS_ecm_gen)
-tax_table(biom_ITS_ecm_gen)
-biom_ITS_ecm_gen
+otu_table(phyloseq_ITS_ecm_gen) <- otu_table(as.matrix(endo_otus), taxa_are_rows = TRUE)
+otu_table(phyloseq_ITS_ecm_gen)
+tax_table(phyloseq_ITS_ecm_gen)
+phyloseq_ITS_ecm_gen
 
 # that's good for OTUs abundances 
-biom_ITS_ecm_gen_ab = transform_sample_counts(biom_ITS_ecm_gen, function(x) 100* x/sum(x))
-biom_ITS_ecm_gen_ab
+phyloseq_ITS_ecm_gen_ab = transform_sample_counts(phyloseq_ITS_ecm_gen, function(x) 100* x/sum(x))
+phyloseq_ITS_ecm_gen_ab
 
 # if I want phylum abundances?
-#colSums(as.data.frame(otu_table(biom_ITS_ecm_gen)))
+#colSums(as.data.frame(otu_table(phyloseq_ITS_ecm_gen)))
 
-biom_ITS_ecm_gen = tax_glom(biom_ITS_ecm, "Genus")
-biom_ITS_ecm_gen
+phyloseq_ITS_ecm_gen = tax_glom(phyloseq_ITS_ecm, "Genus")
+phyloseq_ITS_ecm_gen
 
-otu_ITS_ecm_gen = taxa_sums(biom_ITS_ecm_gen)/sum(taxa_sums(biom_ITS_ecm_gen))*100
+otu_ITS_ecm_gen = taxa_sums(phyloseq_ITS_ecm_gen)/sum(taxa_sums(phyloseq_ITS_ecm_gen))*100
 otu_ITS_ecm_gen
 
-tax_ITS_ecm_gen <- data.frame(tax_table(biom_ITS_ecm_gen))
+tax_ITS_ecm_gen <- data.frame(tax_table(phyloseq_ITS_ecm_gen))
 tax_ITS_ecm_gen <- tax_ITS_ecm_gen[c(1:6)]
 tax_ITS_ecm_gen
 
@@ -2506,13 +2451,13 @@ tax_ITS_ecm_gen
 
 
 #### pathogens
-biom_ITS_pat_gen = tax_glom(biom_ITS_pat, "Genus")
-biom_ITS_pat_gen
+phyloseq_ITS_pat_gen = tax_glom(phyloseq_ITS_pat, "Genus")
+phyloseq_ITS_pat_gen
 
-otu_ITS_pat_gen = taxa_sums(biom_ITS_pat_gen)/sum(taxa_sums(biom_ITS_pat_gen))*100
+otu_ITS_pat_gen = taxa_sums(phyloseq_ITS_pat_gen)/sum(taxa_sums(phyloseq_ITS_pat_gen))*100
 otu_ITS_pat_gen
 
-tax_ITS_pat_gen <- data.frame(tax_table(biom_ITS_pat_gen))
+tax_ITS_pat_gen <- data.frame(tax_table(phyloseq_ITS_pat_gen))
 tax_ITS_pat_gen <- tax_ITS_pat_gen[c(1:6)]
 tax_ITS_pat_gen
 
@@ -2530,32 +2475,32 @@ rowSums(sweep(dune, 1, rowSums(dune), "/"))
 
 
 
-sample_data(biom_ITS_ecm)
-head(otu_table(biom_ITS_ecm))
+sample_data(phyloseq_ITS_ecm)
+head(otu_table(phyloseq_ITS_ecm))
 
-#biom_ITS_ecm_gen = tax_glom(biom_ITS_ecm, "Genus")
-biom_ITS_ecm_gen
-biom_ITS_ecm_gen_merg = merge_samples(biom_ITS_ecm_gen, "Site1")
-biom_ITS_ecm_gen_merg
-sample_data(biom_ITS_ecm_gen_merg)
-otu_table(biom_ITS_ecm_gen_merg)
+#phyloseq_ITS_ecm_gen = tax_glom(phyloseq_ITS_ecm, "Genus")
+phyloseq_ITS_ecm_gen
+phyloseq_ITS_ecm_gen_merg = merge_samples(phyloseq_ITS_ecm_gen, "Site1")
+phyloseq_ITS_ecm_gen_merg
+sample_data(phyloseq_ITS_ecm_gen_merg)
+otu_table(phyloseq_ITS_ecm_gen_merg)
 
-sample_data(biom_ITS_ecm_gen_merg)$Site1 <- levels(sample_data(biom_ITS_ecm_gen)$Site1)
-biom_ITS_ecm_gen_merg_ab = transform_sample_counts(biom_ITS_ecm_gen_merg, function(x) 100 * x/sum(x))
-biom_ITS_ecm_gen_merg_ab
-otu_table(biom_ITS_ecm_gen_merg_ab)
-tax_table(biom_ITS_ecm_gen_merg_ab)
-sum(otu_table(biom_ITS_ecm_gen_merg_ab))
+sample_data(phyloseq_ITS_ecm_gen_merg)$Site1 <- levels(sample_data(phyloseq_ITS_ecm_gen)$Site1)
+phyloseq_ITS_ecm_gen_merg_ab = transform_sample_counts(phyloseq_ITS_ecm_gen_merg, function(x) 100 * x/sum(x))
+phyloseq_ITS_ecm_gen_merg_ab
+otu_table(phyloseq_ITS_ecm_gen_merg_ab)
+tax_table(phyloseq_ITS_ecm_gen_merg_ab)
+sum(otu_table(phyloseq_ITS_ecm_gen_merg_ab))
 
 
-write.csv(tax_table(biom_ITS_ecm_gen_merg_ab), file = "biom_ITS_ecm_gen_merg_ab.csv")
-tax_tab_ecm_gen_merg_ab <- read.csv("biom_ITS_ecm_gen_merg_ab.csv", header=T, row.names =1)
+write.csv(tax_table(phyloseq_ITS_ecm_gen_merg_ab), file = "phyloseq_ITS_ecm_gen_merg_ab.csv")
+tax_tab_ecm_gen_merg_ab <- read.csv("phyloseq_ITS_ecm_gen_merg_ab.csv", header=T, row.names =1)
 tax_tab_ecm_gen_merg_ab
-tax_table(biom_ITS_ecm_gen_merg_ab) <- tax_table(as.matrix(tax_tab_ecm_gen_merg_ab))
+tax_table(phyloseq_ITS_ecm_gen_merg_ab) <- tax_table(as.matrix(tax_tab_ecm_gen_merg_ab))
 
 
 source("../plot_ordered_bar_byGian.R")
-p1 <- plot_ordered_bar(biom_ITS_ecm_gen_merg_ab, x = "Site1", fill="Genus", leg_size = 0.4, title="B.")
+p1 <- plot_ordered_bar(phyloseq_ITS_ecm_gen_merg_ab, x = "Site1", fill="Genus", leg_size = 0.4, title="B.")
 p1
 
 
@@ -2634,8 +2579,8 @@ p1 + theme(legend.text = element_text(face="italic")) +
 
 ##### plot pathogen fungi
 
-biom_ITS_pat_gen_merg = merge_samples(biom_ITS_pat_gen, "Site1")
-biom_ITS_pat_gen_merg_ab = transform_sample_counts(biom_ITS_pat_gen_merg, function(x) 100 * x/sum(x))
+phyloseq_ITS_pat_gen_merg = merge_samples(phyloseq_ITS_pat_gen, "Site1")
+phyloseq_ITS_pat_gen_merg_ab = transform_sample_counts(phyloseq_ITS_pat_gen_merg, function(x) 100 * x/sum(x))
 
 badTaxa = c("OTU_1494","OTU_2750","OTU_2559","OTU_3578","OTU_3405","OTU_3221","OTU_5205","OTU_3915","OTU_2624","OTU_3451"
              ,"OTU_3118","OTU_6904","OTU_4023","OTU_5200","OTU_5862","OTU_4387","OTU_5089","OTU_4523","OTU_4615","OTU_4945")
@@ -2646,13 +2591,13 @@ pop_taxa = function(physeq, badTaxa){
   return(prune_taxa(myTaxa, physeq))
 }
 
-biom_ITS_pat_gen_merg_ab_prun = pop_taxa(biom_ITS_pat_gen_merg_ab, badTaxa)
-biom_ITS_pat_gen_merg_ab_prun
+phyloseq_ITS_pat_gen_merg_ab_prun = pop_taxa(phyloseq_ITS_pat_gen_merg_ab, badTaxa)
+phyloseq_ITS_pat_gen_merg_ab_prun
 
-#top26 <- names(sort(taxa_sums(biom_ITS_pat_gen_merg_ab), TRUE)[1:26]) # sampling first 100 taxa
-#biom_ITS_pat_gen_merg_ab_26 <- prune_taxa(top26, biom_ITS_pat_gen_merg_ab)
+#top26 <- names(sort(taxa_sums(phyloseq_ITS_pat_gen_merg_ab), TRUE)[1:26]) # sampling first 100 taxa
+#phyloseq_ITS_pat_gen_merg_ab_26 <- prune_taxa(top26, phyloseq_ITS_pat_gen_merg_ab)
 
-p1 <- plot_ordered_bar(biom_ITS_pat_gen_merg_ab_prun, x = "Site1", fill="Genus", leg_size = 0.4, title="C.")
+p1 <- plot_ordered_bar(phyloseq_ITS_pat_gen_merg_ab_prun, x = "Site1", fill="Genus", leg_size = 0.4, title="C.")
 p1 + scale_fill_manual(values=custom_col42) + ylim(0, 100) #+ coord_flip() #+ theme_bw()
 
 p1 + theme(legend.text = element_text(face="italic")) +
@@ -2730,13 +2675,13 @@ p1 + theme(legend.text = element_text(face="italic")) +
                                "unidentified"="white"))
 
 ####
-#tax_table(biom_ITS_ecm_gen_merg_ab) <- factor(tax_table(biom_ITS_ecm_gen_merg_ab), levels = c("OTU_5856","OTU_22","OTU_1129","OTU_575","OTU_1173","OTU_2360","OTU_428",
+#tax_table(phyloseq_ITS_ecm_gen_merg_ab) <- factor(tax_table(phyloseq_ITS_ecm_gen_merg_ab), levels = c("OTU_5856","OTU_22","OTU_1129","OTU_575","OTU_1173","OTU_2360","OTU_428",
  #                                                                                             "OTU_4070","OTU_1533","OTU_1194","OTU_2637","OTU_5315","OTU_148","OTU_2028",
   #                                                                                            "OTU_1093","OTU_219","OTU_1233","OTU_2424","OTU_55","OTU_308","OTU_39",
    #                                                                                           "OTU_475","OTU_1822","OTU_531","OTU_2974","OTU_4177","OTU_373","OTU_2945","OTU_3995",
      #                                                                                         "OTU_125","OTU_53","OTU_2642","OTU_1215","OTU_24","OTU_3041"))
 
-#tax_table(biom_ITS_ecm_gen_merg_ab)$Genus <- factor(tax_table(biom_ITS_ecm_gen_merg_ab)$Genus, 
+#tax_table(phyloseq_ITS_ecm_gen_merg_ab)$Genus <- factor(tax_table(phyloseq_ITS_ecm_gen_merg_ab)$Genus, 
            #                                         c("Amanita","Entoloma","Hygrocybe","Inocybe","Rhizopogon",
               #                                        "Scleroderma","Stephanospora","Ramaria","Tomentella","Ceratobasidium",
              #                                         "Serendipita","Cenococcum","Peziza","Chromelosporium","Oidiodendron","Chloridium",
@@ -2758,7 +2703,7 @@ sample_data(merged_ITS_gen_merg)
 sample_data(merged_ITS_gen_merg)$Site1 <- levels(sample_data(merged_ITS_gen)$Site1)
 merged_ITS_gen_merg_ab = transform_sample_counts(merged_ITS_gen_merg, function(x) 100 * x/sum(x))
 merged_ITS_gen_merg_ab
-tax_table(biom_ITS_ecm_gen_merg_ab)
+tax_table(phyloseq_ITS_ecm_gen_merg_ab)
 
 
 
@@ -2768,29 +2713,29 @@ tax_table(biom_ITS_ecm_gen_merg_ab)
 ################################################################################
 ################################################################################
 ### BETA DIVERSITY in Vegan ----------------------------------------------------------------------------------
-sample_data(biom_ITS_hell)
-sample_data(biom_LSU_hell)
+sample_data(phyloseq_ITS_hell)
+sample_data(phyloseq_LSU_hell)
 
-biom_ITS_hell2 <- subset_samples(biom_ITS_hell, Site2%in%c("Beach_Intertidal1","Beach_Intertidal2","Cassava1","Cassava2",
+phyloseq_ITS_hell2 <- subset_samples(phyloseq_ITS_hell, Site2%in%c("Beach_Intertidal1","Beach_Intertidal2","Cassava1","Cassava2",
                                                            "Cassuarina1","Grassland2","Mohogany1","Mohogany2",
                                                            "Mohogany3","Native_Forest1","Native_Forest3","Pinus_carribeana",
                                                            "Stream_Bank1","Stream_Bank2","Stream_Bank3","Sugarcane1","Sugarcane2"))
 
-biom_ITS_hell2
-sample_data(biom_ITS_hell2)
+phyloseq_ITS_hell2
+sample_data(phyloseq_ITS_hell2)
 
-otu_ITS_hell2 <- as.data.frame(otu_table(biom_ITS_hell2))
-taxa_ITS_hell2 <- as.data.frame(as.matrix(tax_table(biom_ITS_hell2)))
-metadata_ITS_hell2 <- as.data.frame(as.matrix(sample_data(biom_ITS_hell2)[,2:9]))
+otu_ITS_hell2 <- as.data.frame(otu_table(phyloseq_ITS_hell2))
+taxa_ITS_hell2 <- as.data.frame(as.matrix(tax_table(phyloseq_ITS_hell2)))
+metadata_ITS_hell2 <- as.data.frame(as.matrix(sample_data(phyloseq_ITS_hell2)[,2:9]))
 identical(colnames(otu_ITS_hell2), rownames(metadata_ITS_hell2))
 
 
 
-fungi_ITS_hl <- as.matrix(otu_table(biom_ITS_hell))
+fungi_ITS_hl <- as.matrix(otu_table(phyloseq_ITS_hell))
 fungi_ITS_hl
-fungi_LSU_hl <- as.matrix(otu_table(biom_LSU_hell))
+fungi_LSU_hl <- as.matrix(otu_table(phyloseq_LSU_hell))
 fungi_LSU_hl
-bacteria_hl <- as.matrix(otu_table(biom_16s_hell))
+bacteria_hl <- as.matrix(otu_table(phyloseq_16s_hell))
 bacteria_hl
 
 # import, filter reorder samples before analyses in vegan
@@ -3057,9 +3002,9 @@ otutab_ITS$taxonomy <- as.character(otutab_ITS$taxonomy)
 
 # changing order of levels. It should happen you need
 # to change variable level order for a better display
-sample_data(biom_R1)$Time<-factor(sample_data(biom_R1)$Time, levels=c("day1","day5","day20"))
-levels(sample_data(biom_R1)$Time)
-sample_data(biom_R1)
+sample_data(phyloseq_R1)$Time<-factor(sample_data(phyloseq_R1)$Time, levels=c("day1","day5","day20"))
+levels(sample_data(phyloseq_R1)$Time)
+sample_data(phyloseq_R1)
 
 
 # plots the top 10 OTUs (by default) at five ranks
@@ -3174,16 +3119,16 @@ ggplot() +
 
 # plotting library 
 
-sums_biom_ITS <- data.frame(colSums(otu_table(biom_ITS_cv)))
-colnames(sums_biom_ITS) <- "Sample_TotalSeqs"
-sums_biom_ITS$sample <- row.names(sums_biom_ITS)
-sums_biom_ITS$Description <- sample_data(biom_ITS_cv)$Description
-sums_biom_ITS$Site2 <- sample_data(biom_ITS_cv)$Site2 # if you want to add another variable to use further
-sums_biom_ITS <- arrange(sums_biom_ITS, Sample_TotalSeqs)
-#sums_biom_ITS <- arrange(sums_biom_ITS, Description) # to order according another variable in the mapping
-sums_biom_ITS
+sums_phyloseq_ITS <- data.frame(colSums(otu_table(phyloseq_ITS_cv)))
+colnames(sums_phyloseq_ITS) <- "Sample_TotalSeqs"
+sums_phyloseq_ITS$sample <- row.names(sums_phyloseq_ITS)
+sums_phyloseq_ITS$Description <- sample_data(phyloseq_ITS_cv)$Description
+sums_phyloseq_ITS$Site2 <- sample_data(phyloseq_ITS_cv)$Site2 # if you want to add another variable to use further
+sums_phyloseq_ITS <- arrange(sums_phyloseq_ITS, Sample_TotalSeqs)
+#sums_phyloseq_ITS <- arrange(sums_phyloseq_ITS, Description) # to order according another variable in the mapping
+sums_phyloseq_ITS
 
-ggplot(sums_biom_ITS, aes(x=reorder(Site2, Sample_TotalSeqs), y = Sample_TotalSeqs)) + 
+ggplot(sums_phyloseq_ITS, aes(x=reorder(Site2, Sample_TotalSeqs), y = Sample_TotalSeqs)) + 
   geom_boxplot(outlier.colour="red", outlier.shape=16, outlier.size=4) +
   geom_point() + geom_text_repel(aes(label=sample), size = 3) + 
   theme(axis.text.x=element_text(angle=90, hjust=1)) +
@@ -3197,34 +3142,34 @@ ggplot(sums_biom_ITS, aes(x=reorder(Site2, Sample_TotalSeqs), y = Sample_TotalSe
 ## New script for barplots and relative abundances
 
 
-biom_ITS_symb = import_biom("mycorrhizal_genus.biom")
+phyloseq_ITS_symb = import_biom("mycorrhizal_genus.biom")
 map_ITS = import_qiime_sample_data("mapping_ITS.txt")
-sample_data(biom_ITS_symb) <- map_ITS
-colnames(tax_table(biom_ITS_symb)) = c(k = "Kingdom", p = "Phylum", c = "Class", o = "Order", f = "Family", g = "Genus", s = "Species")
+sample_data(phyloseq_ITS_symb) <- map_ITS
+colnames(tax_table(phyloseq_ITS_symb)) = c(k = "Kingdom", p = "Phylum", c = "Class", o = "Order", f = "Family", g = "Genus", s = "Species")
 otus_rep_ITS_symb <- readDNAStringSet("otus_ITS.fasta", format="fasta", seek.first.rec=TRUE, use.names=TRUE)
-biom_ITS_symb <- merge_phyloseq(biom_ITS_symb, otus_rep_ITS_symb)
-biom_ITS_symb
-sample_data(biom_ITS_symb)
-tax_table(biom_ITS_symb)
-refseq(biom_ITS_symb)
+phyloseq_ITS_symb <- merge_phyloseq(phyloseq_ITS_symb, otus_rep_ITS_symb)
+phyloseq_ITS_symb
+sample_data(phyloseq_ITS_symb)
+tax_table(phyloseq_ITS_symb)
+refseq(phyloseq_ITS_symb)
 
 
-biom_ITS_symb_gen = tax_glom(biom_ITS_symb, "Genus")
-biom_ITS_symb_gen
-biom_ITS_symb_gen_merg = merge_samples(biom_ITS_symb_gen, "Site1")
-biom_ITS_symb_gen_merg
-sample_data(biom_ITS_symb_gen_merg)
-otu_table(biom_ITS_symb_gen_merg)
+phyloseq_ITS_symb_gen = tax_glom(phyloseq_ITS_symb, "Genus")
+phyloseq_ITS_symb_gen
+phyloseq_ITS_symb_gen_merg = merge_samples(phyloseq_ITS_symb_gen, "Site1")
+phyloseq_ITS_symb_gen_merg
+sample_data(phyloseq_ITS_symb_gen_merg)
+otu_table(phyloseq_ITS_symb_gen_merg)
 
-sample_data(biom_ITS_symb_gen_merg)$Site1 <- levels(sample_data(biom_ITS_symb_gen)$Site1)
-biom_ITS_symb_gen_merg_ab = transform_sample_counts(biom_ITS_symb_gen_merg, function(x) 100 * x/sum(x))
-biom_ITS_symb_gen_merg_ab
-otu_table(biom_ITS_symb_gen_merg_ab)
-tax_table(biom_ITS_symb_gen_merg_ab)
-sum(otu_table(biom_ITS_symb_gen_merg_ab))
+sample_data(phyloseq_ITS_symb_gen_merg)$Site1 <- levels(sample_data(phyloseq_ITS_symb_gen)$Site1)
+phyloseq_ITS_symb_gen_merg_ab = transform_sample_counts(phyloseq_ITS_symb_gen_merg, function(x) 100 * x/sum(x))
+phyloseq_ITS_symb_gen_merg_ab
+otu_table(phyloseq_ITS_symb_gen_merg_ab)
+tax_table(phyloseq_ITS_symb_gen_merg_ab)
+sum(otu_table(phyloseq_ITS_symb_gen_merg_ab))
 
 source("../plot_ordered_bar_byGian.R")
-p1 <- plot_ordered_bar(biom_ITS_symb_gen_merg_ab, x = "Site1", fill="Genus", leg_size = 0.4, title="(A)")
+p1 <- plot_ordered_bar(phyloseq_ITS_symb_gen_merg_ab, x = "Site1", fill="Genus", leg_size = 0.4, title="(A)")
 p1
 
 myco_bar = p1 + theme(legend.text = element_text(face="italic")) +
@@ -3284,23 +3229,23 @@ myco_bar = p1 + theme(legend.text = element_text(face="italic")) +
 
 ## now endophytic fungi
 
-biom_ITS_endo = import_biom("endophyte_genus.biom")
+phyloseq_ITS_endo = import_biom("endophyte_genus.biom")
 map_ITS = import_qiime_sample_data("mapping_ITS.txt")
-sample_data(biom_ITS_endo) <- map_ITS
-colnames(tax_table(biom_ITS_endo)) = c(k = "Kingdom", p = "Phylum", c = "Class", o = "Order", f = "Family", g = "Genus", s = "Species")
+sample_data(phyloseq_ITS_endo) <- map_ITS
+colnames(tax_table(phyloseq_ITS_endo)) = c(k = "Kingdom", p = "Phylum", c = "Class", o = "Order", f = "Family", g = "Genus", s = "Species")
 otus_rep_ITS_endo <- readDNAStringSet("otus_ITS.fasta", format="fasta", seek.first.rec=TRUE, use.names=TRUE)
-biom_ITS_endo <- merge_phyloseq(biom_ITS_endo, otus_rep_ITS_endo)
-biom_ITS_endo
-sample_data(biom_ITS_endo)
-tax_table(biom_ITS_endo)
-refseq(biom_ITS_endo)
+phyloseq_ITS_endo <- merge_phyloseq(phyloseq_ITS_endo, otus_rep_ITS_endo)
+phyloseq_ITS_endo
+sample_data(phyloseq_ITS_endo)
+tax_table(phyloseq_ITS_endo)
+refseq(phyloseq_ITS_endo)
 
-biom_ITS_endo_gen = tax_glom(biom_ITS_endo, "Genus")
-biom_ITS_endo_gen_merg = merge_samples(biom_ITS_endo_gen, "Site1")
-sample_data(biom_ITS_endo_gen_merg)$Site1 <- levels(sample_data(biom_ITS_endo_gen)$Site1)
-biom_ITS_endo_gen_merg_ab = transform_sample_counts(biom_ITS_endo_gen_merg, function(x) 100 * x/sum(x))
+phyloseq_ITS_endo_gen = tax_glom(phyloseq_ITS_endo, "Genus")
+phyloseq_ITS_endo_gen_merg = merge_samples(phyloseq_ITS_endo_gen, "Site1")
+sample_data(phyloseq_ITS_endo_gen_merg)$Site1 <- levels(sample_data(phyloseq_ITS_endo_gen)$Site1)
+phyloseq_ITS_endo_gen_merg_ab = transform_sample_counts(phyloseq_ITS_endo_gen_merg, function(x) 100 * x/sum(x))
 
-p2 <- plot_ordered_bar(biom_ITS_endo_gen_merg_ab, x = "Site1", fill="Genus", leg_size = 0.4, title="(B)")
+p2 <- plot_ordered_bar(phyloseq_ITS_endo_gen_merg_ab, x = "Site1", fill="Genus", leg_size = 0.4, title="(B)")
 p2
 
 endo_bar = p2 + theme(legend.text = element_text(face="italic")) + 
@@ -3340,25 +3285,25 @@ endo_bar = p2 + theme(legend.text = element_text(face="italic")) +
 
 ## now pathogens
 
-biom_ITS_pat = import_biom("pathogen_genus.biom")
+phyloseq_ITS_pat = import_biom("pathogen_genus.biom")
 map_ITS = import_qiime_sample_data("mapping_ITS.txt")
-sample_data(biom_ITS_pat) <- map_ITS
-colnames(tax_table(biom_ITS_pat)) = c(k = "Kingdom", p = "Phylum", c = "Class", o = "Order", f = "Family", g = "Genus", s = "Species")
+sample_data(phyloseq_ITS_pat) <- map_ITS
+colnames(tax_table(phyloseq_ITS_pat)) = c(k = "Kingdom", p = "Phylum", c = "Class", o = "Order", f = "Family", g = "Genus", s = "Species")
 otus_rep_ITS_pat <- readDNAStringSet("otus_ITS.fasta", format="fasta", seek.first.rec=TRUE, use.names=TRUE)
-biom_ITS_pat <- merge_phyloseq(biom_ITS_pat, otus_rep_ITS_pat)
-biom_ITS_pat
-sample_data(biom_ITS_pat)
-tax_table(biom_ITS_pat)
-refseq(biom_ITS_pat)
+phyloseq_ITS_pat <- merge_phyloseq(phyloseq_ITS_pat, otus_rep_ITS_pat)
+phyloseq_ITS_pat
+sample_data(phyloseq_ITS_pat)
+tax_table(phyloseq_ITS_pat)
+refseq(phyloseq_ITS_pat)
 
-biom_ITS_pat_gen = tax_glom(biom_ITS_pat, "Genus")
-biom_ITS_pat_gen_merg = merge_samples(biom_ITS_pat_gen, "Site1")
-biom_ITS_pat_gen_merg
-tax_table(biom_ITS_pat_gen_merg)
-otu_table(biom_ITS_pat_gen_merg)
+phyloseq_ITS_pat_gen = tax_glom(phyloseq_ITS_pat, "Genus")
+phyloseq_ITS_pat_gen_merg = merge_samples(phyloseq_ITS_pat_gen, "Site1")
+phyloseq_ITS_pat_gen_merg
+tax_table(phyloseq_ITS_pat_gen_merg)
+otu_table(phyloseq_ITS_pat_gen_merg)
 
-sample_data(biom_ITS_pat_gen_merg)$Site1 <- levels(sample_data(biom_ITS_pat_gen)$Site1)
-biom_ITS_pat_gen_merg_ab = transform_sample_counts(biom_ITS_pat_gen_merg, function(x) 100 * x/sum(x))
+sample_data(phyloseq_ITS_pat_gen_merg)$Site1 <- levels(sample_data(phyloseq_ITS_pat_gen)$Site1)
+phyloseq_ITS_pat_gen_merg_ab = transform_sample_counts(phyloseq_ITS_pat_gen_merg, function(x) 100 * x/sum(x))
 
 
 badTaxa = c("OTU_1494","OTU_2750","OTU_2559","OTU_3578","OTU_3405","OTU_3221","OTU_5205","OTU_3915","OTU_2624","OTU_3451"
@@ -3370,13 +3315,13 @@ pop_taxa = function(physeq, badTaxa){
   return(prune_taxa(myTaxa, physeq))
 }
 
-biom_ITS_pat_gen_merg_ab_prun = pop_taxa(biom_ITS_pat_gen_merg_ab, badTaxa)
-biom_ITS_pat_gen_merg_ab_prun
+phyloseq_ITS_pat_gen_merg_ab_prun = pop_taxa(phyloseq_ITS_pat_gen_merg_ab, badTaxa)
+phyloseq_ITS_pat_gen_merg_ab_prun
 
-#top26 <- names(sort(taxa_sums(biom_ITS_pat_gen_merg_ab), TRUE)[1:26]) # sampling first 100 taxa
-#biom_ITS_pat_gen_merg_ab_26 <- prune_taxa(top26, biom_ITS_pat_gen_merg_ab)
+#top26 <- names(sort(taxa_sums(phyloseq_ITS_pat_gen_merg_ab), TRUE)[1:26]) # sampling first 100 taxa
+#phyloseq_ITS_pat_gen_merg_ab_26 <- prune_taxa(top26, phyloseq_ITS_pat_gen_merg_ab)
 
-p3 <- plot_ordered_bar(biom_ITS_pat_gen_merg_ab_prun, x = "Site1", fill="Genus", leg_size = 0.4, title="(C)")
+p3 <- plot_ordered_bar(phyloseq_ITS_pat_gen_merg_ab_prun, x = "Site1", fill="Genus", leg_size = 0.4, title="(C)")
 p3
 
 pat_bar = p3 + theme(legend.text = element_text(face="italic")) +
@@ -3437,19 +3382,19 @@ ggarrange(myco_bar,endo_bar,pat_bar,
 
 
 
-biom_16S_gen = tax_glom(biom_16s_cv, "Genus")
-biom_16S_gen
-biom_16S_gen_merg = merge_samples(biom_16S_gen, "Site1")
-biom_16S_gen_merg
-sample_data(biom_16S_gen_merg)
-otu_table(biom_16S_gen_merg)
+phyloseq_16S_gen = tax_glom(phyloseq_16s_cv, "Genus")
+phyloseq_16S_gen
+phyloseq_16S_gen_merg = merge_samples(phyloseq_16S_gen, "Site1")
+phyloseq_16S_gen_merg
+sample_data(phyloseq_16S_gen_merg)
+otu_table(phyloseq_16S_gen_merg)
 
-sample_data(biom_16S_gen_merg)$Site1 <- levels(sample_data(biom_16S_gen)$Site1)
-biom_16S_gen_merg_ab = transform_sample_counts(biom_16S_gen_merg, function(x) 100 * x/sum(x))
-biom_16S_gen_merg_ab
-otu_table(biom_16S_gen_merg_ab)
-tax_table(biom_16S_gen_merg_ab)
-sum(otu_table(biom_16S_gen_merg_ab))
+sample_data(phyloseq_16S_gen_merg)$Site1 <- levels(sample_data(phyloseq_16S_gen)$Site1)
+phyloseq_16S_gen_merg_ab = transform_sample_counts(phyloseq_16S_gen_merg, function(x) 100 * x/sum(x))
+phyloseq_16S_gen_merg_ab
+otu_table(phyloseq_16S_gen_merg_ab)
+tax_table(phyloseq_16S_gen_merg_ab)
+sum(otu_table(phyloseq_16S_gen_merg_ab))
 
 
 badTaxa = c("OTU_30")
@@ -3460,28 +3405,28 @@ pop_taxa = function(physeq, badTaxa){
   return(prune_taxa(myTaxa, physeq))
 }
 
-biom_16s_gen_merg_ab_prun = pop_taxa(biom_16S_gen_merg_ab, badTaxa)
-biom_16s_gen_merg_ab_prun
+phyloseq_16s_gen_merg_ab_prun = pop_taxa(phyloseq_16S_gen_merg_ab, badTaxa)
+phyloseq_16s_gen_merg_ab_prun
 
 
-top_30_bact <- names(sort(taxa_sums(biom_16s_gen_merg_ab_prun), TRUE)[1:30]) # first 30 top OTUs 
+top_30_bact <- names(sort(taxa_sums(phyloseq_16s_gen_merg_ab_prun), TRUE)[1:30]) # first 30 top OTUs 
 top_30_bact
-biom_16s_top30 <- prune_taxa(top_30_bact, biom_16s_gen_merg_ab_prun)
-biom_16s_top30
-tax_table(biom_16s_top30)
+phyloseq_16s_top30 <- prune_taxa(top_30_bact, phyloseq_16s_gen_merg_ab_prun)
+phyloseq_16s_top30
+tax_table(phyloseq_16s_top30)
 
 # get sequnces for BLAST against GenBank
-write.csv(refseq(biom_16S_gen) , file = "refseq_16s_gen.csv")
+write.csv(refseq(phyloseq_16S_gen) , file = "refseq_16s_gen.csv")
 # manual correction of the tax_table - OPTIONAL!
-write.csv(tax_table(biom_16s_top30) , file = "tax_16s_top30.csv")
-tax_biom_16s_top30 <- read.csv("tax_16s_top30.csv", header=T, row.names =1)
-tax_table(biom_16s_top30) <- tax_table(as.matrix(tax_biom_16s_top30))
-tax_table(biom_16s_top30)
+write.csv(tax_table(phyloseq_16s_top30) , file = "tax_16s_top30.csv")
+tax_phyloseq_16s_top30 <- read.csv("tax_16s_top30.csv", header=T, row.names =1)
+tax_table(phyloseq_16s_top30) <- tax_table(as.matrix(tax_phyloseq_16s_top30))
+tax_table(phyloseq_16s_top30)
 
 
 source("../plot_ordered_bar_byGian.R")
 
-p_bact <- plot_ordered_bar(biom_16s_top30, x = "Site1", fill="Genus", leg_size = 0.4, title="(D)")
+p_bact <- plot_ordered_bar(phyloseq_16s_top30, x = "Site1", fill="Genus", leg_size = 0.4, title="(D)")
 p_bact
 
 p_bact + theme(legend.text = element_text(face="italic")) +
@@ -3540,28 +3485,28 @@ p_bact + theme(legend.text = element_text(face="italic")) +
 
 ## Calculate Relative Abundacnes
 
-biom_ITS_cv
-biom_ITS_phy = tax_glom(biom_ITS_cv, "Phylum")
-otu_ITS_phy = taxa_sums(biom_ITS_phy)/sum(taxa_sums(biom_ITS_phy))*100
-tax_ITS_phy <- data.frame(tax_table(biom_ITS_phy))
+phyloseq_ITS_cv
+phyloseq_ITS_phy = tax_glom(phyloseq_ITS_cv, "Phylum")
+otu_ITS_phy = taxa_sums(phyloseq_ITS_phy)/sum(taxa_sums(phyloseq_ITS_phy))*100
+tax_ITS_phy <- data.frame(tax_table(phyloseq_ITS_phy))
 tax_ITS_phy <- tax_ITS_phy[c(1:2)]
 tax_ITS_phy$abundance <- as.vector(otu_ITS_phy)
 tax_ITS_phy <- tax_ITS_phy[order(tax_ITS_phy$abundance, decreasing = TRUE),] 
 tax_ITS_phy
 
-biom_LSU_cv
-biom_LSU_phy = tax_glom(biom_LSU_cv, "Phylum")
-otu_LSU_phy = taxa_sums(biom_LSU_phy)/sum(taxa_sums(biom_LSU_phy))*100
-tax_LSU_phy <- data.frame(tax_table(biom_LSU_phy))
+phyloseq_LSU_cv
+phyloseq_LSU_phy = tax_glom(phyloseq_LSU_cv, "Phylum")
+otu_LSU_phy = taxa_sums(phyloseq_LSU_phy)/sum(taxa_sums(phyloseq_LSU_phy))*100
+tax_LSU_phy <- data.frame(tax_table(phyloseq_LSU_phy))
 tax_LSU_phy <- tax_LSU_phy[c(1:2)]
 tax_LSU_phy$abundance <- as.vector(otu_LSU_phy)
 tax_LSU_phy <- tax_LSU_phy[order(tax_LSU_phy$abundance, decreasing = TRUE),] 
 tax_LSU_phy
 
-biom_16s_cv
-biom_16s_phy = tax_glom(biom_16s_cv, "Phylum")
-otu_16s_phy = taxa_sums(biom_16s_phy)/sum(taxa_sums(biom_16s_phy))*100
-tax_16s_phy <- data.frame(tax_table(biom_16s_phy))
+phyloseq_16s_cv
+phyloseq_16s_phy = tax_glom(phyloseq_16s_cv, "Phylum")
+otu_16s_phy = taxa_sums(phyloseq_16s_phy)/sum(taxa_sums(phyloseq_16s_phy))*100
+tax_16s_phy <- data.frame(tax_table(phyloseq_16s_phy))
 tax_16s_phy <- tax_16s_phy[c(1:2)]
 tax_16s_phy$abundance <- as.vector(otu_16s_phy)
 tax_16s_phy <- tax_16s_phy[order(tax_16s_phy$abundance, decreasing = TRUE),] 
@@ -3572,27 +3517,27 @@ tax_16s_phy
 
 # different guilds
 
-biom_ITS_symb
-tax_table(biom_ITS_symb)
-otu_table(biom_ITS_symb)
+phyloseq_ITS_symb
+tax_table(phyloseq_ITS_symb)
+otu_table(phyloseq_ITS_symb)
 
-otu_ITS_symb_gen = taxa_sums(biom_ITS_symb)/sum(taxa_sums(biom_ITS_symb))*100
-tax_ITS_symb_gen <- data.frame(tax_table(biom_ITS_symb))
+otu_ITS_symb_gen = taxa_sums(phyloseq_ITS_symb)/sum(taxa_sums(phyloseq_ITS_symb))*100
+tax_ITS_symb_gen <- data.frame(tax_table(phyloseq_ITS_symb))
 tax_ITS_symb_gen <- tax_ITS_symb_gen[c(1:6)]
 tax_ITS_symb_gen$abundance <- as.vector(otu_ITS_symb_gen)
 tax_ITS_symb_gen <- tax_ITS_symb_gen[order(tax_ITS_symb_gen$abundance, decreasing = TRUE),] 
 tax_ITS_symb_gen
 
-otu_ITS_endo_gen = taxa_sums(biom_ITS_endo)/sum(taxa_sums(biom_ITS_endo))*100
-tax_ITS_endo_gen <- data.frame(tax_table(biom_ITS_endo))
+otu_ITS_endo_gen = taxa_sums(phyloseq_ITS_endo)/sum(taxa_sums(phyloseq_ITS_endo))*100
+tax_ITS_endo_gen <- data.frame(tax_table(phyloseq_ITS_endo))
 tax_ITS_endo_gen <- tax_ITS_endo_gen[c(1:6)]
 tax_ITS_endo_gen$abundance <- as.vector(otu_ITS_endo_gen)
 tax_ITS_endo_gen <- tax_ITS_endo_gen[order(tax_ITS_endo_gen$abundance, decreasing = TRUE),] 
 tax_ITS_endo_gen
 
-biom_ITS_pat_gen = tax_glom(biom_ITS_pat, "Genus")
-otu_ITS_pat_gen = taxa_sums(biom_ITS_pat_gen)/sum(taxa_sums(biom_ITS_pat_gen))*100
-tax_ITS_pat_gen <- data.frame(tax_table(biom_ITS_pat_gen))
+phyloseq_ITS_pat_gen = tax_glom(phyloseq_ITS_pat, "Genus")
+otu_ITS_pat_gen = taxa_sums(phyloseq_ITS_pat_gen)/sum(taxa_sums(phyloseq_ITS_pat_gen))*100
+tax_ITS_pat_gen <- data.frame(tax_table(phyloseq_ITS_pat_gen))
 tax_ITS_pat_gen <- tax_ITS_pat_gen[c(1:6)]
 tax_ITS_pat_gen$abundance <- as.vector(otu_ITS_pat_gen)
 tax_ITS_pat_gen <- tax_ITS_pat_gen[order(tax_ITS_pat_gen$abundance, decreasing = TRUE),] 
@@ -3603,9 +3548,9 @@ tax_ITS_pat_gen
 
 ## alpha diversity
 
-plot_alpha_its <- plot_richness(biom_ITS_cv, x = "Site1", color = "Site1", measures = c("Observed","Simpson"))
-plot_alpha_lsu <- plot_richness(biom_LSU_cv, x = "Site1", color = "Site1", measures = c("Observed","Shannon"))
-plot_alpha_16s <- plot_richness(biom_16s_cv, x = "Site1", color = "Site1", measures = c("Observed","Shannon"))
+plot_alpha_its <- plot_richness(phyloseq_ITS_cv, x = "Site1", color = "Site1", measures = c("Observed","Simpson"))
+plot_alpha_lsu <- plot_richness(phyloseq_LSU_cv, x = "Site1", color = "Site1", measures = c("Observed","Shannon"))
+plot_alpha_16s <- plot_richness(phyloseq_16s_cv, x = "Site1", color = "Site1", measures = c("Observed","Shannon"))
 
 rich_its = plot_alpha_its + geom_boxplot(outlier.colour="black", outlier.shape = 8) +
 scale_colour_manual(values=palette_CB9) +
