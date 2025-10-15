@@ -7,7 +7,7 @@
 #                   Diversity in Soils Beneath Native and Introduced Plants in Fiji, 
 #                   South Pacific. Microb Ecol. 78(1):136-146. 
 # DOI               10.1007/s00248-018-1266-1. 
-# PMID: 	    30288545.
+# PMID: 	    30288545
 # **********************************************************************--------
 
 #rm(list = ls())it config pull.rebase false
@@ -146,10 +146,15 @@ plot_libsize(phyloseq_16S)
 
 # Guilds extracted with funguild
 phyloseq_endo <- readRDS(file = file.path(data_path, "phyloseq_endophytic.RDS"))
-phyloseq_pato <- readRDS(file = file.path(data_path, "phyloseq_pathogenic.RDS"))
-phyloseq_symb <- readRDS(file = file.path(data_path, "phyloseq_symbiont.RDS"))
+phyloseq_endo
 
-source(file = "Benucci_etal_2018_FijiSoilMicrobiome/functions/plot_ordered_bar_byGian.R")
+phyloseq_pato <- readRDS(file = file.path(data_path, "phyloseq_pathogenic.RDS"))
+phyloseq_pato
+
+phyloseq_symb <- readRDS(file = file.path(data_path, "phyloseq_symbiont.RDS"))
+phyloseq_symb
+
+# source(file = "Benucci_etal_2018_FijiSoilMicrobiome/functions/plot_ordered_bar_byGian.R")
 
 # 1) endophytes
 phyloseq_endo_gen = tax_glom(phyloseq_endo, "Genus")
