@@ -1,26 +1,66 @@
-# ****************DATA ANALYSIS ********************************************************************************************* -----
-# Project name: Fungal and Bacterial Associations in Early Diverging Lycopodiaceae
-# Manuscript:   Evidence for Co-Evolutionary History of Early Diverging Lycopodiaceae Plants With Fungi But Not Bacteria
-# Authors:      Gian Maria Niccolò Benucci, Delaney Burnard, Lara D. Shepherd, Gregory Bonito, Andrew Munkacsi
-# Affiliation:  Michigan State University, Victoria University of Wellington, Museum of New Zealand Te Papa Tongarewa
-# Journal:      Forntiers in Microbiology
-# Date:         October 3, 2019
-# *************************************************************************************************************************** -----
+#************************************************************************-------
+# Manuscript Title: Evidence for Co-evolutionary History of Early Diverging 
+#                   Lycopodiaceae Plants With Fungi
+# Authors:          Benucci GMN, Burnard D, Shepherd LD, Bonito G and Munkacsi AB
+# Code Developer:   Gian MN Benucci 2019
+# Citation:         Benucci GMN, Burnard D, Shepherd LD, Bonito G and Munkacsi AB. 
+#                   Evidence for Co-evolutionary History of Early Diverging 
+#                   Lycopodiaceae Plants With Fungi. Front Microbiol. 2020 Jan 
+#                   15;10:2944. doi: 10.3389/fmicb.2019.02944. PMID: 32010072;
+#                   PMCID: PMC6974469.
+# DOI               10.3389/fmicb.2019.02944.
+# PMID:             32010072
+# **********************************************************************--------
 
-# ___________WORKING ENVIRONMENT SETUP _____________ ---------------------------------------------------
-options(scipen = 999) #to use decimals
-options(max.print=100000000) # to print more lines on the display
-options(verbose=TRUE)
-#rm(list = ls()) # use with caution
+#rm(list = ls())it config pull.rebase false
+options(scipen = 9999, pillar.sigfig = 6, digits = 6, max.print = 10000000)
 
-# >>> IMPORTING DATASETS -------------------------------------------------------------------------------
-library(phyloseq); packageVersion("phyloseq")
-library(ggplot2)
-library(Biostrings)
-library(ape)
+# Check the lib paths ----------------------------------------------------------
+.libPaths()
 
-# IMPORTING DATASETS -----------------------------------------------------------------------------------
-getwd(); dir(); ls() 
+# **********************************************************************--------
+# ***** SETUP ***** ------------------------------------------------------------
+
+# Load R packages --------------------------------------------------------------
+if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")
+
+pacman::p_load(
+  styler,
+  magrittr,
+  Biostrings,
+  ape,
+  decontam,
+  phyloseq,
+  speedyseq,
+  tidysq,
+  vegan,
+  AICcPermanova,
+  tidyverse,
+  ggtext,
+  ggpubr,
+  cowplot,
+  gridExtra,
+  ggrepel,
+  scales,
+  agricolae
+)
+
+# Session Info -----------------------------------------------------------------
+sessionInfo()
+
+# **********************************************************************--------
+# ***** PATHS ***** ------------------------------------------------------------
+
+data_path <- 
+  ("/home/gian/Data/github_repos/Published-R-Code/Benucci_etal_2019_Lycopods/datasets")
+
+# results ----------------------------------------------------------------------
+
+results_path <- 
+  ("/home/gian/Data/github_repos/Published-R-Code/Benucci_etal_2019_Lycopods/results/")
+
+# **********************************************************************--------
+# ***** IMPORT ***** -----------------------------------------------------------
 
 # >>> COLOR PALETTES --------------------------------------------------------------------------------------
 
