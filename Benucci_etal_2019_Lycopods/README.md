@@ -18,26 +18,12 @@ URL: https://www.frontiersin.org/journals/microbiology/articles/10.3389/fmicb.20
 
 ```
 ├── code
-│   └── Rcode_LycopodsNZ.R
+│   └── Rcode_LycopodsNZ.R
 ├── datasets
-│   ├── mapping_16s.txt
-│   ├── mapping_18S.txt
-│   ├── mapping_ITS.txt
-│   ├── mapping_SSU.txt
-│   ├── otus_16S.fasta
-│   ├── otus_R1_18S.fasta
-│   ├── otus_R1_ITS.fasta
-│   ├── otus_R1_SSU.fasta
-│   ├── otu_table_16S_UPARSE.txt
-│   ├── otu_table_18S_UPARSE_R1.txt
-│   ├── otu_table_ITS_UPARSE_R1.txt
-│   ├── otu_table_SSU_UPARSE_R1.txt
-│   ├── taxonomy_16S_RDP.txt
-│   ├── taxonomy_16S_SILVA.txt
-│   ├── taxonomy_18S_SILVA.csv
-│   ├── taxonomy_ITS_consensus.txt
-│   ├── taxonomy_ITS_RDP.txt
-│   └── taxonomy_SSU_SILVA.csv
+│   ├── phyloseq_16S.RDS
+│   ├── phyloseq_18S.RDS
+│   ├── phyloseq_ITS.RDS
+│   └── phyloseq_SSU.RDS
 ├── functions
 └── README.md
 ```

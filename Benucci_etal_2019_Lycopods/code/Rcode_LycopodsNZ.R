@@ -62,6 +62,33 @@ results_path <-
 # **********************************************************************--------
 # ***** IMPORT ***** -----------------------------------------------------------
 
+# _NOTE_ These datasets are clean to number and filtered from non-target, mitochondria 
+# and chloroplast sequences. Contaminants were checked by PCR on negative control
+# samples. 
+
+phyloseq_ITS <- readRDS(file = file.path(data_path, "phyloseq_ITS.RDS"))
+phyloseq_ITS
+sample_sums(phyloseq_ITS)
+
+phyloseq_16S <- readRDS(file = file.path(data_path, "phyloseq_16S.RDS"))
+phyloseq_16S
+sample_sums(phyloseq_16S)
+
+phyloseq_18S <- readRDS(file = file.path(data_path, "phyloseq_18S.RDS"))
+phyloseq_18S
+sample_sums(phyloseq_18S)
+
+phyloseq_SSU <- readRDS(file = file.path(data_path, "phyloseq_SSU.RDS"))
+phyloseq_SSU
+sample_sums(phyloseq_SSU)
+
+
+
+
+
+
+
+
 # >>> COLOR PALETTES --------------------------------------------------------------------------------------
 
 palette_fungi = c("#781156","#A51876","#D21E96","#E43FAD","#EA6CC0","#F098D3","#114578","#185EA5",
@@ -76,9 +103,12 @@ palette_bact = c("#781156","#A51876","#D21E96","#E43FAD","#EA6CC0","#F098D3","#1
                  "#A5A518","#D2D21E","#E4E43F","#EAEA6C","#D21E2C")
 
 
-# Import fungal ITS data ------------------------------------------------------------------------------
-otus_ITS_uparse_R1 <- read.delim("analysis_ITS/otu_table_ITS_UPARSE_R1.txt",row.names=1) 
-otus_phy_ITS_uparse_R1 <-otu_table(otus_ITS_uparse_R1, taxa_are_rows = TRUE)
+
+# older stuff... I am slowly cleanign this...
+otus_ITS_uparse_R1 <- read.delim(file."analysis_ITS/otu_table_ITS_UPARSE_R1.txt",row.names=1) 
+
+
+otus_phy_ITS_uparse_R1 <- otu_table(otus_ITS_uparse_R1, taxa_are_rows = TRUE)
 
 metadata_ITS_uparse_R1 <-read.delim("analysis_ITS/mapping_ITS.txt", row.names=1, header=TRUE, sep="\t")
 metadata_phy_ITS_uparse_R1 <-sample_data(metadata_ITS_uparse_R1)
