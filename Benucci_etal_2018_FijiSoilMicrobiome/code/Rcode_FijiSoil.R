@@ -48,7 +48,6 @@ sessionInfo()
 
 # **********************************************************************--------
 # ***** PATHS ***** ------------------------------------------------------------
-# datasets ---------------------------------------------------------------------
 
 data_path <- 
   ("/home/gian/Data/github_repos/Published-R-Code/Benucci_etal_2018_FijiSoilMicrobiome/datasets")
@@ -60,8 +59,6 @@ results_path <-
 
 # **********************************************************************--------
 # ***** IMPORT ***** -----------------------------------------------------------
-
-# Import datasets --------------------------------------------------------------
 
 # _NOTE_ These datasets are clean to number and filtered from non-target, mitochondria 
 # and chloroplast sequences. Contaminants were checked by PCR on negative control
