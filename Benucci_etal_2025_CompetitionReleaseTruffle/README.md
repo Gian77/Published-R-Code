@@ -1,6 +1,6 @@
 ## **Title:** "Mycorrhizal competition release and microbial dynamics in native and non-native *Tuber melanosporum* habitats." 
 
-**Authors:** Gian Maria Niccolo Benucci, Sergi Garcia-Barreda, Sergio Sánchez, Pedro Marco, Ana De Miguel, Francois Le Tacon, Giorgio Marozzi, Leonardo Baciarelli Failini, Harry Eslick, Todd Elliott, Aurelie Deveau, Claude Murat, Domizia Donnini, and Gregory Bonito
+**Authors:** Gian Maria Niccolo' Benucci, Sergi Garcia-Barreda, Sergio Sánchez, Pedro Marco, Ana De Miguel, Francois Le Tacon, Giorgio Marozzi, Leonardo Baciarelli Failini, Harry Eslick, Todd Elliott, Aurelie Deveau, Claude Murat, Domizia Donnini, and Gregory Bonito
 
 ## **Journal:** Applied and Environmental Microbiology.
 
