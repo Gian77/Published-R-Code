@@ -1,12 +1,12 @@
-# 📘 Code for Benucci et al. (2018) Microb Ecol
+# 📘 Code for Benucci et al. 
 
-## 📖 Citation
+## **Title:** "Mycorrhizal competition release and microbial dynamics in native and non-native *Tuber melanosporum* habitats." 
+
+## 📖 Citation (unpublished)
 
 **Authors:** Gian Maria Niccolo' Benucci, Sergi Garcia-Barreda, Sergio Sánchez, Pedro Marco, Ana De Miguel, Francois Le Tacon, Giorgio Marozzi, Leonardo Baciarelli Failini, Harry Eslick, Todd Elliott, Aurelie Deveau, Claude Murat, Domizia Donnini, and Gregory Bonito
 
 Corresponding author: benucci@msu.edu
-
-## **Title:** "Mycorrhizal competition release and microbial dynamics in native and non-native *Tuber melanosporum* habitats." 
 
 ## **Journal:** Applied and Environmental Microbiology.
 
