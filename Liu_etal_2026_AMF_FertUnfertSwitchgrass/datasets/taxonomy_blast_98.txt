@@ -1,0 +1,467 @@
+OTU_ID	OTU_Score	Kingdom	K_score	Phylum	P_score	Class	C_score	Order	O_score	Family	F_score	Genus	G_score	Species	S_score
+Query_1        	0.92  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Microdominikia 	0.92  	Microdominikia litorea	0.92  
+Query_2        	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Paraglomerales 	1.0   	Paraglomeraceae	1.0   	Paraglomus     	1.0   	Paraglomus brasilianum	1.0   
+Query_3        	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_4        	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_5        	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_6        	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_7        	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_8        	0.76  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   	Glomeraceae sp.	0.76  
+Query_9        	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_10       	0.9047619047619048	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	0.92  	Diversisporaceae	0.92  	Diversispora   	0.9047619047619048
+Query_11       	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   	Archaeosporaceae	1.0   
+Query_12       	0.92  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Paraglomerales 	1.0   	Paraglomeraceae	1.0   	Paraglomus     	1.0   	Paraglomus laccatum	0.92  
+Query_13       	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   
+Query_14       	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   
+Query_15       	0.84  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   	Ambisporaceae  	1.0   	Ambispora      	1.0   	uncultured Archaeosporales	0.84  
+Query_16       	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   
+Query_17       	0.8   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   	Glomeraceae sp.	0.8   
+Query_18       	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   
+Query_19       	0.8   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Paraglomerales 	1.0   	Paraglomeraceae	1.0   	Paraglomus     	1.0   	uncultured Paraglomus	0.8   
+Query_20       	0.9375	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Rhizophagus    	0.9375
+Query_21       	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Paraglomerales 	1.0   	Paraglomeraceae	1.0   	Paraglomus     	1.0   	Paraglomus laccatum	1.0   
+Query_22       	0.72  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Gigasporaceae  	1.0   	Cetraspora     	1.0   	Cetraspora gilmorei	0.72  
+Query_23       	0.88  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Gigasporaceae  	1.0   	Cetraspora     	1.0   	Cetraspora gilmorei	0.88  
+Query_24       	0.68  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Acaulosporaceae	1.0   	Acaulospora    	1.0   	Acaulospora brasiliensis	0.68  
+Query_25       	0.84  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   	uncultured Glomeromycotina	0.84  
+Query_26       	0.9090909090909091	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Rhizophagus    	0.9090909090909091
+Query_27       	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Paraglomerales 	1.0   
+Query_28       	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Entrophosporales	0.9583333333333334	Entrophosporaceae	0.9583333333333334	Entrophospora  	1.0   
+Query_29       	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   
+Query_30       	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Funneliformis  	1.0   
+Query_31       	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_32       	0.9047619047619048	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	0.92  	Diversisporaceae	0.92  	Diversispora   	0.9047619047619048
+Query_33       	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   
+Query_34       	0.6666666666666666	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Microkamienskia	0.6666666666666666
+Query_35       	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_36       	0.85  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	0.88  	Diversisporaceae	0.88  	Diversispora   	0.85  
+Query_37       	0.8947368421052632	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	0.92  	Diversisporaceae	0.92  	Diversispora   	0.8947368421052632
+Query_38       	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   	Archaeosporaceae	0.8333333333333334	Ambispora      	1.0   
+Query_39       	0.96  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Microdominikia 	0.96  	Microdominikia litorea	0.96  
+Query_40       	0.8095238095238095	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Dominikia      	0.8095238095238095
+Query_41       	0.8   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   	Glomeraceae sp.	0.8   
+Query_42       	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   
+Query_43       	0.8   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   	Glomeraceae sp.	0.8   
+Query_44       	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Gigasporaceae  	1.0   	Scutellospora  	1.0   
+Query_45       	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Diversisporaceae	1.0   	Diversispora   	1.0   
+Query_46       	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Septoglomus    	1.0   
+Query_47       	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_48       	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   
+Query_49       	0.6666666666666666	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Dominikia      	0.6666666666666666
+Query_50       	0.96  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Microdominikia 	0.96  	Microdominikia litorea	0.96  
+Query_51       	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   	Archaeosporaceae	0.8571428571428571	Ambispora      	1.0   
+Query_52       	0.8   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   	Glomeraceae sp.	0.8   
+Query_53       	0.8   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   	uncultured Glomeromycotina	0.8   
+Query_54       	0.72  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Rhizophagus    	0.72  
+Query_55       	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_56       	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Paraglomerales 	1.0   	Paraglomeraceae	1.0   	Paraglomus     	1.0   
+Query_57       	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   	Archaeosporaceae	1.0   
+Query_58       	0.7368421052631579	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Dominikia      	0.7368421052631579
+Query_59       	0.7857142857142857	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Dominikia      	0.7857142857142857
+Query_60       	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   
+Query_61       	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   
+Query_62       	0.96  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   	Glomus macrocarpum	0.96  
+Query_63       	0.7916666666666666	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Rhizophagus    	0.7916666666666666
+Query_64       	0.92  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Microdominikia 	0.92  	Microdominikia litorea	0.92  
+Query_65       	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Entrophosporales	1.0   	Entrophosporaceae	1.0   	Entrophospora  	1.0   
+Query_66       	0.92  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Microdominikia 	0.92  	Microdominikia litorea	0.92  
+Query_67       	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   	Archaeosporaceae	0.8571428571428571	Ambispora      	1.0   
+Query_68       	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   
+Query_69       	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   
+Query_70       	0.6666666666666666	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Dominikia      	0.6666666666666666
+Query_71       	0.7619047619047619	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Septoglomus    	0.7619047619047619
+Query_72       	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   
+Query_73       	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Entrophosporales	0.9565217391304348	Entrophosporaceae	0.9565217391304348	Entrophospora  	1.0   
+Query_74       	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   	Archaeosporaceae	0.875 	Ambispora      	1.0   
+Query_75       	0.8235294117647058	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Rhizophagus    	0.8235294117647058
+Query_76       	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   
+Query_77       	0.6875	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	0.6875
+Query_78       	0.7619047619047619	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Septoglomus    	0.7619047619047619
+Query_79       	0.8235294117647058	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	0.88  	Diversisporaceae	0.88  	Diversispora   	0.8235294117647058
+Query_80       	0.68  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Diversisporaceae	1.0   	Diversispora   	1.0   	Diversispora versiformis	0.68  
+Query_81       	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Funneliformis  	1.0   
+Query_82       	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_83       	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   
+Query_84       	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   
+Query_85       	0.92  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Microdominikia 	0.92  	Microdominikia litorea	0.92  
+Query_86       	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Septoglomus    	1.0   
+Query_87       	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   
+Query_88       	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Entrophosporales	0.6666666666666666	Entrophosporaceae	0.6666666666666666	Entrophospora  	1.0   
+Query_89       	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Paraglomerales 	0.95  	Paraglomeraceae	0.9411764705882353	Paraglomus     	1.0   
+Query_90       	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_91       	0.68  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Microkamienskia	0.68  
+Query_92       	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   
+Query_93       	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   	Archaeosporaceae	0.8571428571428571	Ambispora      	1.0   
+Query_94       	0.9583333333333334	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Diversisporaceae	1.0   	Diversispora   	0.9583333333333334
+Query_95       	0.6666666666666666	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	0.6666666666666666
+Query_96       	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   	Archaeosporaceae	0.8333333333333334	Ambispora      	1.0   
+Query_97       	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Diversisporaceae	1.0   	Diversispora   	1.0   
+Query_98       	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Entrophosporales	0.95  	Entrophosporaceae	0.95  	Entrophospora  	1.0   
+Query_99       	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_100      	0.92  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Microdominikia 	0.92  	Microdominikia litorea	0.92  
+Query_101      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   
+Query_102      	0.84  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Gigasporaceae  	1.0   	Dentiscutata   	1.0   	Dentiscutata heterogama	0.84  
+Query_103      	0.8   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Entrophosporales	1.0   	Entrophosporaceae	1.0   	Entrophospora  	1.0   	Entrophospora claroidea	0.8   
+Query_104      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   
+Query_105      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_106      	0.8   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   	Glomeraceae sp.	0.8   
+Query_107      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_108      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_109      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_110      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Diversisporaceae	1.0   	Diversispora   	1.0   
+Query_111      	0.6818181818181818	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Dominikia      	0.6818181818181818
+Query_112      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_113      	0.8   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Gigasporaceae  	1.0   	Gigaspora      	1.0   	Gigaspora margarita	0.8   
+Query_114      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   
+Query_115      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   	Archaeosporaceae	1.0   
+Query_116      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   
+Query_117      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Acaulosporaceae	1.0   	Acaulospora    	1.0   
+Query_118      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Septoglomus    	1.0   
+Query_119      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   
+Query_120      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   
+Query_121      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_122      	0.68  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Gigasporaceae  	1.0   	Dentiscutata   	1.0   	Dentiscutata heterogama	0.68  
+Query_123      	0.92  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Microdominikia 	0.92  	Microdominikia litorea	0.92  
+Query_124      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   
+Query_125      	0.7142857142857143	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	0.7142857142857143
+Query_126      	0.96  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Microdominikia 	0.96  	Microdominikia litorea	0.96  
+Query_127      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Septoglomus    	1.0   
+Query_128      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   
+Query_129      	0.75  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Oehlia         	0.75  
+Query_130      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Paraglomerales 	1.0   	Paraglomeraceae	1.0   	Paraglomus     	1.0   	Paraglomus brasilianum	1.0   
+Query_131      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_132      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Gigasporaceae  	1.0   	Scutellospora  	1.0   
+Query_133      	0.76  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   	uncultured Glomeromycotina	0.76  
+Query_134      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Rhizophagus    	1.0   
+Query_135      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Paraglomerales 	1.0   	Paraglomeraceae	1.0   	Paraglomus     	1.0   	Paraglomus laccatum	1.0   
+Query_136      	0.8421052631578947	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	0.88  	Diversisporaceae	0.88  	Diversispora   	0.8421052631578947
+Query_137      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Gigasporaceae  	1.0   	Cetraspora     	1.0   	Cetraspora gilmorei	1.0   
+Query_138      	0.92  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Microdominikia 	0.92  	Microdominikia litorea	0.92  
+Query_139      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Rhizophagus    	1.0   
+Query_140      	0.6666666666666666	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	0.6666666666666666	Glomeraceae    	0.6666666666666666
+Query_141      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Paraglomerales 	1.0   	Paraglomeraceae	1.0   	Paraglomus     	1.0   
+Query_142      	0.76  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Dominikia      	1.0   	Dominikia sp.  	0.76  
+Query_143      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   
+Query_144      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   	Archaeosporaceae	1.0   
+Query_145      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Paraglomerales 	1.0   	Paraglomeraceae	1.0   	Paraglomus     	1.0   
+Query_146      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   
+Query_147      	0.92  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Microdominikia 	0.92  	Microdominikia litorea	0.92  
+Query_148      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_149      	0.68  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Diversisporaceae	1.0   	Diversispora   	1.0   	Diversispora versiformis	0.68  
+Query_150      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_151      	0.72  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Diversisporaceae	1.0   	Diversispora   	1.0   	Diversispora versiformis	0.72  
+Query_152      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Diversisporaceae	1.0   	Diversispora   	1.0   
+Query_153      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Dominikia      	1.0   
+Query_154      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Gigasporaceae  	1.0   	Gigaspora      	1.0   
+Query_155      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Rhizophagus    	1.0   
+Query_156      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   
+Query_157      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   
+Query_158      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Septoglomus    	1.0   
+Query_159      	0.7272727272727273	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Oehlia         	0.7272727272727273
+Query_160      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   
+Query_161      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   
+Query_162      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_163      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   	Archaeosporaceae	1.0   
+Query_164      	0.8181818181818182	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Dominikia      	0.8181818181818182
+Query_165      	0.84  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Gigasporaceae  	1.0   	Cetraspora     	1.0   	Cetraspora gilmorei	0.84  
+Query_166      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   
+Query_167      	0.9166666666666666	Eukaryota      	1.0   	Basidiomycota  	1.0   	Agaricomycetes 	1.0   	Hymenochaetales	1.0   	Schizoporaceae 	1.0   	Xylodon        	0.9166666666666666
+Query_168      	0.7894736842105263	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	0.7894736842105263	Glomeraceae    	0.7894736842105263
+Query_169      	0.9473684210526315	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Diversisporaceae	1.0   	Diversispora   	0.9473684210526315
+Query_170      	0.9   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Rhizophagus    	0.9   
+Query_171      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   
+Query_172      	0.6666666666666666	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Dominikia      	0.6666666666666666
+Query_173      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Paraglomerales 	1.0   	Paraglomeraceae	1.0   	Paraglomus     	1.0   	Paraglomus laccatum	1.0   
+Query_174      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_175      	0.92  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Microdominikia 	0.92  	Microdominikia litorea	0.92  
+Query_176      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   
+Query_177      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   
+Query_178      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Gigasporaceae  	1.0   	Gigaspora      	1.0   
+Query_179      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Entrophosporales	1.0   	Entrophosporaceae	1.0   	Entrophospora  	1.0   
+Query_180      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_181      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   	Archaeosporaceae	0.8571428571428571	Ambispora      	1.0   
+Query_182      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Gigasporaceae  	1.0   	Scutellospora  	1.0   
+Query_183      	0.9130434782608695	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Diversisporaceae	1.0   	Diversispora   	0.9130434782608695
+Query_184      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Diversisporaceae	1.0   	Diversispora   	1.0   
+Query_185      	0.8333333333333334	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	0.8333333333333334
+Query_186      	0.6875	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	0.6875
+Query_187      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_188      	0.9473684210526315	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	0.96  	Diversisporaceae	0.96  	Diversispora   	0.9473684210526315
+Query_189      	0.84  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   	Glomus macrocarpum	0.84  
+Query_190      	0.92  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Microdominikia 	0.92  	Microdominikia litorea	0.92  
+Query_191      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_192      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Diversisporaceae	1.0   	Diversispora   	1.0   
+Query_193      	0.8947368421052632	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	0.92  	Diversisporaceae	0.92  	Diversispora   	0.8947368421052632
+Query_194      	0.72  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Dominikia      	0.9523809523809523	Dominikia sp.  	0.72  
+Query_195      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_196      	0.8   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   	uncultured Glomus	0.8   
+Query_197      	0.85  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Septoglomus    	0.85  
+Query_198      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_199      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   
+Query_200      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   	Archaeosporaceae	0.8571428571428571	Ambispora      	1.0   
+Query_201      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Diversisporaceae	1.0   	Diversispora   	1.0   
+Query_202      	0.84  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Gigasporaceae  	1.0   	Gigaspora      	1.0   	Gigaspora rosea	0.84  
+Query_203      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Diversisporaceae	1.0   	Diversispora   	1.0   
+Query_204      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Entrophosporales	0.9090909090909091	Entrophosporaceae	0.9090909090909091	Entrophospora  	1.0   
+Query_205      	0.76  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   	Ambisporaceae  	1.0   	Ambispora      	1.0   	uncultured Archaeosporales	0.76  
+Query_206      	0.75  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Rhizophagus    	0.75  
+Query_207      	0.76  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Entrophosporales	0.96  	Entrophosporaceae	0.96  	Entrophospora  	1.0   	Entrophospora claroidea	0.76  
+Query_208      	0.8888888888888888	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Oehlia         	0.8888888888888888
+Query_209      	0.8   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	0.8   
+Query_210      	0.92  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Rhizophagus    	1.0   	uncultured Glomus	0.92  
+Query_211      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   
+Query_212      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_213      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   
+Query_214      	0.8125	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Oehlia         	0.8125
+Query_215      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Entrophosporales	1.0   	Entrophosporaceae	1.0   	Entrophospora  	1.0   
+Query_216      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_217      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   
+Query_218      	0.7368421052631579	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Septoglomus    	0.7368421052631579
+Query_219      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Entrophosporales	0.7   	Entrophosporaceae	0.7   	Entrophospora  	1.0   
+Query_220      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_221      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Paraglomerales 	1.0   	Paraglomeraceae	1.0   	Paraglomus     	1.0   
+Query_222      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Septoglomus    	1.0   
+Query_223      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Paraglomerales 	0.9583333333333334	Paraglomeraceae	0.9230769230769231	Paraglomus     	1.0   
+Query_224      	0.8   	Eukaryota      	1.0   	Basidiomycota  	1.0   	Agaricomycetes 	1.0   	Hymenochaetales	0.92  	Schizoporaceae 	0.92  	Xylodon        	0.8   
+Query_225      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_226      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   
+Query_227      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_228      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   	Archaeosporaceae	1.0   
+Query_229      	0.92  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Microdominikia 	0.92  	Microdominikia litorea	0.92  
+Query_230      	0.72  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Diversisporaceae	1.0   	Diversispora   	1.0   	Diversispora versiformis	0.72  
+Query_231      	1.0   	Eukaryota      	1.0   	Basidiomycota  	1.0   
+Query_232      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Diversisporaceae	1.0   	Diversispora   	1.0   
+Query_233      	0.68  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	0.75  	uncultured Glomeromycotina	0.68  
+Query_234      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Entrophosporales	1.0   	Entrophosporaceae	1.0   	Entrophospora  	1.0   
+Query_235      	0.8   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Dominikia      	1.0   	Dominikia sp.  	0.8   
+Query_236      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_237      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_238      	0.7857142857142857	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Dominikia      	0.7857142857142857
+Query_239      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_240      	0.6666666666666666	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Entrophosporales	0.6666666666666666	Entrophosporaceae	0.6666666666666666
+Query_241      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   
+Query_242      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Septoglomus    	1.0   
+Query_243      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_244      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Paraglomerales 	1.0   	Paraglomeraceae	1.0   	Paraglomus     	1.0   
+Query_245      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   	Archaeosporaceae	0.875 	Ambispora      	1.0   
+Query_246      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   	Archaeosporaceae	1.0   
+Query_247      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Entrophosporales	1.0   	Entrophosporaceae	1.0   	Entrophospora  	1.0   
+Query_248      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Mortierellomycetes	1.0   	Mortierellales 	1.0   	Mortierellaceae	1.0   	Mortierella    	1.0   
+Query_249      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   
+Query_250      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   
+Query_251      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   
+Query_252      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_253      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   
+Query_254      	0.96  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   	uncultured Glomeromycotina	0.96  
+Query_255      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Acaulosporaceae	1.0   	Acaulospora    	1.0   
+Query_256      	0.85  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Septoglomus    	0.85  
+Query_257      	0.75  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Complexispora  	0.75  
+Query_258      	0.7   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Entrophosporales	0.7   	Entrophosporaceae	0.7   
+Query_259      	0.76  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Dominikia      	1.0   	Dominikia sp.  	0.76  
+Query_260      	0.8947368421052632	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	0.92  	Diversisporaceae	0.92  	Diversispora   	0.8947368421052632
+Query_261      	0.96  	Eukaryota      	1.0   	Basidiomycota  	1.0   	Ustilaginomycetes	1.0   	Urocystidales  	0.96  	Glomosporiaceae	0.96  	Thecaphora     	0.96  
+Query_262      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Paraglomerales 	1.0   	Paraglomeraceae	1.0   	Paraglomus     	1.0   
+Query_263      	0.88  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Gigasporaceae  	1.0   	Dentiscutata   	1.0   	Dentiscutata heterogama	0.88  
+Query_264      	0.8   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Paraglomerales 	1.0   	Paraglomeraceae	1.0   	Paraglomus     	1.0   	uncultured Paraglomus	0.8   
+Query_265      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_266      	1.0   	Eukaryota      	1.0   	Sanchytriomycota	1.0   	Sanchytriomycetes	1.0   	Sanchytriales  	1.0   	Sanchytriaceae 	1.0   	Sanchytrium    	1.0   
+Query_267      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Diversisporaceae	1.0   	Diversispora   	1.0   
+Query_268      	0.8   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Entrophosporales	1.0   	Entrophosporaceae	1.0   	Entrophospora  	1.0   	Entrophospora claroidea	0.8   
+Query_269      	0.68  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Microkamienskia	0.68  
+Query_270      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   
+Query_271      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Septoglomus    	1.0   
+Query_272      	0.96  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Microdominikia 	0.96  	Microdominikia litorea	0.96  
+Query_273      	0.875 	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   	Archaeosporaceae	1.0   	Archaeospora   	1.0   	Archaeospora trappei	0.875 
+Query_274      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_275      	0.72  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Diversisporaceae	1.0   	Diversispora   	1.0   	Diversispora versiformis	0.72  
+Query_276      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Gigasporaceae  	1.0   	Scutellospora  	1.0   
+Query_277      	1.0   	Eukaryota      	1.0   	Basidiomycota  	0.6666666666666666	Flabellinia    	1.0   	Apusomonadida  	1.0   	Apusomonadidae 	1.0   
+Query_278      	0.7619047619047619	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Septoglomus    	0.7619047619047619
+Query_279      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_280      	0.84  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Gigasporaceae  	1.0   	Dentiscutata   	1.0   	Dentiscutata heterogama	0.84  
+Query_281      	0.9130434782608695	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Rhizophagus    	0.9130434782608695
+Query_282      	0.92  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Microdominikia 	0.92  	Microdominikia litorea	0.92  
+Query_283      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   
+Query_284      	1.0   	Eukaryota      	1.0   
+Query_285      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Rhizophagus    	1.0   
+Query_286      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_287      	0.68  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Entrophosporales	0.96  	Entrophosporaceae	0.96  	Entrophospora  	1.0   	Entrophospora claroidea	0.68  
+Query_288      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_289      	0.68  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Microkamienskia	0.68  
+Query_290      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Diversisporaceae	1.0   	Diversispora   	1.0   
+Query_291      	0.88  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Gigasporaceae  	1.0   	Gigaspora      	1.0   	Gigaspora rosea	0.88  
+Query_292      	0.68  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Gigasporaceae  	1.0   	Cetraspora     	1.0   	Cetraspora gilmorei	0.68  
+Query_293      	0.68  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Dominikia      	0.7727272727272727	Dominikia sp.  	0.68  
+Query_294      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   
+Query_295      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   
+Query_296      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Paraglomerales 	1.0   	Paraglomeraceae	1.0   	Paraglomus     	1.0   
+Query_297      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   
+Query_298      	1.0   	Eukaryota      	1.0   	Discosea       	1.0   	Flabellinia    	1.0   
+Query_299      	0.76  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Rhizophagus    	1.0   	uncultured Glomeromycotina	0.76  
+Query_300      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   	Archaeosporaceae	0.8571428571428571	Ambispora      	1.0   
+Query_301      	0.84  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   	Glomeraceae sp.	0.84  
+Query_302      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   
+Query_303      	0.72  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Dominikia      	0.9090909090909091	Dominikia sp.  	0.72  
+Query_304      	1.0   	Eukaryota      	1.0   
+Query_305      	0.8125	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Oehlia         	0.8125
+Query_306      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   	Archaeosporaceae	0.8571428571428571	Ambispora      	1.0   
+Query_307      	0.8636363636363636	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Dominikia      	0.8636363636363636
+Query_308      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_309      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Diversisporaceae	1.0   	Diversispora   	1.0   
+Query_310      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   	Archaeosporaceae	0.8571428571428571	Ambispora      	1.0   
+Query_311      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   
+Query_312      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_313      	0.6666666666666666	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Dominikia      	0.6666666666666666
+Query_314      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   
+Query_315      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Septoglomus    	1.0   
+Query_316      	0.6923076923076923	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Dominikia      	0.6923076923076923
+Query_317      	0.7619047619047619	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Dominikia      	0.7619047619047619
+Query_318      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   
+Query_319      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Septoglomus    	1.0   
+Query_320      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Diversisporaceae	1.0   	Diversispora   	1.0   
+Query_321      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_322      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   
+Query_323      	0.96  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Microdominikia 	0.96  	Microdominikia litorea	0.96  
+Query_324      	0.72  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Entrophosporales	0.8695652173913043	Entrophosporaceae	0.8695652173913043	Entrophospora  	1.0   	Entrophospora drummondii	0.72  
+Query_325      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_326      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   
+Query_327      	1.0   	Eukaryota      	1.0   	Discosea       	1.0   	Flabellinia    	1.0   	Apusomonadida  	1.0   	Apusomonadidae 	1.0   
+Query_328      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Microdominikia 	1.0   	Microdominikia litorea	1.0   
+Query_329      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Diversisporaceae	1.0   
+Query_330      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Rhizophagus    	1.0   
+Query_331      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_332      	0.84  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   	uncultured Glomeromycotina	0.84  
+Query_333      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_334      	0.84  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   	uncultured Glomeromycotina	0.84  
+Query_335      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   
+Query_336      	0.8947368421052632	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Rhizophagus    	0.8947368421052632
+Query_337      	0.9411764705882353	Eukaryota      	1.0   	Ascomycota     	1.0   	Eurotiomycetes 	1.0   	Chaetothyriales	1.0   	Herpotrichiellaceae	1.0   	Exophiala      	0.9411764705882353
+Query_338      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_339      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Paraglomerales 	1.0   	Paraglomeraceae	1.0   	Paraglomus     	1.0   	Paraglomus laccatum	1.0   
+Query_340      	0.8888888888888888	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Diversisporaceae	1.0   	Diversispora   	0.8888888888888888
+Query_341      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_342      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_343      	1.0   	Eukaryota      	1.0   	Basidiomycota  	1.0   	Agaricomycetes 	1.0   	Agaricales     	1.0   	Entolomataceae 	1.0   	Clitopilus     	1.0   
+Query_344      	0.7142857142857143	Eukaryota      	1.0   	Basidiomycota  	1.0   	Agaricomycetes 	1.0   	Cantharellales 	1.0   	Ceratobasidiaceae	1.0   	Ceratobasidium 	0.7142857142857143
+Query_345      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Entrophosporales	0.9565217391304348	Entrophosporaceae	0.9565217391304348	Entrophospora  	1.0   
+Query_346      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Entrophosporales	0.9545454545454546	Entrophosporaceae	0.9545454545454546	Entrophospora  	1.0   
+Query_347      	1.0   	Eukaryota      	1.0   	Discosea       	1.0   	Flabellinia    	1.0   
+Query_348      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Entrophosporales	1.0   	Entrophosporaceae	1.0   	Entrophospora  	1.0   
+Query_349      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   
+Query_350      	0.96  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Microdominikia 	0.96  	Microdominikia litorea	0.96  
+Query_351      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Dominikia      	1.0   
+Query_352      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   
+Query_353      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_354      	1.0   	Eukaryota      	1.0   	Discosea       	1.0   	Flabellinia    	1.0   
+Query_355      	0.7272727272727273	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Entrophosporales	0.7272727272727273	Entrophosporaceae	0.7272727272727273
+Query_356      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_357      	1.0   	Eukaryota      	1.0   	Basidiomycota  	0.6666666666666666	Flabellinia    	1.0   	Apusomonadida  	1.0   	Apusomonadidae 	1.0   
+Query_358      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Mortierellomycetes	1.0   	Mortierellales 	1.0   	Mortierellaceae	1.0   	Mortierella    	1.0   
+Query_359      	0.6521739130434783	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Microkamienskia	0.6521739130434783
+Query_360      	0.7894736842105263	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	0.7894736842105263	Glomeraceae    	0.7894736842105263
+Query_361      	0.8   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Dominikia      	1.0   	Dominikia sp.  	0.8   
+Query_362      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Complexispora  	1.0   
+Query_363      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Entrophosporales	0.8181818181818182	Entrophosporaceae	0.8181818181818182	Entrophospora  	1.0   
+Query_364      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Acaulosporaceae	1.0   	Acaulospora    	1.0   
+Query_365      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_366      	0.92  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Microdominikia 	0.92  	Microdominikia litorea	0.92  
+Query_367      	1.0   	Eukaryota      	1.0   	Discosea       	1.0   	Flabellinia    	1.0   
+Query_368      	0.75  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Mortierellomycetes	0.75  	Mortierellales 	0.75  	Mortierellaceae	0.75  
+Query_369      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_370      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Rhizophagus    	1.0   
+Query_371      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   	Archaeosporaceae	1.0   	Archaeospora   	1.0   
+Query_372      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Paraglomerales 	1.0   	Paraglomeraceae	1.0   	Paraglomus     	1.0   
+Query_373      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_374      	0.96  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Microdominikia 	0.96  	Microdominikia litorea	0.96  
+Query_375      	0.96  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Microdominikia 	0.96  	Microdominikia litorea	0.96  
+Query_376      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Gigasporaceae  	1.0   	Scutellospora  	1.0   
+Query_377      	0.84  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Microdominikia 	0.84  	Microdominikia litorea	0.84  
+Query_378      	0.96  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Microdominikia 	0.96  	Microdominikia litorea	0.96  
+Query_379      	0.6666666666666666	Eukaryota      	1.0   	Chlorophyta    	1.0   	Trebouxiophyceae	0.6666666666666666
+Query_380      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   
+Query_381      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   
+Query_382      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Acaulosporaceae	1.0   	Acaulospora    	1.0   
+Query_383      	0.7777777777777778	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	0.7777777777777778
+Query_384      	0.8   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   	uncultured Glomeromycotina	0.8   
+Query_385      	0.8571428571428571	Eukaryota      	1.0   	Basidiomycota  	1.0   	Agaricomycetes 	1.0   	Agaricales     	0.8571428571428571	Clavariaceae   	0.8571428571428571	Clavaria       	0.8571428571428571
+Query_386      	1.0   	Eukaryota      	1.0   	Ascomycota     	1.0   
+Query_387      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_388      	0.6666666666666666	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Septoglomus    	0.6666666666666666
+Query_389      	0.6666666666666666	Eukaryota      	1.0   	Basidiomycota  	0.6666666666666666
+Query_390      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   	Archaeosporaceae	0.8571428571428571	Ambispora      	1.0   
+Query_391      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   
+Query_392      	1.0   	Eukaryota      	1.0   	Discosea       	1.0   	Flabellinia    	1.0   	Apusomonadida  	1.0   	Apusomonadidae 	1.0   
+Query_393      	0.84  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   	Glomus macrocarpum	0.84  
+Query_394      	0.6666666666666666	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Dominikia      	0.6666666666666666
+Query_395      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   
+Query_396      	0.96  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Microdominikia 	0.96  	Microdominikia litorea	0.96  
+Query_397      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   
+Query_398      	0.6923076923076923	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Dominikia      	0.6923076923076923
+Query_399      	0.96  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Microdominikia 	0.96  	Microdominikia litorea	0.96  
+Query_400      	0.9130434782608695	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Dominikia      	0.9130434782608695
+Query_401      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_402      	0.92  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Microdominikia 	0.92  	Microdominikia litorea	0.92  
+Query_403      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Diversisporaceae	1.0   	Diversispora   	1.0   
+Query_404      	1.0   	Eukaryota      	1.0   	Basidiomycota  	1.0   	Agaricomycetes 	1.0   
+Query_405      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   
+Query_406      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   	Archaeosporaceae	1.0   
+Query_407      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_408      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   
+Query_409      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Diversisporaceae	1.0   	Diversispora   	1.0   
+Query_410      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Rhizophagus    	1.0   
+Query_411      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Silvaspora     	1.0   
+Query_412      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_413      	0.7894736842105263	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	0.7894736842105263	Glomeraceae    	0.7894736842105263
+Query_414      	0.92  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Microdominikia 	0.92  	Microdominikia litorea	0.92  
+Query_415      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   
+Query_416      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   
+Query_417      	0.8947368421052632	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	0.92  	Diversisporaceae	0.92  	Diversispora   	0.8947368421052632
+Query_418      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   	Archaeosporaceae	1.0   	Archaeospora   	1.0   
+Query_419      	0.84  	Eukaryota      	1.0   	Basidiomycota  	1.0   	Agaricomycetes 	1.0   	Hymenochaetales	0.92  	Schizoporaceae 	0.92  	Xylodon        	0.84  
+Query_420      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_421      	0.6666666666666666	Eukaryota      	1.0   	Discosea       	0.6666666666666666
+Query_422      	0.7894736842105263	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	0.7894736842105263	Glomeraceae    	0.7894736842105263
+Query_423      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   
+Query_425      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_426      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   
+Query_427      	0.72  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   	Glomus tetrastratosum	0.72  
+Query_428      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Diversisporales	1.0   	Gigasporaceae  	1.0   	Scutellospora  	1.0   
+Query_429      	0.8   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Oehlia         	0.8   
+Query_430      	0.7142857142857143	Eukaryota      	1.0   	Basidiomycota  	1.0   	Agaricomycetes 	1.0   	Hymenochaetales	0.7142857142857143
+Query_431      	0.76  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Rhizophagus    	0.8   	uncultured Glomus	0.76  
+Query_433      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Rhizophagus    	1.0   
+Query_434      	0.9090909090909091	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Rhizophagus    	0.9090909090909091
+Query_435      	0.6666666666666666	Eukaryota      	1.0   	Discosea       	0.6666666666666666
+Query_436      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_437      	1.0   	Eukaryota      	1.0   	Discosea       	1.0   	Flabellinia    	1.0   	Apusomonadida  	1.0   	Apusomonadidae 	1.0   
+Query_438      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   
+Query_439      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Entrophosporales	1.0   	Entrophosporaceae	1.0   	Entrophospora  	1.0   
+Query_440      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_441      	1.0   	Eukaryota      	1.0   	Basidiomycota  	0.6666666666666666	Flabellinia    	1.0   	Apusomonadida  	1.0   	Apusomonadidae 	1.0   
+Query_442      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Entrophosporales	0.9333333333333333	Entrophosporaceae	0.9333333333333333	Entrophospora  	1.0   
+Query_443      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   
+Query_444      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   
+Query_445      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   	Ambisporaceae  	1.0   	Ambispora      	1.0   
+Query_446      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Entrophosporales	0.96  	Entrophosporaceae	0.96  	Entrophospora  	1.0   
+Query_447      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Septoglomus    	1.0   
+Query_448      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   
+Query_449      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   
+Query_450      	0.96  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Microdominikia 	0.96  	Microdominikia litorea	0.96  
+Query_451      	0.92  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Microdominikia 	0.92  	Microdominikia litorea	0.92  
+Query_452      	0.92  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Microdominikia 	0.92  	Microdominikia litorea	0.92  
+Query_453      	1.0   	Eukaryota      	1.0   	Basidiomycota  	1.0   	Tremellomycetes	1.0   	Cystofilobasidiales	1.0   	Mrakiaceae     	1.0   	Mrakia         	1.0   
+Query_454      	1.0   	Eukaryota      	1.0   	Discosea       	1.0   	Flabellinia    	1.0   
+Query_455      	0.88  	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   	Glomus macrocarpum	0.88  
+Query_456      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Endogonomycetes	1.0   	Endogonales    	1.0   	Endogonaceae   	1.0   	Jimgerdemannia 	1.0   
+Query_457      	1.0   	Eukaryota      	1.0   
+Query_458      	0.6666666666666666	Eukaryota      	1.0   	Basidiomycota  	1.0   	Agaricomycetes 	1.0   	Tremellodendropsidales	0.6666666666666666	Tremellodendropsidaceae	0.6666666666666666	Tremellodendropsis	0.6666666666666666
+Query_459      	0.8571428571428571	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	0.8571428571428571
+Query_460      	0.9047619047619048	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Septoglomus    	0.9047619047619048
+Query_461      	0.0   	               	      	               	      	               	      	               	      	               	      	               	      	               	      
+Query_462      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Archaeosporales	1.0   	Archaeosporaceae	1.0   
+Query_463      	1.0   	Eukaryota      	1.0   
+Query_464      	0.6666666666666666	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Microkamienskia	0.6666666666666666
+Query_465      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   
+Query_466      	1.0   	Eukaryota      	1.0   	Discosea       	1.0   	Flabellinia    	1.0   
+Query_467      	1.0   	Eukaryota      	1.0   	Mucoromycota   	1.0   	Glomeromycetes 	1.0   	Glomerales     	1.0   	Glomeraceae    	1.0   	Glomus         	1.0   
+Query_468      	1.0   	Eukaryota      	1.0   
