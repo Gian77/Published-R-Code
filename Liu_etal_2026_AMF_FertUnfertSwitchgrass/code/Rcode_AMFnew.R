@@ -36,16 +36,19 @@ pacman::p_load(
   phyloseq,
   speedyseq,
   tidysq,
+  tidytree,
   vegan,
   AICcPermanova,
   tidyverse,
   ggtext,
   ggpubr,
+  ggtree,
   cowplot,
   gridExtra,
   ggrepel,
   scales,
   agricolae,
+  BRCore,
   install=FALSE
 )
 
@@ -136,10 +139,197 @@ head(metadata_99)
 
 # Phylogenetic tree ------------------------------------------------------------
 
-# I run this analysis on the HPCC 
+# I run this analysis on the HPCC. Then I import the phylogenetic tree in here.
 
+# NOTE. I am importing 2 trees. One genrated with RAXML, the other generated with 
+# iqtree2 that has bayesian posterior probabilities.
+tree_raxml <- 
+  read.tree("phylogeny/otus99_mafft_trim_spprt.raxml.support") 
 
+str(tree_raxml)
+ggtree::ggtree(tree_raxml)
 
+# **********************************************************************--------
+# ***** MAKE PHYLOSEQ OBJECT ***** ---------------------------------------------
+dim(otutable_99)
+dim(metadata_99)
+dim(taxonomy_99_fix)
+str(otu_99)
+str(tree_raxml)
+
+# Final phyloseq object --------------------------------------------------------
+physeq_AMF <-
+  phyloseq(
+    otu_table(otutable_99, taxa_are_rows = TRUE),
+    sample_data(metadata_99),
+    tax_table(as.matrix(taxonomy_99_fix)),
+    DNAStringSet(otu_99), 
+    phy_tree(tree_raxml)) %>% 
+  prune_taxa(taxa_sums(x = .) > 0, x = .) %>% 
+  prune_samples(sample_sums(x=.) > 0, x =.)
+
+physeq_AMF
+
+physeq_AMF@phy_tree
+head(physeq_AMF@otu_table)
+head(physeq_AMF@sam_data)
+
+# **********************************************************************--------
+# ***** DECONTAMINATION ***** --------------------------------------------------
+# decontamination from a phyloseq object ---------------------------------------
+sample_data(physeq_AMF) %>% as.matrix()
+
+sample_data(physeq_AMF)$is.neg <-
+  sample_data(physeq_AMF)$description == "Control"
+
+contam_AMF <-
+  decontam::isContaminant(physeq_AMF,
+                          method = "prevalence",
+                          neg = "is.neg",
+                          threshold = 0.1
+  )
+
+contam_AMF
+table(contam_AMF$contaminant)
+contam_AMF %>% filter(contaminant == TRUE)
+
+# Check contaminants taxonomy
+left_join(
+  contam_AMF %>% 
+    filter(contaminant == TRUE) %>% 
+    rownames_to_column("OTU_ID"), 
+  taxonomy_99_fix%>% 
+    rownames_to_column("OTU_ID"),
+  by = "OTU_ID") %>% 
+  dplyr::select( OTU_ID, freq, BestMatch) %>% 
+  left_join(
+    otutable_99 %>% 
+      rownames_to_column("OTU_ID") %>% 
+      filter(OTU_ID %in% c(contam_AMF %>% 
+                             filter(contaminant == TRUE) %>% 
+                             rownames_to_column("OTU_ID") %>% 
+                             pull(OTU_ID))) %>% 
+      mutate(Abund = rowSums(across(where(is.numeric)))) %>% 
+      dplyr::select(OTU_ID, Abund),
+    by = "OTU_ID")
+
+# NOTE! These looks like all real taxa to me. I am not going to remove any!
+
+# function to remove taxa by OTU name
+remove_taxa <- function(physeq, badTaxa) {
+  allTaxa <- taxa_names(physeq)
+  myTaxa <- allTaxa[!(allTaxa %in% badTaxa)]
+  return(prune_taxa(myTaxa, physeq))
+}
+
+subset(contam_AMF, contaminant %in% c("TRUE"))
+
+# Filtering the phyloseq object
+physeq_AMF_clean <-
+  remove_taxa(
+    physeq_AMF,
+    rownames(subset(contam_AMF, contaminant %in% c("TRUE")))
+  ) %>%
+  subset_samples(!is.neg %in% TRUE) %>% # remove the control samples
+  prune_taxa(taxa_sums(x = .) > 0, x = .) # make sure there aren't OTUs that are 0
+
+# ***** FINAL PHYLOSEQ OBJECTS ***** -------------------------------------------
+physeq_AMF_clean
+physeq_AMF_clean@sam_data
+
+# ***** RAREFACTION ***** ------------------------------------------------------
+
+# Add rarefaction metrics
+physeq_AMF_clean <- add_rarefaction_metrics(data = physeq_AMF_clean)
+physeq_AMF_clean@sam_data %>% as.matrix()
+
+rarefaction_plot <- plot_rarefaction_metrics(physeq_AMF_clean)
+print(rarefaction_plot)
+
+# Identify best rarefaction depth cutoff 
+physeq_AMF_clean@sam_data %>% 
+  as.matrix() %>% 
+  as.data.frame() %>% 
+  arrange(read_num)
+  
+rare_depth_cutoff = 4568
+
+# Perform mutiple rarefaction
+AMF_otutable_rarefied <-
+  multi_rarefy(
+    physeq = physeq_AMF_clean,
+    depth_level = rare_depth_cutoff,
+    num_iter = 100,
+    threads = 8,
+    set_seed = 1026
+  )
+
+rowSums(AMF_otutable_rarefied)
+dim(AMF_otutable_rarefied)
+
+# Update otu_table
+physeq_AMF_rare <-
+  do_phyloseq(physeq = physeq_AMF_clean, otu_rare = AMF_otutable_rarefied)
+
+physeq_AMF_rare
+sample_sums(physeq_AMF_rare)
+
+# Update metadata 
+sample_data(physeq_AMF_rare)$site_id
+
+sample_data(physeq_AMF_rare) <- sample_data(
+  as.data.frame(as.matrix(physeq_AMF_rare@sam_data)) %>%
+    mutate(
+      site = site_id,
+      site = recode(
+        site,
+        LUX = "Lux Harbor",
+        LC = "Lake City",
+        HAN = "Hancock",
+        RHN = "Rhinelander",
+        ESC = "Escanaba"
+      )
+    ) %>%
+    select(
+      collection_date,
+      site_id,
+      site,
+      fert_status,
+      plot_rep,
+      pseudo_no,
+      x_cord,
+      y_cord
+    )
+)
+
+sample_data(physeq_AMF_rare) 
+
+# save the metadata
+write.csv(
+  x = as.data.frame(as.matrix(physeq_AMF_rare@sam_data)) %>%
+    mutate(
+      site = site_id,
+      site = recode(
+        site,
+        LUX = "Lux Harbor",
+        LC = "Lake City",
+        HAN = "Hancock",
+        RHN = "Rhinelander",
+        ESC = "Escanaba"
+      )
+    ) %>%
+    select(
+      collection_date,
+      site_id,
+      site,
+      fert_status,
+      plot_rep,
+      pseudo_no,
+      x_cord,
+      y_cord
+    ),
+  file = file.path(data_path, "datasets/medatata_filtered.csv")
+)
 
 
 
