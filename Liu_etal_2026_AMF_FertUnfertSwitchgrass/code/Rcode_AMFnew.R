@@ -53,6 +53,7 @@ pacman::p_load(
 )
 
 
+
 # Session Info -----------------------------------------------------------------
 sessionInfo()
 
@@ -148,6 +149,11 @@ tree_raxml <-
 
 str(tree_raxml)
 ggtree::ggtree(tree_raxml)
+
+tree_iqtree2 <- read.tree("phylogeny/otus99_mafft_trim_iq2.treefile")
+
+str(tree_iqtree2)
+ggtree::ggtree(tree_iqtree2)
 
 # **********************************************************************--------
 # ***** MAKE PHYLOSEQ OBJECT ***** ---------------------------------------------
@@ -330,6 +336,40 @@ write.csv(
     ),
   file = file.path(data_path, "datasets/medatata_filtered.csv")
 )
+
+
+
+
+
+
+# **** ALPHA DIVERSITY **** ----------------------------------------------------
+# Adding alpha metrics ---------------------------------------------------------
+AlphaMetrics <- function(physeq) {
+  sample_data(physeq)$ReadNo <- sample_sums(physeq)
+  sample_data(physeq)$hill_0 <- as.data.frame(as.matrix(t(physeq@otu_table))) %>% 
+    renyi(scales = c(0), hill = TRUE)
+  sample_data(physeq)$hill_1 <- as.data.frame(as.matrix(t(physeq@otu_table))) %>% 
+    renyi(scales = c(1), hill = TRUE)
+  sample_data(physeq)$hill_2 <- as.data.frame(as.matrix(t(physeq@otu_table))) %>% 
+    renyi(scales = c(2), hill = TRUE)
+  sample_data(physeq)$pielou_j <- log(sample_data(physeq)$hill_1) / log(sample_data(physeq)$hill_0)
+  return(physeq)
+}
+
+# NOTE. Pileau J is the classic 0–1 evenness measure based on Shannon.
+
+physeq_AMF_rare <- 
+  AlphaMetrics(physeq_AMF_rare)
+physeq_AMF_rare
+
+head(physeq_AMF_rare@sam_data)
+AlphaMetrics(physeq_AMF_rare) %>% sam_data() %>% pull(pielou_j) %>% range()
+
+
+
+
+
+
 
 
 
