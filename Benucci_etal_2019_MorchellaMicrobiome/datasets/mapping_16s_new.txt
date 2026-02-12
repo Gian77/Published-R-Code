@@ -1,0 +1,133 @@
+#SampleID	BarcodeSequence	LinkerPrimerSequence	barcodenumb	Study	Tissue	Species	Stage	Description
+samplebac1	GACGCACTAA	GTGCCAGCMGCCGCGGTAA	385	Outdoor	Cap	Growhouse 1	Young	11C
+samplebac3	CTGATTACGA	GTGCCAGCMGCCGCGGTAA	387	Outdoor	Cap	Growhouse 1	Mature	12C
+samplebac5	ACCCATACAG	GTGCCAGCMGCCGCGGTAA	389	Outdoor	Cap	Growhouse 1	Young	13C
+samplebac7	CGCACTACGC	GTGCCAGCMGCCGCGGTAA	391	Outdoor	Cap	Growhouse 1	Mature	14C
+samplebac9	TCGGACAGTG	GTGCCAGCMGCCGCGGTAA	393	Outdoor	Cap	Growhouse 1	Young	15C
+samplebac12	CAGTAAATCG	GTGCCAGCMGCCGCGGTAA	396	Outdoor	Cap	Growhouse 1	Mature	16C
+samplebac14	CTCTTCTGAT	GTGCCAGCMGCCGCGGTAA	398	Outdoor	Cap	Growhouse 1	Young	17C
+samplebac16	TGATGAACCC	GTGCCAGCMGCCGCGGTAA	400	Outdoor	Cap	Growhouse 1	Mature	18C
+samplebac18	ATGCTAACCA	GTGCCAGCMGCCGCGGTAA	402	Outdoor	Cap	Growhouse 1	Young	19C
+samplebac20	CGACCTCGCA	GTGCCAGCMGCCGCGGTAA	404	Outdoor	Cap	Growhouse 1	Mature	110C
+samplebac22	GTACTGAAGA	GTGCCAGCMGCCGCGGTAA	406	Outdoor	Cap	Growhouse 1	Young	111C
+samplebac24	CTCTGAGGTA	GTGCCAGCMGCCGCGGTAA	408	Outdoor	Cap	Growhouse 1	Mature	112C
+samplebac290	TTCTTAACGC	GTGCCAGCMGCCGCGGTAA	2	Outdoor	Cap	Growhouse 1	Young	15C2
+samplebac292	AACGGCTGGA	GTGCCAGCMGCCGCGGTAA	4	Outdoor	Cap	Growhouse 1	Young	111C2
+samplebac51	CCACACGTTT	GTGCCAGCMGCCGCGGTAA	435	Outdoor	Soil	Growhouse 1	Young	11R
+samplebac52	ACAGCATAGC	GTGCCAGCMGCCGCGGTAA	436	Outdoor	Soil	Growhouse 1	Mature	12R
+samplebac53	AATGTGGCTC	GTGCCAGCMGCCGCGGTAA	437	Outdoor	Soil	Growhouse 1	Young	13R
+samplebac54	TCTGATCGAG	GTGCCAGCMGCCGCGGTAA	438	Outdoor	Soil	Growhouse 1	Mature	14R
+samplebac55	CCACATTGGG	GTGCCAGCMGCCGCGGTAA	439	Outdoor	Soil	Growhouse 1	Young	15R
+samplebac56	GCTGTGATTC	GTGCCAGCMGCCGCGGTAA	440	Outdoor	Soil	Growhouse 1	Mature	16R
+samplebac57	GCCGATTGTA	GTGCCAGCMGCCGCGGTAA	441	Outdoor	Soil	Growhouse 1	Young	17R
+samplebac58	CTAGCTATGG	GTGCCAGCMGCCGCGGTAA	442	Outdoor	Soil	Growhouse 1	Mature	18R
+samplebac59	CGGTGGAAGC	GTGCCAGCMGCCGCGGTAA	443	Outdoor	Soil	Growhouse 1	Young	19R
+samplebac60	CTCTGCCTAA	GTGCCAGCMGCCGCGGTAA	444	Outdoor	Soil	Growhouse 1	Mature	110R
+samplebac61	CAACCACTCG	GTGCCAGCMGCCGCGGTAA	445	Outdoor	Soil	Growhouse 1	Young	111R
+samplebac63	CTCTATTCCA	GTGCCAGCMGCCGCGGTAA	447	Outdoor	Soil	Growhouse 1	Mature	112R
+samplebac298	AAGCTGCCTA	GTGCCAGCMGCCGCGGTAA	10	Outdoor	Soil	Growhouse 1	Young	11R2
+samplebac299	ATTTGTGGGT	GTGCCAGCMGCCGCGGTAA	11	Outdoor	Soil	Growhouse 1	Young	13R2
+samplebac300	TACATGGAGC	GTGCCAGCMGCCGCGGTAA	12	Outdoor	Soil	Growhouse 1	Mature	14R2
+samplebac301	GCCTCAGCAG	GTGCCAGCMGCCGCGGTAA	13	Outdoor	Soil	Growhouse 1	Young	15R2
+samplebac302	AGTCGAACGA	GTGCCAGCMGCCGCGGTAA	14	Outdoor	Soil	Growhouse 1	Mature	16R2
+samplebac303	GGTTGCCCTG	GTGCCAGCMGCCGCGGTAA	15	Outdoor	Soil	Growhouse 1	Young	17R2
+samplebac304	ATCTTGGAGT	GTGCCAGCMGCCGCGGTAA	16	Outdoor	Soil	Growhouse 1	Mature	18R2
+samplebac305	CGAGCTGTTA	GTGCCAGCMGCCGCGGTAA	17	Outdoor	Soil	Growhouse 1	Young	111R2
+samplebac306	TCAGATACCA	GTGCCAGCMGCCGCGGTAA	18	Outdoor	Soil	Growhouse 1	Mature	112R2
+samplebac2	TCTCCGTTCC	GTGCCAGCMGCCGCGGTAA	386	Outdoor	Stem	Growhouse 1	Young	11S
+samplebac4	TAAGGCATCG	GTGCCAGCMGCCGCGGTAA	388	Outdoor	Stem	Growhouse 1	Mature	12S
+samplebac6	TCTGAATGGT	GTGCCAGCMGCCGCGGTAA	390	Outdoor	Stem	Growhouse 1	Young	13S
+samplebac8	TAGATCCTCG	GTGCCAGCMGCCGCGGTAA	392	Outdoor	Stem	Growhouse 1	Mature	14S
+samplebac10	ATAATTGCCG	GTGCCAGCMGCCGCGGTAA	394	Outdoor	Stem	Growhouse 1	Young	15S
+samplebac13	CAAGTTTCCG	GTGCCAGCMGCCGCGGTAA	397	Outdoor	Stem	Growhouse 1	Mature	16S
+samplebac15	ACGAAAGAGC	GTGCCAGCMGCCGCGGTAA	399	Outdoor	Stem	Growhouse 1	Young	17S
+samplebac17	GCTCTTATGC	GTGCCAGCMGCCGCGGTAA	401	Outdoor	Stem	Growhouse 1	Mature	18S
+samplebac19	ACCAATCTCG	GTGCCAGCMGCCGCGGTAA	403	Outdoor	Stem	Growhouse 1	Young	19S
+samplebac21	GGAAGTGGCC	GTGCCAGCMGCCGCGGTAA	405	Outdoor	Stem	Growhouse 1	Mature	110S
+samplebac23	GATAATGTGC	GTGCCAGCMGCCGCGGTAA	407	Outdoor	Stem	Growhouse 1	Young	111S
+samplebac25	TACTGGTAAG	GTGCCAGCMGCCGCGGTAA	409	Outdoor	Stem	Growhouse 1	Mature	112S
+samplebac289	TACGACTCTG	GTGCCAGCMGCCGCGGTAA	1	Outdoor	Stem	Growhouse 1	Young	11S2
+samplebac291	ACCCAGTATG	GTGCCAGCMGCCGCGGTAA	3	Outdoor	Stem	Growhouse 1	Young	19S2
+samplebac293	CCAATACGCC	GTGCCAGCMGCCGCGGTAA	29	Outdoor	Stem	Growhouse 1	Young	111S2
+samplebac294	AGCAAGGTCT	GTGCCAGCMGCCGCGGTAA	6	Outdoor	Stem	Growhouse 1	Mature	112S2
+samplebac79	CACACAAAGT	GTGCCAGCMGCCGCGGTAA	463	Outdoor	Active_Nutrient_Pack	Active_Nutrient_Pack	Active_Nutrient_Pack	NPAF
+samplebac26	TTGAGAAGCA	GTGCCAGCMGCCGCGGTAA	410	Outdoor	Cap	Growhouse 2	Young	21C
+samplebac28	TCCCGTAGCA	GTGCCAGCMGCCGCGGTAA	412	Outdoor	Cap	Growhouse 2	Mature	22C
+samplebac30	GGTTCATGAA	GTGCCAGCMGCCGCGGTAA	414	Outdoor	Cap	Growhouse 2	Young	23C
+samplebac32	GAGCGAGTTA	GTGCCAGCMGCCGCGGTAA	416	Outdoor	Cap	Growhouse 2	Mature	24C
+samplebac35	CACACGCCTG	GTGCCAGCMGCCGCGGTAA	419	Outdoor	Cap	Growhouse 2	Young	25C
+samplebac37	CAAAGCGGTA	GTGCCAGCMGCCGCGGTAA	421	Outdoor	Cap	Growhouse 2	Mature	26C
+samplebac39	GAGGACCAGC	GTGCCAGCMGCCGCGGTAA	423	Outdoor	Cap	Growhouse 2	Young	27C
+samplebac41	AATAGCATGT	GTGCCAGCMGCCGCGGTAA	425	Outdoor	Cap	Growhouse 2	Mature	28C
+samplebac43	CGGAGTAATC	GTGCCAGCMGCCGCGGTAA	427	Outdoor	Cap	Growhouse 2	Young	29C
+samplebac45	GTAGATCGTG	GTGCCAGCMGCCGCGGTAA	429	Outdoor	Cap	Growhouse 2	Mature	210C
+samplebac47	TCCTTCCCTG	GTGCCAGCMGCCGCGGTAA	431	Outdoor	Cap	Growhouse 2	Young	211C
+samplebac49	TAGGAGAGAC	GTGCCAGCMGCCGCGGTAA	433	Outdoor	Cap	Growhouse 2	Mature	212C
+samplebac295	ATTCGGTAGT	GTGCCAGCMGCCGCGGTAA	7	Outdoor	Cap	Growhouse 2	Mature	24C2
+samplebac296	TCTAAACCCT	GTGCCAGCMGCCGCGGTAA	8	Outdoor	Cap	Growhouse 2	Young	25C2
+samplebac297	TAGAGAATGC	GTGCCAGCMGCCGCGGTAA	9	Outdoor	Cap	Growhouse 2	Young	211C2
+samplebac64	TCTTAGTCGG	GTGCCAGCMGCCGCGGTAA	448	Outdoor	Soil	Growhouse 2	Young	21R
+samplebac65	TTATGGTACG	GTGCCAGCMGCCGCGGTAA	449	Outdoor	Soil	Growhouse 2	Mature	22R
+samplebac66	GGCTGCATAC	GTGCCAGCMGCCGCGGTAA	450	Outdoor	Soil	Growhouse 2	Young	23R
+samplebac67	GTACCGTTGC	GTGCCAGCMGCCGCGGTAA	451	Outdoor	Soil	Growhouse 2	Mature	24R
+samplebac68	TTGGTAAAGT	GTGCCAGCMGCCGCGGTAA	452	Outdoor	Soil	Growhouse 2	Young	25R
+samplebac69	CTGATAGCAC	GTGCCAGCMGCCGCGGTAA	453	Outdoor	Soil	Growhouse 2	Mature	26R
+samplebac70	GTAATAATGC	GTGCCAGCMGCCGCGGTAA	454	Outdoor	Soil	Growhouse 2	Young	27R
+samplebac71	AATACAGACC	GTGCCAGCMGCCGCGGTAA	455	Outdoor	Soil	Growhouse 2	Mature	28R
+samplebac72	ACTCGAAACC	GTGCCAGCMGCCGCGGTAA	456	Outdoor	Soil	Growhouse 2	Young	29R
+samplebac73	ACCGTAAGAC	GTGCCAGCMGCCGCGGTAA	457	Outdoor	Soil	Growhouse 2	Mature	210R
+samplebac74	TCGATTGGCC	GTGCCAGCMGCCGCGGTAA	458	Outdoor	Soil	Growhouse 2	Young	211R
+samplebac75	CACTGGTGCA	GTGCCAGCMGCCGCGGTAA	459	Outdoor	Soil	Growhouse 2	Mature	212R
+samplebac76	GCATTACTGG	GTGCCAGCMGCCGCGGTAA	460	Outdoor	Spent_Nutrient_Pack	Spent_Nutrient_Pack	Spent_Nutrient_Pack	NPA
+samplebac77	TTGGGCCACA	GTGCCAGCMGCCGCGGTAA	461	Outdoor	Spent_Nutrient_Pack	Spent_Nutrient_Pack	Spent_Nutrient_Pack	NPB
+samplebac78	CTAATCAGAG	GTGCCAGCMGCCGCGGTAA	462	Outdoor	Spent_Nutrient_Pack	Spent_Nutrient_Pack	Spent_Nutrient_Pack	NPC
+samplebac27	TCGCCGTGTA	GTGCCAGCMGCCGCGGTAA	411	Outdoor	Stem	Growhouse 2	Young	21S
+samplebac29	TGTACATCGC	GTGCCAGCMGCCGCGGTAA	413	Outdoor	Stem	Growhouse 2	Mature	22S
+samplebac31	TGTTAAGCAG	GTGCCAGCMGCCGCGGTAA	415	Outdoor	Stem	Growhouse 2	Young	23S
+samplebac34	GACCATGTAG	GTGCCAGCMGCCGCGGTAA	418	Outdoor	Stem	Growhouse 2	Mature	24S
+samplebac36	TCTTCGCAGC	GTGCCAGCMGCCGCGGTAA	420	Outdoor	Stem	Growhouse 2	Young	25S
+samplebac38	CGAAACTACG	GTGCCAGCMGCCGCGGTAA	422	Outdoor	Stem	Growhouse 2	Mature	26S
+samplebac40	CATCTGGGCA	GTGCCAGCMGCCGCGGTAA	424	Outdoor	Stem	Growhouse 2	Young	27S
+samplebac42	TCTCATGTGG	GTGCCAGCMGCCGCGGTAA	426	Outdoor	Stem	Growhouse 2	Mature	28S
+samplebac44	CTTCGCGGAT	GTGCCAGCMGCCGCGGTAA	428	Outdoor	Stem	Growhouse 2	Young	29S
+samplebac46	TCTGCACTGA	GTGCCAGCMGCCGCGGTAA	430	Outdoor	Stem	Growhouse 2	Mature	210S
+samplebac48	TGTGTAGCCA	GTGCCAGCMGCCGCGGTAA	432	Outdoor	Stem	Growhouse 2	Young	211S
+samplebac50	TGTTCCTCTC	GTGCCAGCMGCCGCGGTAA	434	Outdoor	Stem	Growhouse 2	Mature	212S
+samplebac11	CGTGACAATA	GTGCCAGCMGCCGCGGTAA	395	neg	neg	neg	neg	NEGCON1_1
+samplebac33	GCTCAATCAG	GTGCCAGCMGCCGCGGTAA	417	neg	neg	neg	neg	NEGCON1_2
+samplebac307	TGCGTTCTAG	GTGCCAGCMGCCGCGGTAA	19	neg	neg	neg	neg	NEGCON4_5
+samplebac62	TGGGTCCCAC	GTGCCAGCMGCCGCGGTAA	446	positive	positive	positive	positive	POSCON1
+samplebac90	CATGCCAACA	GTGCCAGCMGCCGCGGTAA	474	Indoor	Substrate	M. sextelata	Conidia	341
+samplebac91	TATTGCAGCA	GTGCCAGCMGCCGCGGTAA	475	Indoor	Substrate	M. sextelata	Conidia	342
+samplebac92	AGATTCGCTC	GTGCCAGCMGCCGCGGTAA	476	Indoor	Substrate	M. sextelata	Conidia	343
+samplebac94	AGCCGGAGAG	GTGCCAGCMGCCGCGGTAA	478	Indoor	Substrate	M. sextelata	Conidia	351
+samplebac95	CCTACATGAG	GTGCCAGCMGCCGCGGTAA	479	Indoor	Substrate	M. sextelata	Conidia	352
+samplebac96	AAGGCCTTTA	GTGCCAGCMGCCGCGGTAA	480	Indoor	Substrate	M. sextelata	Conidia	353
+samplebac111	AACATTGCAG	GTGCCAGCMGCCGCGGTAA	495	Indoor	Substrate	Ch6	Late_non_fruiting	GB6
+samplebac97	TCCGTGGTAT	GTGCCAGCMGCCGCGGTAA	481	Indoor	Substrate	M. importuna	Conidia	CH811
+samplebac98	AGTTGTAGTC	GTGCCAGCMGCCGCGGTAA	482	Indoor	Substrate	M. importuna	Conidia	CH812
+samplebac99	CTTGTCTGGA	GTGCCAGCMGCCGCGGTAA	483	Indoor	Substrate	M. importuna	Conidia	CH813
+samplebac106	ACTGGATCTC	GTGCCAGCMGCCGCGGTAA	490	Indoor	Substrate	M. importuna	Conidia	CH821
+samplebac107	TCAAGGGACC	GTGCCAGCMGCCGCGGTAA	491	Indoor	Substrate	M. importuna	Conidia	CH822
+samplebac108	TGCAGTCCTC	GTGCCAGCMGCCGCGGTAA	492	Indoor	Substrate	M. importuna	Conidia	CH823
+samplebac87	GTTCACGCCC	GTGCCAGCMGCCGCGGTAA	471	Indoor	Substrate	M. rufobrunnea	Differentiation	MRDA1
+samplebac88	TAGGAACTCA	GTGCCAGCMGCCGCGGTAA	472	Indoor	Substrate	M. rufobrunnea	Differentiation	MRDA2
+samplebac89	TGTATTGGAC	GTGCCAGCMGCCGCGGTAA	473	Indoor	Substrate	M. rufobrunnea	Differentiation	MRDA3
+samplebac84	AATCCGGTCA	GTGCCAGCMGCCGCGGTAA	468	Indoor	Substrate	M. rufobrunnea	Fundamental	MRF121
+samplebac85	GGTAAAGGGT	GTGCCAGCMGCCGCGGTAA	469	Indoor	Substrate	M. rufobrunnea	Fundamental	MRF122
+samplebac86	GCTTTCTCAA	GTGCCAGCMGCCGCGGTAA	470	Indoor	Substrate	M. rufobrunnea	Fundamental	MRF123
+samplebac103	ATGCTGCAAC	GTGCCAGCMGCCGCGGTAA	487	Indoor	Substrate	M. rufobrunnea	Late_fruiting	MF1
+samplebac104	AAGGTCAATC	GTGCCAGCMGCCGCGGTAA	488	Indoor	Substrate	M. rufobrunnea	Late_fruiting	MF2
+samplebac105	ACCTACTTGT	GTGCCAGCMGCCGCGGTAA	489	Indoor	Substrate	M. rufobrunnea	Late_fruiting	MF3
+samplebac100	TCTACGGCAC	GTGCCAGCMGCCGCGGTAA	484	Indoor	Substrate	M. rufobrunnea	Late_non_fruiting	NF1
+samplebac101	CACGAGCTAC	GTGCCAGCMGCCGCGGTAA	485	Indoor	Substrate	M. rufobrunnea	Late_non_fruiting	NF2
+samplebac102	ACCGCATCAA	GTGCCAGCMGCCGCGGTAA	486	Indoor	Substrate	M. rufobrunnea	Late_non_fruiting	NF3
+samplebac80	TATAATCCGA	GTGCCAGCMGCCGCGGTAA	464	Indoor	Substrate	M. rufobrunnea	Primordia	MRP91
+samplebac81	GCCAAGGATA	GTGCCAGCMGCCGCGGTAA	465	Indoor	Substrate	M. rufobrunnea	Primordia	MRP92
+samplebac82	TCCAGATAGC	GTGCCAGCMGCCGCGGTAA	466	Indoor	Substrate	M. rufobrunnea	Primordia	MRP93
+samplebac93	GAGTACAGTC	GTGCCAGCMGCCGCGGTAA	477	mock	mock	mock	mock	MOCK1
+samplebac83	GCAACCGATT	GTGCCAGCMGCCGCGGTAA	467	neg	neg	neg	neg	NEGCON1_3
+samplebac112	CCGTGACAAC	GTGCCAGCMGCCGCGGTAA	496	neg	neg	neg	neg	NEGCON2_1
+samplebac110	GTACGATATG	GTGCCAGCMGCCGCGGTAA	494	Indoor	Uninoculated_Pasteurized	Uninoculated_Pasteurized	Uninoculated_Pasteurized	PF
+samplebac109	AAGTCGACAC	GTGCCAGCMGCCGCGGTAA	493	Indoor	Uninoculated_Unpasterized	Uninoculated_Unpasterized	Uninoculated_Unpasterized	UPF
+

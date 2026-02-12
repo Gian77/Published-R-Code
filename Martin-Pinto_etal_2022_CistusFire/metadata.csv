@@ -1,0 +1,28 @@
+sample,Procedencia,Tratamiento,Site,Treatment
+B01,clearing,clearing 50%,clearing,half
+B02,clearing,total clearing,clearing,total
+B03,clearing,Control,clearing,control
+B04,clearing,clearing 50%,clearing,half
+B05,clearing,total clearing,clearing,total
+B06,clearing,Control,clearing,control
+B07,clearing,clearing 50%,clearing,half
+B08,clearing,total clearing,clearing,total
+B09,clearing,Control,clearing,control
+B10,burnt,Control,burnt,control
+B11,burnt,clearing 50%,burnt,half
+B12,burnt,total clearing,burnt,total
+B13,burnt,Control,burnt,control
+B14,burnt,clearing 50%,burnt,half
+B15,burnt,total clearing,burnt,total
+B16,burnt,Control,burnt,control
+B17,burnt,total clearing,burnt,total
+B18,burnt,clearing 50%,burnt,half
+B19,Old-growth,Control,old-growth,control
+B20,Old-growth,Control,old-growth,control
+B21,Old-growth,Control,old-growth,control
+B22,Old-growth,total clearing,old-growth,total
+B23,Old-growth,total clearing,old-growth,total
+B24,Old-growth,total clearing,old-growth,total
+B25,Old-growth,controlled burn,old-growth,controlled-burn
+B26,Old-growth,controlled burn,old-growth,controlled-burn
+B27,Old-growth,controlled burn,old-growth,controlled-burn

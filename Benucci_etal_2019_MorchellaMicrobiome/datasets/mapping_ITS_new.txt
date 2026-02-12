@@ -1,0 +1,68 @@
+#SampleID	BarcodeSequence	LinkerPrimerSequence	barcodenumb	Study	Substrate	Species	Stage	Description
+samplefun40	GAAGGAAAGT	CTTGGTCATTTAGAGGAAGTAA	712	Indoor	Substrate	M. sextelata	Conidia	341F
+samplefun41	AATGCAATGC	CTTGGTCATTTAGAGGAAGTAA	713	Indoor	Substrate	M. sextelata	Conidia	342F
+samplefun42	GACCGATAGG	CTTGGTCATTTAGAGGAAGTAA	714	Indoor	Substrate	M. sextelata	Conidia	343F
+samplefun43	GGACTATCGT	CTTGGTCATTTAGAGGAAGTAA	715	Indoor	Substrate	M. sextelata	Conidia	351F
+samplefun44	CAACGCTAGA	CTTGGTCATTTAGAGGAAGTAA	716	Indoor	Substrate	M. sextelata	Conidia	352F
+samplefun46	TATTCCCACG	CTTGGTCATTTAGAGGAAGTAA	718	Indoor	Substrate	M. sextelata	Conidia	353F
+samplefun47	GACAACGAAT	CTTGGTCATTTAGAGGAAGTAA	719	Indoor	Substrate	M. importuna	Conidia	CH811F
+samplefun48	CCATTAGTTC	CTTGGTCATTTAGAGGAAGTAA	720	Indoor	Substrate	M. importuna	Conidia	CH812F
+samplefun49	TCGGATCTGT	CTTGGTCATTTAGAGGAAGTAA	721	Indoor	Substrate	M. importuna	Conidia	CH813F
+samplefun56	CACAGGATTA	CTTGGTCATTTAGAGGAAGTAA	728	Indoor	Substrate	M. importuna	Conidia	CH821F
+samplefun57	CGATCTTCGA	CTTGGTCATTTAGAGGAAGTAA	729	Indoor	Substrate	M. importuna	Conidia	CH822F
+samplefun58	CGATATCAGT	CTTGGTCATTTAGAGGAAGTAA	730	Indoor	Substrate	M. importuna	Conidia	CH823F
+samplefun37	TTACCCGCAC	CTTGGTCATTTAGAGGAAGTAA	709	Indoor	Substrate	M. rufobrunnea	Differentiation	MRDA1F
+samplefun38	GCTCCGACCA	CTTGGTCATTTAGAGGAAGTAA	710	Indoor	Substrate	M. rufobrunnea	Differentiation	MRDA2F
+samplefun39	CAAACTGCGT	CTTGGTCATTTAGAGGAAGTAA	711	Indoor	Substrate	M. rufobrunnea	Differentiation	MRDA3F
+samplefun33	TGCGTCAGCT	CTTGGTCATTTAGAGGAAGTAA	705	Indoor	Substrate	M. rufobrunnea	Fundamental	MRF121F
+samplefun34	TGTAAGACTT	CTTGGTCATTTAGAGGAAGTAA	706	Indoor	Substrate	M. rufobrunnea	Fundamental	MRF122F
+samplefun36	ATGATCGGTA	CTTGGTCATTTAGAGGAAGTAA	708	Indoor	Substrate	M. rufobrunnea	Fundamental	MRF123F
+samplefun53	AGAGACGCGT	CTTGGTCATTTAGAGGAAGTAA	725	Indoor	Substrate	M. rufobrunnea	Late_fruiting	MF1F
+samplefun54	GTTATGACGG	CTTGGTCATTTAGAGGAAGTAA	726	Indoor	Substrate	M. rufobrunnea	Late_fruiting	MF2F
+samplefun55	TCGCATGGAT	CTTGGTCATTTAGAGGAAGTAA	727	Indoor	Substrate	M. rufobrunnea	Late_fruiting	MF3F
+samplefun50	GCCGGTACTC	CTTGGTCATTTAGAGGAAGTAA	722	Indoor	Substrate	M. rufobrunnea	Late_non_fruiting	NF1F
+samplefun51	AGAATAGCGC	CTTGGTCATTTAGAGGAAGTAA	723	Indoor	Substrate	M. rufobrunnea	Late_non_fruiting	NF2F
+samplefun52	GGTGGCATGG	CTTGGTCATTTAGAGGAAGTAA	724	Indoor	Substrate	M. rufobrunnea	Late_non_fruiting	NF3F
+samplefun30	TGCGGGATTC	CTTGGTCATTTAGAGGAAGTAA	702	Indoor	Substrate	M. rufobrunnea	Primordia	MRP91F
+samplefun31	TAACCACCAA	CTTGGTCATTTAGAGGAAGTAA	703	Indoor	Substrate	M. rufobrunnea	Primordia	MRP92F
+samplefun32	TCGCCAGTGC	CTTGGTCATTTAGAGGAAGTAA	704	Indoor	Substrate	M. rufobrunnea	Primordia	MRP93F
+samplefun60	GCCCGACATA	CTTGGTCATTTAGAGGAAGTAA	732	Indoor	Substrate	Uninoculated_Pasteurized	Uninoculated_Pasteurized	PF
+samplefun59	CAACAATGCC	CTTGGTCATTTAGAGGAAGTAA	731	Indoor	Substrate	Uninoculated_Unpasterized	Uninoculated_Unpasterized	UPF
+samplefun61	AGTATTCGCG	CTTGGTCATTTAGAGGAAGTAA	733	Indoor	Ch6	Ch6	Late_nonfruiting	GB6F
+samplefun45	GCTATATCCA	CTTGGTCATTTAGAGGAAGTAA	717	mock	mock	mock	mock	MOCK4
+samplefun35	CGAAATGCAT	CTTGGTCATTTAGAGGAAGTAA	707	neg	neg	neg	neg	NEGCON4_1
+samplefun62	TGCCAACAAC	CTTGGTCATTTAGAGGAAGTAA	734	neg	neg	neg	neg	NEGCON4_2
+samplefun14	GAACCTATGA	CTTGGTCATTTAGAGGAAGTAA	686	positive	positive	positive	positive	POSCON4
+samplefun1	ACAGGGTTTG	CTTGGTCATTTAGAGGAAGTAA	673	Outdoor	Soil	Growhouse 1	Young	11RF
+samplefun2	ACGAGTTTAC	CTTGGTCATTTAGAGGAAGTAA	674	Outdoor	Soil	Growhouse 1	Mature	12RF
+samplefun3	TGGTCAACGA	CTTGGTCATTTAGAGGAAGTAA	675	Outdoor	Soil	Growhouse 1	Young	13RF
+samplefun4	AAGCCCAGCA	CTTGGTCATTTAGAGGAAGTAA	676	Outdoor	Soil	Growhouse 1	Mature	14RF
+samplefun5	CAAACCTATG	CTTGGTCATTTAGAGGAAGTAA	677	Outdoor	Soil	Growhouse 1	Young	15RF
+samplefun6	GGTGAAACCT	CTTGGTCATTTAGAGGAAGTAA	678	Outdoor	Soil	Growhouse 1	Mature	16RF
+samplefun7	ACCATCCAAC	CTTGGTCATTTAGAGGAAGTAA	679	Outdoor	Soil	Growhouse 1	Young	17RF
+samplefun8	GCAAGTGTGA	CTTGGTCATTTAGAGGAAGTAA	680	Outdoor	Soil	Growhouse 1	Mature	18RF
+samplefun9	GCAATAGGAG	CTTGGTCATTTAGAGGAAGTAA	681	Outdoor	Soil	Growhouse 1	Young	19RF
+samplefun10	GCGCTTAGAA	CTTGGTCATTTAGAGGAAGTAA	682	Outdoor	Soil	Growhouse 1	Mature	110RF
+samplefun11	AGGTGTATCA	CTTGGTCATTTAGAGGAAGTAA	683	Outdoor	Soil	Growhouse 1	Young	111RF
+samplefun12	CATAGGCCAT	CTTGGTCATTTAGAGGAAGTAA	684	Outdoor	Soil	Growhouse 1	Mature	112RF
+samplefun73	GAGGGACGCA	CTTGGTCATTTAGAGGAAGTAA	49	Outdoor	Soil	Growhouse 1	Young	13RF2
+samplefun74	ACTCCGATAG	CTTGGTCATTTAGAGGAAGTAA	50	Outdoor	Soil	Growhouse 1	Mature	16RF2
+samplefun75	TAGGCCATGT	CTTGGTCATTTAGAGGAAGTAA	51	Outdoor	Soil	Growhouse 1	Young	17RF2
+samplefun76	GCTGAGCCTT	CTTGGTCATTTAGAGGAAGTAA	52	Outdoor	Soil	Growhouse 1	Young	111RF2
+samplefun13	CGACACGGAG	CTTGGTCATTTAGAGGAAGTAA	685	Outdoor	Soil	Growhouse 2	Young	21RF
+samplefun15	CCTTGGAATC	CTTGGTCATTTAGAGGAAGTAA	687	Outdoor	Soil	Growhouse 2	Mature	22RF
+samplefun16	CACTTGCTCT	CTTGGTCATTTAGAGGAAGTAA	688	Outdoor	Soil	Growhouse 2	Young	23RF
+samplefun17	GAACAGCTCT	CTTGGTCATTTAGAGGAAGTAA	689	Outdoor	Soil	Growhouse 2	Mature	24RF
+samplefun18	GCCAATCCAA	CTTGGTCATTTAGAGGAAGTAA	690	Outdoor	Soil	Growhouse 2	Young	25RF
+samplefun19	CCTTCAATGG	CTTGGTCATTTAGAGGAAGTAA	691	Outdoor	Soil	Growhouse 2	Mature	26RF
+samplefun20	CTGGAACATT	CTTGGTCATTTAGAGGAAGTAA	692	Outdoor	Soil	Growhouse 2	Young	27RF
+samplefun21	TGGTCGCATC	CTTGGTCATTTAGAGGAAGTAA	693	Outdoor	Soil	Growhouse 2	Mature	28RF
+samplefun22	TTAGCCCAGC	CTTGGTCATTTAGAGGAAGTAA	694	Outdoor	Soil	Growhouse 2	Young	29RF
+samplefun23	AATGGTTCAG	CTTGGTCATTTAGAGGAAGTAA	695	Outdoor	Soil	Growhouse 2	Mature	210RF
+samplefun24	ACATACTGAG	CTTGGTCATTTAGAGGAAGTAA	696	Outdoor	Soil	Growhouse 2	Young	211RF
+samplefun25	TTAAGCGCCT	CTTGGTCATTTAGAGGAAGTAA	697	Outdoor	Soil	Growhouse 2	Mature	212RF
+samplefun26	CGCGCCTTAA	CTTGGTCATTTAGAGGAAGTAA	698	Outdoor	Spent_Nutrient_Pack	Spent_Nutrient_Pack	Spent_Nutrient_Pack	NPAF
+samplefun27	TCAACCCGTG	CTTGGTCATTTAGAGGAAGTAA	699	Outdoor	Spent_Nutrient_Pack	Spent_Nutrient_Pack	Spent_Nutrient_Pack	NPBF
+samplefun28	TCCGCGCAAG	CTTGGTCATTTAGAGGAAGTAA	700	Outdoor	Spent_Nutrient_Pack	Spent_Nutrient_Pack	Spent_Nutrient_Pack	NPCF
+samplefun29	GTTTGAAACA	CTTGGTCATTTAGAGGAAGTAA	701	Outdoor	Active_Nutrient_Pack	Active_Nutrient_Pack	Active_Nutrient_Pack	NPAFF
+
