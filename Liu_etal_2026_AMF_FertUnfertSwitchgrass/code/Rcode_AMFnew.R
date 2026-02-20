@@ -812,8 +812,8 @@ palette_site <- c("#009E73", "#0072B2", "#825121", "#E69F00", "#CC79A7")
 # Hill 0 and Hill 2 ------------------------------------------------------------
 
 # INTERPRETATION. Hill numbers are not independent indices. They are the same diversity 
-# continuum at different q values. So including all three is often redundant unless you want
-# to demonstrate consistency across evenness weighting.
+# continuum at different q values. So including all three is often redundant unless 
+# you want to demonstrate consistency across evenness weighting.
 # Hill_0 (q = 0) Pure richness, sensitive to rare taxa, influenced by sampling noise
 # Hill_2 (q = 2) Strongly dominated by abundant taxa, less sensitive to rare taxa, 
 # more stable across samples.
