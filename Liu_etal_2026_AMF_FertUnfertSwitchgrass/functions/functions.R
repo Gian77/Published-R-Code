@@ -275,8 +275,8 @@ diagnostic_plots <- function(fit) {
     labs(x = "Fitted Values", y = expression(sqrt("|Pearson Resid|")), 
          title = "Scale-Location") +
     theme_bw() +
-    theme(legend.title = element_blank()) 
-    #scale_color_manual(values = c("grey", "red"))
+    theme(legend.title = element_blank()) +
+    scale_color_manual(values = c("grey", "red"))
   
   # 5. Influence (Cook's D)
   cooks_threshold <- 4 / nrow(diag_data)
@@ -287,7 +287,7 @@ diagnostic_plots <- function(fit) {
     geom_hline(yintercept = cooks_threshold, linetype = "dashed", color = "red") +
     geom_text(
       aes(label = ifelse(.cooksd > cooks_threshold, seq_along(.cooksd), "")),
-      color = "black",
+      color = "red",
       hjust = -0.2, vjust = -0.5,
       size = 3)+
     labs(x = "Observation Index", y = "Cook's Distance", title = "Influence Check") +
@@ -353,7 +353,7 @@ diagnostics_dharma(
 
 
 
-
+# ****************************************************************--------------
 
 
 

@@ -26,6 +26,7 @@ if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")
 pacman::p_load(
   pak,
   styler,
+  janitor,
   magrittr,
   Biostrings,
   ape,
@@ -417,7 +418,7 @@ summary(run_lmem(alpha_df, hill_0, "randomslope"))
 
 # Does fertilizer improve fit?
 anova( run_lmem(alpha_df, hill_0, "baseline"), 
-       run_lmem(alpha_df, hill_0, "randomslope") )
+       run_lmem(alpha_df, hill_0, "fixslope") )
 
 # Does slope vary among sites?
 anova( run_lmem(alpha_df, hill_0, "fixslope"), 
@@ -457,7 +458,7 @@ summary(run_lmem(alpha_df, hill_1, "randomslope"))
 
 # Does fertilizer improve fit?
 anova( run_lmem(alpha_df, hill_1, "baseline"), 
-       run_lmem(alpha_df, hill_1, "randomslope") )
+       run_lmem(alpha_df, hill_1, "fixslope") )
 
 # Does slope vary among sites?
 anova( run_lmem(alpha_df, hill_1, "fixslope"), 
@@ -499,7 +500,7 @@ summary(run_lmem(alpha_df, hill_2, "randomslope"))
 
 # Does fertilizer improve fit?
 anova( run_lmem(alpha_df, hill_2, "baseline"), 
-       run_lmem(alpha_df, hill_2, "randomslope") )
+       run_lmem(alpha_df, hill_2, "fixslope") )
 
 # Does slope vary among sites?
 anova( run_lmem(alpha_df, hill_2, "fixslope"), 
@@ -760,7 +761,7 @@ broom.mixed::tidy(
        color = "Random Effect") +
   theme_minimal()
 
-# 9. Full Diagnostic Plot Set (sjPlot) -----------------------------------------
+# 7. Full Diagnostic Plot Set (sjPlot) -----------------------------------------
 
 sjPlot::plot_model(run_lmem(alpha_df, hill_0, "baseline"), type = "re")
 sjPlot::plot_model(run_lmem(alpha_df, hill_0, "fixslope"), type = "re")
@@ -779,7 +780,7 @@ tab_model(run_lmem(alpha_df, hill_0, "baseline"), show.stat = TRUE)
 tab_model(run_lmem(alpha_df, hill_0, "fixslope"), show.stat = TRUE) 
 
 
-# 10. Raw Data + Model Predictions (emmeand) -----------------------------------
+# 8. Raw Data + Model Predictions (emmeand) -----------------------------------
 
 # Panel A: Raw data
 ggplot(alpha_df, aes(x = fert_status, y = hill_0, fill = fert_status)) +
@@ -824,6 +825,29 @@ palette_site <- c("#009E73", "#0072B2", "#825121", "#E69F00", "#CC79A7")
 # If Hill_2 = 24, it means: The community has the same dominance structure as a 
 # community with 24 equally abundant species.
 
+# calculate global limits across all strains
+x_limits_hill_0 <- 
+  run_lmem(alpha_df, hill_0, "baseline") %>% 
+  broom.mixed::tidy(effects = "ran_vals") %>%
+  bind_rows() %>%
+  summarise(
+    min = min(estimate - 1.96*std.error),
+    max = max(estimate + 1.96*std.error)
+  )
+
+x_limits_hill_2 <- 
+  run_lmem(alpha_df, hill_2, "baseline") %>% 
+  broom.mixed::tidy(effects = "ran_vals") %>%
+  bind_rows() %>%
+  summarise(
+    min = min(estimate - 1.96*std.error),
+    max = max(estimate + 1.96*std.error)
+  )
+
+# Intercept
+intercept_hill_0 <- fixef(run_lmem(alpha_df, hill_0, "baseline"))["(Intercept)"]
+intercept_hill_2 <- fixef(run_lmem(alpha_df, hill_2, "baseline"))["(Intercept)"]
+
 Figure_1_alpha <-
   ggarrange(
     ggarrange(
@@ -855,7 +879,7 @@ ggplot(alpha_df,
     #legend.margin=ggplot2::margin(0,5,0,0),
     #legend.box.margin=ggplot2::margin(0,5,0,0)
     )+
-  guides(color = guide_legend(ncol=1)),
+  guides(color = guide_legend(nrow=1)),
 
 # Hill_2: Raw data with fixed effect means  
 ggplot(alpha_df, 
@@ -885,25 +909,26 @@ ggplot(alpha_df,
     #legend.margin=ggplot2::margin(0,5,0,0),
     #legend.box.margin=ggplot2::margin(0,5,0,0)
   )+
-  guides(color = guide_legend(ncol=1)),
+  guides(color = guide_legend(nrow=1)),
 
 ncol = 2, 
 nrow = 1,
 labels = c("A", "C"),
-legend = "right",
+legend = "bottom",
 common.legend = TRUE),
 
 ggarrange(
 # Hill_0: Random effect deviations
-broom.mixed::tidy(
-  run_lmem(alpha_df, hill_0, "baseline"), effects = "ran_vals") %>% 
-  as.data.frame() %>%
-  separate(level, into = c("plot_rep", "site"), sep = ":", 
-           extra = "merge", fill = "left") %>% 
-  mutate(level = ifelse(is.na(plot_rep), site, paste(site, plot_rep, sep = ":"))) %>% 
-  mutate(group = recode(group, "site" = "Site", 
-                        "plot_rep:site" = "Site:Plot")) %>%
-  arrange(level) %>% 
+  run_lmem(alpha_df, hill_0, "baseline") %>% 
+  broom.mixed::tidy(effects = "ran_vals") %>%
+  as.data.frame() %>% 
+  separate(level, into = c("plot_rep", "site"), sep = ":",
+           extra = "merge", fill = "left", remove = FALSE) %>%
+  mutate(site_plot = ifelse(is.na(plot_rep), site, paste(site, plot_rep, sep = ":"))) %>%
+  mutate(group = recode(group, "site" = "Site","plot:site" = "Plot:Site")) %>% 
+  arrange(site_plot) %>% 
+  mutate(level = factor(level, 
+                        levels = unique(level[order(site_plot, decreasing = TRUE)]))) %>% 
   ggplot(aes(x = estimate, y = level, color = group)) +
   geom_point(size = 4, shape = 18) +
   geom_errorbar(aes(xmin = estimate - 1.96*std.error, 
@@ -912,9 +937,9 @@ broom.mixed::tidy(
                 orientation = "y") +
   geom_vline(xintercept = 0, linetype = "dashed", color = "black") +
   labs(title = "Hill 0 Random Effects",
-       subtitle = "deviations by site & plot",
-       x = "Deviation from Fixed Effect",
-       y = "Site:plot",
+       subtitle = "Deviations from fixed-effect means",
+       x = "Random Effect Deviation (OTUs)",
+       y = "Plot:Site",
        color = NULL) +
   scale_color_manual(values = palette_fert)+
   theme_classic()+ 
@@ -924,22 +949,32 @@ broom.mixed::tidy(
     axis.text.x = element_markdown(size = 8),
     axis.text.y = element_markdown(size = 8),
     legend.key.height = unit(0.5, "cm"), legend.key.width = unit(0.5, "cm"),
-    legend.title = element_blank(), legend.text = element_text(size = 8)
-    #legend.margin=ggplot2::margin(0,5,0,0),
-    #legend.box.margin=ggplot2::margin(0,5,0,0)
+    legend.title = element_blank(), 
+    legend.text = element_text(size = 8),
+    legend.margin=ggplot2::margin(0,5,0,0),
+    legend.box.margin=ggplot2::margin(0,5,0,0),
+    legend.position=  "bottom"
     ) +
-  guides(color = guide_legend(ncol = 1)),
+    guides(color = guide_legend(nrow = 1)) +
+    scale_x_continuous(
+      limits = c(x_limits_hill_0$min, x_limits_hill_0$max),
+      sec.axis = sec_axis(
+        transform = ~ . + intercept_hill_0,
+        name = expression("Hill 0 (richness)")
+      )
+    ),
 
 # Hill_2: Random effect deviations
-broom.mixed::tidy(
-  run_lmem(alpha_df, hill_2, "baseline"), effects = "ran_vals") %>% 
-  as.data.frame() %>%
-  separate(level, into = c("plot_rep", "site"), sep = ":", 
-           extra = "merge", fill = "left") %>% 
-  mutate(level = ifelse(is.na(plot_rep), site, paste(site, plot_rep, sep = ":"))) %>% 
-  mutate(group = recode(group, "site" = "Site", 
-                        "plot_rep:site" = "Site:Plot")) %>%
-  arrange(level) %>% 
+run_lmem(alpha_df, hill_2, "baseline") %>% 
+  broom.mixed::tidy(effects = "ran_vals") %>%
+  as.data.frame() %>% 
+  separate(level, into = c("plot_rep", "site"), sep = ":",
+           extra = "merge", fill = "left", remove = FALSE) %>%
+  mutate(site_plot = ifelse(is.na(plot_rep), site, paste(site, plot_rep, sep = ":"))) %>%
+  mutate(group = recode(group, "site" = "Site","plot:site" = "Plot:Site")) %>% 
+  arrange(site_plot) %>% 
+  mutate(level = factor(level, 
+                        levels = unique(level[order(site_plot, decreasing = TRUE)]))) %>% 
   ggplot(aes(x = estimate, y = level, color = group)) +
   geom_point(size = 4, shape = 18) +
   geom_errorbar(aes(xmin = estimate - 1.96*std.error, 
@@ -948,9 +983,9 @@ broom.mixed::tidy(
                 orientation = "y") +
   geom_vline(xintercept = 0, linetype = "dashed", color = "black") +
   labs(title = "Hill 2 Random Effects",
-       subtitle = "deviations by site & plot",
-       x = "Deviation from Fixed Effect",
-       y = "Site:plot",
+       subtitle = "Deviations from fixed-effect means",
+       x = "Random Effect Deviation (OTUs)",
+       y = "Plot:Site",
        color = NULL) +
   scale_color_manual(values = palette_fert)+
   theme_classic()+ 
@@ -960,17 +995,27 @@ broom.mixed::tidy(
     axis.text.x = element_markdown(size = 8),
     axis.text.y = element_markdown(size = 8),
     legend.key.height = unit(0.5, "cm"), legend.key.width = unit(0.5, "cm"),
-    legend.title = element_blank(), legend.text = element_text(size = 8)
-    #legend.margin=ggplot2::margin(0,5,0,0),
-    #legend.box.margin=ggplot2::margin(0,5,0,0)
+    legend.title = element_blank(), 
+    legend.text = element_text(size = 8),
+    legend.margin=ggplot2::margin(0,5,0,0),
+    legend.box.margin=ggplot2::margin(0,5,0,0),
+    legend.position=  "bottom"
     ) +
-  guides(color = guide_legend(ncol = 1)),
+  guides(color = guide_legend(nrow = 1)) +
+  scale_x_continuous(
+    limits = c(x_limits_hill_2$min, x_limits_hill_2$max),
+    sec.axis = sec_axis(
+      transform = ~ . + intercept_hill_2,
+      name = expression("inverse Simpson")
+    )
+  ),
 
-ncol = 2, nrow = 1,
+ncol = 2, 
+nrow = 1,
 labels = c("B","D"),
-legend = "right",
+legend = "bottom",
 common.legend = TRUE),
-
+heights= c(1, 1.2),
 ncol = 1, 
 nrow = 2
 )
@@ -985,20 +1030,6 @@ ggsave(
   ),
   device = "pdf"
 )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 # ***** FUTHER COMPARISONS ***** -----------------------------------------------
