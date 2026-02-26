@@ -253,6 +253,7 @@ physeq_AMF_clean <-
 physeq_AMF_clean
 physeq_AMF_clean@sam_data
 
+# **********************************************************************--------
 # ***** RAREFACTION ***** ------------------------------------------------------
 
 # Add rarefaction metrics
@@ -348,8 +349,8 @@ write.csv(
 )
 
 
-
-# **** ALPHA DIVERSITY **** ----------------------------------------------------
+# **********************************************************************--------
+# **** 1. ALPHA DIVERSITY **** -------------------------------------------------
 # Adding alpha metrics ---------------------------------------------------------
 AlphaMetrics <- function(physeq) {
   sample_data(physeq)$ReadNo <- sample_sums(physeq)
@@ -628,8 +629,6 @@ summary(run_lmem_robust(alpha_df, pielou_j, "baseline"))
 summary(run_lmem_robust(alpha_df, pielou_j, "fixslope"))
 summary(run_lmem_robust(alpha_df, pielou_j, "randomslope"))
 
-
-# **********************************************************************--------
 # ***** VISUALIZING MIX MODELS ***** ------------------------------------------
 
 # 1. Basic Boxplot by Fertilizer Status ----------------------------------------
@@ -761,7 +760,7 @@ broom.mixed::tidy(
        color = "Random Effect") +
   theme_minimal()
 
-# 7. Full Diagnostic Plot Set (sjPlot) -----------------------------------------
+# 9. Full Diagnostic Plot Set (sjPlot) -----------------------------------------
 
 sjPlot::plot_model(run_lmem(alpha_df, hill_0, "baseline"), type = "re")
 sjPlot::plot_model(run_lmem(alpha_df, hill_0, "fixslope"), type = "re")
@@ -780,7 +779,7 @@ tab_model(run_lmem(alpha_df, hill_0, "baseline"), show.stat = TRUE)
 tab_model(run_lmem(alpha_df, hill_0, "fixslope"), show.stat = TRUE) 
 
 
-# 8. Raw Data + Model Predictions (emmeand) -----------------------------------
+# 10. Raw Data + Model Predictions (emmeand) -----------------------------------
 
 # Panel A: Raw data
 ggplot(alpha_df, aes(x = fert_status, y = hill_0, fill = fert_status)) +
@@ -803,7 +802,6 @@ emmeans::emmeans(run_lmem(alpha_df, hill_0, "fixslope"), ~ fert_status) %>%
   theme_minimal() +
   theme(legend.position = "none")
 
-# **********************************************************************--------
 # Selecting BEST VISUALIZATION APPROACH ----------------------------------------
 
 palette_fert <- c("#CC2D35", "#2D3142")
@@ -824,29 +822,6 @@ palette_site <- c("#009E73", "#0072B2", "#825121", "#E69F00", "#CC79A7")
 # If Hill_0 = 150 → there are 150 observed taxa
 # If Hill_2 = 24, it means: The community has the same dominance structure as a 
 # community with 24 equally abundant species.
-
-# calculate global limits across all strains
-x_limits_hill_0 <- 
-  run_lmem(alpha_df, hill_0, "baseline") %>% 
-  broom.mixed::tidy(effects = "ran_vals") %>%
-  bind_rows() %>%
-  summarise(
-    min = min(estimate - 1.96*std.error),
-    max = max(estimate + 1.96*std.error)
-  )
-
-x_limits_hill_2 <- 
-  run_lmem(alpha_df, hill_2, "baseline") %>% 
-  broom.mixed::tidy(effects = "ran_vals") %>%
-  bind_rows() %>%
-  summarise(
-    min = min(estimate - 1.96*std.error),
-    max = max(estimate + 1.96*std.error)
-  )
-
-# Intercept
-intercept_hill_0 <- fixef(run_lmem(alpha_df, hill_0, "baseline"))["(Intercept)"]
-intercept_hill_2 <- fixef(run_lmem(alpha_df, hill_2, "baseline"))["(Intercept)"]
 
 Figure_1_alpha <-
   ggarrange(
@@ -879,7 +854,7 @@ ggplot(alpha_df,
     #legend.margin=ggplot2::margin(0,5,0,0),
     #legend.box.margin=ggplot2::margin(0,5,0,0)
     )+
-  guides(color = guide_legend(nrow=1)),
+  guides(color = guide_legend(ncol=1)),
 
 # Hill_2: Raw data with fixed effect means  
 ggplot(alpha_df, 
@@ -909,26 +884,25 @@ ggplot(alpha_df,
     #legend.margin=ggplot2::margin(0,5,0,0),
     #legend.box.margin=ggplot2::margin(0,5,0,0)
   )+
-  guides(color = guide_legend(nrow=1)),
+  guides(color = guide_legend(ncol=1)),
 
 ncol = 2, 
 nrow = 1,
 labels = c("A", "C"),
-legend = "bottom",
+legend = "right",
 common.legend = TRUE),
 
 ggarrange(
 # Hill_0: Random effect deviations
-  run_lmem(alpha_df, hill_0, "baseline") %>% 
-  broom.mixed::tidy(effects = "ran_vals") %>%
-  as.data.frame() %>% 
-  separate(level, into = c("plot_rep", "site"), sep = ":",
-           extra = "merge", fill = "left", remove = FALSE) %>%
-  mutate(site_plot = ifelse(is.na(plot_rep), site, paste(site, plot_rep, sep = ":"))) %>%
-  mutate(group = recode(group, "site" = "Site","plot:site" = "Plot:Site")) %>% 
-  arrange(site_plot) %>% 
-  mutate(level = factor(level, 
-                        levels = unique(level[order(site_plot, decreasing = TRUE)]))) %>% 
+broom.mixed::tidy(
+  run_lmem(alpha_df, hill_0, "baseline"), effects = "ran_vals") %>% 
+  as.data.frame() %>%
+  separate(level, into = c("plot_rep", "site"), sep = ":", 
+           extra = "merge", fill = "left") %>% 
+  mutate(level = ifelse(is.na(plot_rep), site, paste(site, plot_rep, sep = ":"))) %>% 
+  mutate(group = recode(group, "site" = "Site", 
+                        "plot_rep:site" = "Site:Plot")) %>%
+  arrange(level) %>% 
   ggplot(aes(x = estimate, y = level, color = group)) +
   geom_point(size = 4, shape = 18) +
   geom_errorbar(aes(xmin = estimate - 1.96*std.error, 
@@ -937,9 +911,9 @@ ggarrange(
                 orientation = "y") +
   geom_vline(xintercept = 0, linetype = "dashed", color = "black") +
   labs(title = "Hill 0 Random Effects",
-       subtitle = "Deviations from fixed-effect means",
-       x = "Random Effect Deviation (OTUs)",
-       y = "Plot:Site",
+       subtitle = "deviations by site & plot",
+       x = "Deviation from Fixed Effect",
+       y = "Site:plot",
        color = NULL) +
   scale_color_manual(values = palette_fert)+
   theme_classic()+ 
@@ -949,32 +923,22 @@ ggarrange(
     axis.text.x = element_markdown(size = 8),
     axis.text.y = element_markdown(size = 8),
     legend.key.height = unit(0.5, "cm"), legend.key.width = unit(0.5, "cm"),
-    legend.title = element_blank(), 
-    legend.text = element_text(size = 8),
-    legend.margin=ggplot2::margin(0,5,0,0),
-    legend.box.margin=ggplot2::margin(0,5,0,0),
-    legend.position=  "bottom"
+    legend.title = element_blank(), legend.text = element_text(size = 8)
+    #legend.margin=ggplot2::margin(0,5,0,0),
+    #legend.box.margin=ggplot2::margin(0,5,0,0)
     ) +
-    guides(color = guide_legend(nrow = 1)) +
-    scale_x_continuous(
-      limits = c(x_limits_hill_0$min, x_limits_hill_0$max),
-      sec.axis = sec_axis(
-        transform = ~ . + intercept_hill_0,
-        name = expression("Hill 0 (richness)")
-      )
-    ),
+  guides(color = guide_legend(ncol = 1)),
 
 # Hill_2: Random effect deviations
-run_lmem(alpha_df, hill_2, "baseline") %>% 
-  broom.mixed::tidy(effects = "ran_vals") %>%
-  as.data.frame() %>% 
-  separate(level, into = c("plot_rep", "site"), sep = ":",
-           extra = "merge", fill = "left", remove = FALSE) %>%
-  mutate(site_plot = ifelse(is.na(plot_rep), site, paste(site, plot_rep, sep = ":"))) %>%
-  mutate(group = recode(group, "site" = "Site","plot:site" = "Plot:Site")) %>% 
-  arrange(site_plot) %>% 
-  mutate(level = factor(level, 
-                        levels = unique(level[order(site_plot, decreasing = TRUE)]))) %>% 
+broom.mixed::tidy(
+  run_lmem(alpha_df, hill_2, "baseline"), effects = "ran_vals") %>% 
+  as.data.frame() %>%
+  separate(level, into = c("plot_rep", "site"), sep = ":", 
+           extra = "merge", fill = "left") %>% 
+  mutate(level = ifelse(is.na(plot_rep), site, paste(site, plot_rep, sep = ":"))) %>% 
+  mutate(group = recode(group, "site" = "Site", 
+                        "plot_rep:site" = "Site:Plot")) %>%
+  arrange(level) %>% 
   ggplot(aes(x = estimate, y = level, color = group)) +
   geom_point(size = 4, shape = 18) +
   geom_errorbar(aes(xmin = estimate - 1.96*std.error, 
@@ -983,9 +947,9 @@ run_lmem(alpha_df, hill_2, "baseline") %>%
                 orientation = "y") +
   geom_vline(xintercept = 0, linetype = "dashed", color = "black") +
   labs(title = "Hill 2 Random Effects",
-       subtitle = "Deviations from fixed-effect means",
-       x = "Random Effect Deviation (OTUs)",
-       y = "Plot:Site",
+       subtitle = "deviations by site & plot",
+       x = "Deviation from Fixed Effect",
+       y = "Site:plot",
        color = NULL) +
   scale_color_manual(values = palette_fert)+
   theme_classic()+ 
@@ -995,27 +959,17 @@ run_lmem(alpha_df, hill_2, "baseline") %>%
     axis.text.x = element_markdown(size = 8),
     axis.text.y = element_markdown(size = 8),
     legend.key.height = unit(0.5, "cm"), legend.key.width = unit(0.5, "cm"),
-    legend.title = element_blank(), 
-    legend.text = element_text(size = 8),
-    legend.margin=ggplot2::margin(0,5,0,0),
-    legend.box.margin=ggplot2::margin(0,5,0,0),
-    legend.position=  "bottom"
+    legend.title = element_blank(), legend.text = element_text(size = 8)
+    #legend.margin=ggplot2::margin(0,5,0,0),
+    #legend.box.margin=ggplot2::margin(0,5,0,0)
     ) +
-  guides(color = guide_legend(nrow = 1)) +
-  scale_x_continuous(
-    limits = c(x_limits_hill_2$min, x_limits_hill_2$max),
-    sec.axis = sec_axis(
-      transform = ~ . + intercept_hill_2,
-      name = expression("inverse Simpson")
-    )
-  ),
+  guides(color = guide_legend(ncol = 1)),
 
-ncol = 2, 
-nrow = 1,
+ncol = 2, nrow = 1,
 labels = c("B","D"),
-legend = "bottom",
+legend = "right",
 common.legend = TRUE),
-heights= c(1, 1.2),
+
 ncol = 1, 
 nrow = 2
 )
@@ -1067,6 +1021,132 @@ pairs(emm_site_adj, adjust = "tukey")
 # differences between sites, because plots are still your experimental units, 
 # and you have 3 pseudoreplicates per plot. Even when site is fixed, the 
 # hierarchical structure does not disappear. 
+
+# **********************************************************************--------
+# **** 2. BETA DIVERSITY **** --------------------------------------------------
+
+# Extracting metadata and otutable ---------------------------------------------
+otutable_rare <- 
+  physeq_AMF_rare %>%
+  prune_taxa(taxa_sums(.) > 0, .) %>%
+  prune_samples(sample_sums(.) > 0, .) %>% 
+  otu_table() %>%  
+  as.matrix() %>% 
+  t() %>% 
+  as.data.frame()
+
+otutable_rare
+
+meta_rare <- 
+  physeq_AMF_rare %>%
+  prune_taxa(taxa_sums(.) > 0, .) %>%
+  prune_samples(sample_sums(.) > 0, .) %>% 
+  sample_data() %>%   # Extract metadata table 
+  as.matrix() %>% 
+  as.data.frame() %>% 
+  mutate()
+
+meta_rare$site_plot <- 
+  interaction(meta_rare$site, meta_rare$plot_rep, drop = TRUE)
+
+meta_rare
+
+# PERMANOVA tables ------------------------------------------------------------- 
+
+# treatment is applied at the plot level, the appropriate unit of permutation 
+# within site and among plots, not withing plots. 
+
+adonis2(
+  otutable_rare ~ fert_status,
+  data = meta_rare,
+  method = "bray",
+  permutations = how(
+    blocks = meta_rare$site,
+    nperm = 999
+  )
+)
+
+# Even better: include site explicitly -----------------------------------------
+adonis2(
+  otutable_rare ~ site + fert_status,
+  data = meta_rare,
+  method = "bray",
+  permutations = how(
+    blocks = meta_rare$site,
+    nperm = 999
+  ),
+  by = "margin"
+)
+
+# NOTE that using permutations = how(blocks = meta_rare$site) is the same as 
+# adding the strata = site was used to restrict permutations within groups i.e.
+# treatment labels are shuffled only within each site.
+
+# Site effect and fert_status effects ------------------------------------------
+
+# This model tests site effect, fertilization effect within site, and keeps 
+# permutations restricted within site. Gives marginal tests (Type III-like logic)
+
+adonis2(
+  otutable_rare ~ site + fert_status,
+  data = meta_rare,
+  method = "bray",
+  permutations = how(blocks = meta_rare$site, nperm = 999),
+  by = "margin"
+)
+
+# Should we check for an interaction between site and fetr_status?
+# Interaction are justified when you hypothesized context-dependent fertilization 
+# effects.
+
+adonis2(
+  otutable_rare ~ site * fert_status,
+  data = meta_rare,
+  method = "bray",
+  permutations = how(blocks = meta_rare$site, nperm = 999),
+  by = "margin"
+)
+
+# Is there strong plot-level structure (beyond site)?
+
+adonis2(
+  otutable_rare ~ site + site_plot,
+  data = meta_rare,
+  method = "bray",
+  permutations = how(blocks = meta_rare$site, nperm = 999),
+  by = "margin"
+)
+
+# site have Df = 0 and F = -Inf because you restricted permutations within site.
+# When you block permutations within site, you are preventing any reshuffling of 
+# samples across sites.
+
+adonis2(otutable_rare ~ site_plot,
+        data = meta_rare,
+        method = "bray",
+        permutations = how(blocks = meta_rare$site, nperm = 999),
+        by = "margin")
+
+
+adonis2(otutable_rare ~ site * site_plot * fert_status,
+        data = meta_rare,
+        method = "bray",
+        permutations = how(blocks = meta_rare$site, nperm = 999),
+        by = "margin")
+
+
+# Check homogenitiy of variances -----------------------------------------------
+betadisper(
+  vegdist(otutable_rare, method = "bray"),
+  meta_rare$fert_status
+) %>% 
+  anova()
+
+dist <- vegdist(otutable_rare, method = "bray")
+
+anova(betadisper(dist, meta_rare$site))
+anova(betadisper(dist, meta_rare$site_plot))
+
 
 
 
