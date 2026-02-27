@@ -1,4 +1,4 @@
-#*************************************************************************************-------
+#************************************************************************-------
 # Manuscript Title: Site-specific factors rather than nitrogen impact arbuscular 
 #                   mycorrhizal fungi diversity in bioenergy switchgrass monocultures
 # Authors:          Shuang Liu, Gian Maria Niccolò Benucci, Alden Dirks, 
@@ -8,7 +8,7 @@
 #                   
 # DOI               ...
 # PMID:             ...
-# ************************************************************************************--------
+# **********************************************************************--------
 
 # Positron options to restore Rstudio projects
 # load(".Rdata")
@@ -24,6 +24,7 @@ options(scipen = 9999, pillar.sigfig = 6, digits = 6, max.print = 10000000)
 if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")
 
 pacman::p_load(
+  renv,
   pak,
   styler,
   janitor,
@@ -59,10 +60,17 @@ pacman::p_load(
   sjPlot,
   broom.mixed,
   merTools,
+  multcompView,
   install=FALSE
 )
 
 
+# Tracking package versions with renv ------------------------------------------
+renv::init()      # initializes renv in your project
+renv::restore()   # installs all packages from the lockfile
+renv::snapshot()  # updates the lockfile
+
+# Then commit and push the updated renv.lock file!
 
 # Session Info -----------------------------------------------------------------
 sessionInfo()
@@ -1051,101 +1059,176 @@ meta_rare$site_plot <-
 
 meta_rare
 
-# PERMANOVA tables ------------------------------------------------------------- 
+# PERMANOVA ------------------------------------------------------------------- 
 
+# INTERPRETATION. The adonis2 function in vegan can be run using:
+
+# >>>> 1) by = "terms" (sequential/Type I) -------------------------------------
+# Tests each term after only the terms that come before it in the formula. This 
+# means the results are order-dependent — putting site before fert_status gives 
+# site "first dibs" on explaining variance, and fert_status is tested on whatever
+# is left over. This is appropriate when you have a strong a priori reason to 
+# believe terms should be entered in a specific hierarchical order.
+
+# >>>> 2) by = "margin" (marginal/Type III) ------------------------------------
+# Tests each term after all other terms are already in the model, regardless of 
+# order. This is what you've been using, and for your question — "does fertilization
+# matter after accounting for everything else?" — it's the right choice.
+
+# Since your primary question is whether fertilization has an effect independent 
+# of site and plot structure, by = "margin" is the correct and more conservative 
+# test. Using by = "terms" would actually be more likely to find a spurious 
+# fertilization effect if you put fert_status early in the formula before site
+# absorbs its share of variance.
+
+# 1) Does fertilization affect community composition within sites? -------------
 # treatment is applied at the plot level, the appropriate unit of permutation 
-# within site and among plots, not withing plots. 
+# within site and among plots, not withing plots. This is a correct test for 
+# fertilizer while accounting for site structure.
 
 adonis2(
   otutable_rare ~ fert_status,
   data = meta_rare,
   method = "bray",
-  permutations = how(
-    blocks = meta_rare$site,
-    nperm = 999
-  )
-)
-
-# Even better: include site explicitly -----------------------------------------
-adonis2(
-  otutable_rare ~ site + fert_status,
-  data = meta_rare,
-  method = "bray",
-  permutations = how(
-    blocks = meta_rare$site,
-    nperm = 999
-  ),
+  permutations = how(blocks = meta_rare$site, nperm = 999),
   by = "margin"
 )
+
 
 # NOTE that using permutations = how(blocks = meta_rare$site) is the same as 
 # adding the strata = site was used to restrict permutations within groups i.e.
 # treatment labels are shuffled only within each site.
 
-# Site effect and fert_status effects ------------------------------------------
+# 2) Does site impact community composition? -----------------------------------
 
 # This model tests site effect, fertilization effect within site, and keeps 
 # permutations restricted within site. Gives marginal tests (Type III-like logic)
 
 adonis2(
-  otutable_rare ~ site + fert_status,
+  otutable_rare ~ site,
   data = meta_rare,
   method = "bray",
-  permutations = how(blocks = meta_rare$site, nperm = 999),
-  by = "margin"
+  permutations = 999,
+  by = "term"
 )
-
-# Should we check for an interaction between site and fetr_status?
-# Interaction are justified when you hypothesized context-dependent fertilization 
-# effects.
 
 adonis2(
-  otutable_rare ~ site * fert_status,
+  otutable_rare ~ fert_status + site,
   data = meta_rare,
   method = "bray",
   permutations = how(blocks = meta_rare$site, nperm = 999),
   by = "margin"
 )
 
-# Is there strong plot-level structure (beyond site)?
+adonis2(
+  otutable_rare ~ fert_status + site,
+  data = meta_rare,
+  method = "bray",
+  permutations = how(blocks = meta_rare$site, nperm = 999),
+  by = "terms"
+)
+
+# 3) Does fertilizer effect differ among sites? --------------------------------
+# NOTE. Should we check for an interaction between site and fert_status? Usually, 
+# interactions are justified when you hypothesized context-dependent effects. For
+# example that fert_status impact site A but not site B. If you have no reason to
+# expect that, then the interaction is not justified.
+
+adonis2(
+  otutable_rare ~ fert_status * site,
+  data = meta_rare,
+  method = "bray",
+  permutations = 999,
+  by = "margin"
+)
+
+adonis2(
+  otutable_rare ~ fert_status * site,
+  data = meta_rare,
+  method = "bray",
+  permutations = how(blocks = meta_rare$site, nperm = 999),
+  by = "margin"
+)
+
+adonis2(
+  otutable_rare ~ fert_status * site,
+  data = meta_rare,
+  method = "bray",
+  permutations = how(blocks = meta_rare$site, nperm = 999),
+  by = "terms"
+)
+
+# 4) Does plot-level (beyond site) impact beta diversity? ----------------------
+adonis2(
+  otutable_rare ~ site_plot,
+  data = meta_rare,
+  method = "bray",
+  permutations = how(blocks = meta_rare$site, nperm = 999),
+  by = "margin"
+)
 
 adonis2(
   otutable_rare ~ site + site_plot,
   data = meta_rare,
   method = "bray",
   permutations = how(blocks = meta_rare$site, nperm = 999),
+  by = "terms"
+)
+
+# 5) Does fertilizer effect vary among plots within sites? ---------------------
+adonis2(
+  otutable_rare ~ site_plot * fert_status,
+  data = meta_rare,
+  method = "bray",
+  permutations = how(blocks = meta_rare$site, nperm = 999),
   by = "margin"
 )
 
-# site have Df = 0 and F = -Inf because you restricted permutations within site.
-# When you block permutations within site, you are preventing any reshuffling of 
-# samples across sites.
+# INTERPRETATION. This appears significant, we only have 2 samples per plot 
+# (treatment/control). In this situation the interaction is essentially capturing
+# plot-specific treatment differences. Given n = 2 per plot, this term absorbs 
+# nearly all treatment contrast variability (No independent estimate of treatment 
+# variance). So it is mathematically allowed, but biologically unstable. 
+# I would not emphasize this interaction given the paired 
+# design and limited replication. The interaction term is essentially capturing:
+# Differences in pairwise Bray–Curtis distances among plots.
+# Not a replicated random slope.
+# Not a properly estimated treatment heterogeneity.
 
-adonis2(otutable_rare ~ site_plot,
-        data = meta_rare,
-        method = "bray",
-        permutations = how(blocks = meta_rare$site, nperm = 999),
-        by = "margin")
+# BETADISPER -------------------------------------------------------------------
+# Check homogeneity of variances -----------------------------------------------
+bray_dist <- vegdist(otutable_rare, method = "bray")
+
+bd_fert <- betadisper(bray_dist, meta_rare$fert_status)
+permutest(bd_fert, permutations = how(blocks = meta_rare$site, nperm = 999))
+TukeyHSD(bd_fert)
+
+bd_site <- betadisper(bray_dist, meta_rare$site)
+permutest(bd_site, permutations = how(blocks = meta_rare$site, nperm = 999))
+TukeyHSD(bd_site)
+
+bd_plot <- betadisper(bray_dist, meta_rare$site_plot)
+permutest(bd_plot, permutations = how(blocks = meta_rare$site, nperm = 999))
+TukeyHSD(bd_plot)
+
+# NOTE anova() is ok, but for publication you want permutest() because:
+# _It doesn't assume normality of distances.
+# _It keeps your permutation scheme consistent with your PERMANOVA — a reviewer 
+#    will notice if you restricted permutations in adonis2 but then used a free 
+#    parametric test for betadisper.
+# _It's the approach vegan's own documentation recommends for this kind of data.
 
 
-adonis2(otutable_rare ~ site * site_plot * fert_status,
-        data = meta_rare,
-        method = "bray",
-        permutations = how(blocks = meta_rare$site, nperm = 999),
-        by = "margin")
+bd_site <- betadisper(bray_dist, meta_rare$site)
+betadisper(bray_dist, meta_rare$fert_status)
 
 
-# Check homogenitiy of variances -----------------------------------------------
-betadisper(
-  vegdist(otutable_rare, method = "bray"),
-  meta_rare$fert_status
-) %>% 
-  anova()
+anova(betadisper(bray_dist, meta_rare$fert_status))
 
-dist <- vegdist(otutable_rare, method = "bray")
+bray_dist <- vegdist(otutable_rare, method = "bray")
 
-anova(betadisper(dist, meta_rare$site))
-anova(betadisper(dist, meta_rare$site_plot))
+anova(betadisper(bray_dist, meta_rare$site))
+anova(betadisper(bray_dist, meta_rare$site_plot))
 
 
 

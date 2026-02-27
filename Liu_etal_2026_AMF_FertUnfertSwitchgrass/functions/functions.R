@@ -121,7 +121,7 @@ blank2na = function(x, na.strings=c('','.','NA','na','N/A','n/a','NaN','nan')) {
 }
 
 
-# Finalize ---------------------------------------------------------------------
+# Finalize OTU/ASVs taxonomy ---------------------------------------------------
 FinalizeTaxonomy <- function(taxonomy){
   taxonomy$Species <- 
     gsub(" sp ", "", taxonomy$Species)
@@ -227,7 +227,7 @@ run_lmem_robust <- function(df,
 summary(run_lmem_robust(alpha_df, hill_0, "fixslope"))
 
 
-# Model diagnostics plots ------------------------------------------------------ 
+# Diagnostics plots ------------------------------------------------------ 
 diagnostic_plots <- function(fit) {
   
   # Extract diagnostic data using broom + direct model functions
@@ -301,7 +301,7 @@ diagnostic_plots <- function(fit) {
 diagnostic_plots(run_lmem(alpha_df, hill_0, "fixslope"))
 
 
-# USING DHARMA package to run model diagnostics --------------------------------
+# DHARMA diagnostics plots -----------------------------------------------------
 
 # DHARMa provides simulation-based residual diagnostics that are often more 
 # informative than raw residual plots, especially in hierarchical models.
@@ -349,6 +349,14 @@ diagnostics_dharma(
   group_var1 = alpha_df$site,
   group_var2 = alpha_df$plot_rep
 )
+
+
+
+
+
+
+
+
 
 
 
