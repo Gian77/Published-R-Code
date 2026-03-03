@@ -984,6 +984,7 @@ nrow = 2
 
 Figure_1_alpha
 
+# ***** FIGURE 1 - Alpha-diversity ***** ----------------------------------------
 ggsave(
   file.path(data_path, "results/Fig_1_alphadiv.pdf"),
   plot = ggpubr::annotate_figure(
@@ -1052,12 +1053,21 @@ meta_rare <-
   sample_data() %>%   # Extract metadata table 
   as.matrix() %>% 
   as.data.frame() %>% 
-  mutate()
+  mutate(fert_status = factor(recode(
+    fert_status, "FERT" = "Fertilized" ,  "UNFERT" ="Control"
+  )))
 
 meta_rare$site_plot <- 
-  interaction(meta_rare$site, meta_rare$plot_rep, drop = TRUE)
+  as.factor(
+    paste(meta_rare$plot_rep, meta_rare$site, sep=":"))
+  
+meta_rare$site_plot <- with(
+  meta_rare,
+  factor(site_plot,
+         levels = unique(site_plot[order(site, plot_rep)])))
 
-meta_rare
+head(meta_rare)
+
 
 # PERMANOVA ------------------------------------------------------------------- 
 
@@ -1081,7 +1091,7 @@ meta_rare
 # fertilization effect if you put fert_status early in the formula before site
 # absorbs its share of variance.
 
-# 1) Does fertilization affect community composition within sites? -------------
+# 1) Does fertilization affect community composition? --------------------------
 # treatment is applied at the plot level, the appropriate unit of permutation 
 # within site and among plots, not withing plots. This is a correct test for 
 # fertilizer while accounting for site structure.
@@ -1199,12 +1209,17 @@ adonis2(
 # Check homogeneity of variances -----------------------------------------------
 bray_dist <- vegdist(otutable_rare, method = "bray")
 
+# The logic is identical to PERMANOVA — the permutation scheme must match the 
+# scale at which the grouping variable exists:
+# _Between sites → free permutations
+# _Within sites (fert_status, plot) → restricted within sites
+
 bd_fert <- betadisper(bray_dist, meta_rare$fert_status)
 permutest(bd_fert, permutations = how(blocks = meta_rare$site, nperm = 999))
 TukeyHSD(bd_fert)
 
 bd_site <- betadisper(bray_dist, meta_rare$site)
-permutest(bd_site, permutations = how(blocks = meta_rare$site, nperm = 999))
+permutest(bd_site, permutations = 999)
 TukeyHSD(bd_site)
 
 bd_plot <- betadisper(bray_dist, meta_rare$site_plot)
@@ -1219,26 +1234,178 @@ TukeyHSD(bd_plot)
 # _It's the approach vegan's own documentation recommends for this kind of data.
 
 
-bd_site <- betadisper(bray_dist, meta_rare$site)
-betadisper(bray_dist, meta_rare$fert_status)
+# PLOTTING ---------------------------------------------------------------------
+# community composition --------------------------------------------------------
+
+# Run NMDS
+set.seed(270226)
+
+amf_nmds <- metaMDS(otutable_rare, distance = "bray", k = 2, trymax = 100)
+amf_pcoa <- cmdscale(bray_dist, k = 2, eig = TRUE)
+
+plot_ordination(
+  ord = amf_nmds,
+  meta = meta_rare,
+  col_var = "site",
+  shape_var = "fert_status"
+)
+
+plot_ordination(
+  ord = amf_pcoa,
+  meta = meta_rare,
+  col_var = "site",
+  shape_var = "fert_status", 
+  ellipse = FALSE
+)
 
 
-anova(betadisper(bray_dist, meta_rare$fert_status))
+# dispersion -------------------------------------------------------------------
+plot_betadisper(dist_matrix = bray_dist, 
+                grouping = meta_rare$fert_status)
 
-bray_dist <- vegdist(otutable_rare, method = "bray")
+plot_betadisper(dist_matrix = bray_dist, 
+                grouping = meta_rare$site)
 
-anova(betadisper(bray_dist, meta_rare$site))
-anova(betadisper(bray_dist, meta_rare$site_plot))
-
-
-
-
-
+plot_betadisper(dist_matrix = bray_dist, 
+                grouping = meta_rare$site_plot)
 
 
+# ***** FIGURE 2 - Beta-diversity ***** -----------------------------------------
+
+# using ggarrange --------------------------------------------------------------
+
+Figure_2_beta_long <-
+ggarrange(
+  plot_ordination(
+    ord = amf_pcoa,
+    meta = meta_rare,
+    col_var = "site",
+    shape_var = "fert_status",
+    ellipse = FALSE,
+    legend_inside = TRUE
+  ) +
+    labs(title = "PCoA") +
+    scale_color_manual(values = palette_site),
+  plot_betadisper(
+        dist_matrix = bray_dist,
+        grouping = meta_rare$fert_status,
+        signif_label = "Treatment, F=1.006, p=0.243"
+        ) +
+        labs(title = "Within-treatment variance",
+             y = NULL),
+  plot_betadisper(
+    dist_matrix = bray_dist,
+    grouping = meta_rare$site,
+    signif_label = "Site, F=6.88, p=0.001"
+  ) +
+    labs(title = "Within-site variance",
+         y = NULL),
+  plot_betadisper(
+    dist_matrix = bray_dist,
+    grouping = meta_rare$site_plot,
+    signif_label = "Plot, F=4.777, p=0.001"
+  ) +
+    labs(title = "Within-plot variance",
+         y = NULL),
+  ncol = 1,
+  nrow = 4,
+  align = "h",
+  heights =  c(1.4, 0.6, 0.6, 1.2),
+  labels = c("A", "B", "C", "D")
+)
+
+Figure_2_beta_long
+
+ggsave(
+  file.path(data_path, "results/Fig_2_betadiv.pdf"),
+  plot = ggpubr::annotate_figure(
+    Figure_2_beta_long,
+    top = text_grob("BETA DIVERSITY", size = 12, face = "bold")
+  ),
+  device = "pdf"
+)
 
 
 
+ggarrange(
+  plot_ordination(
+    ord = amf_nmds,
+    meta = meta_rare,
+    col_var = "site",
+    shape_var = "fert_status"
+  ) +
+    labs(title = "NMDS"),
+  plot_betadisper(
+    dist_matrix = bray_dist,
+    grouping = meta_rare$site,
+    signif_label = "Site, F=6.88, p=001"
+  ) +
+    labs(title = "Group dispersion"),
+  ncol = 2,
+  nrow = 1,
+  align = "h",
+  legend = "right",
+  widths = c(1.4, 1),
+  labels = c("A", "B")
+)
 
+# INTERPREATTION. NMDS space is different than PCoA space, that is why the spread
+# (variances) of the samples within sites is different — the axes and distances are
+# not the same thing.
+# _ betadisper() calculates distances to centroids in PCoA space:
+# _ Takes the Bray-Curtis distance matrix
+# _ Runs a PCoA (cmdscale()) on it to convert distances into Euclidean coordinates\
+#    in multivariate space
+# _ Finds the centroid of each group in that PCoA space
+# _ Calculates the Euclidean distance from each sample to its group centroid (or 
+#   medians) in PCoA space. Those distances are what get plotted and tested.
 
+# _ NMDS plot shows dispersion visually in NMDS space, which is a non-metric 
+# rank-based reduction 
+
+# Using patchwork --------------------------------------------------------------
+plot_pcoa <- plot_ordination(
+  ord = amf_pcoa,
+  meta = meta_rare,
+  col_var = "site",
+  shape_var = "fert_status",
+  ellipse = FALSE, 
+  legend_inside = TRUE
+) +
+  labs(title = "PCoA")
+
+plot_btadisper_fert <- 
+  plot_betadisper(
+    dist_matrix = bray_dist,
+    grouping = meta_rare$fert_status,
+    signif_label = "Treatment, F=1.006, p=0.243"
+  ) +
+  labs(title = "Within-treatment variance",
+       y = NULL)
+
+plot_btadisper_site <- 
+  plot_betadisper(
+    dist_matrix = bray_dist,
+    grouping = meta_rare$site,
+    signif_label = "Site, F=6.88, p=0.001"
+  ) +
+  labs(title = "Within-site variance",
+       y = NULL)
+
+plot_btadisper_plot_rep <- 
+  plot_betadisper(
+    dist_matrix = bray_dist,
+    grouping = meta_rare$site_plot,
+    signif_label = "Plot, F=4.777, p=0.001"
+  ) +
+  labs(title = "Within-plot variance",
+       y = NULL)
+
+Figure_2_beta <-
+  (plot_pcoa | (plot_btadisper_fert / plot_btadisper_site) | plot_btadisper_plot_rep) +
+  plot_layout(widths = c(1.5, 1, 1.3)) +
+  plot_annotation(tag_levels = "A") &
+  theme(plot.tag = element_text(face = "bold"))
+
+Figure_2_beta
 

@@ -351,14 +351,240 @@ diagnostics_dharma(
 )
 
 
+# Plot beta-dversity -----------------------------------------------------------
+
+plot_ordination <- function(ord,
+                            meta,
+                            col_var,
+                            shape_var,
+                            ellipse = TRUE,
+                            ellipse_level = 0.95,
+                            point_size = 3,
+                            point_alpha = 0.8,
+                            ellipse_type = "t", 
+                            legend_inside = FALSE) {
+  
+  # Ensure factors
+  meta[[col_var]]   <- as.factor(meta[[col_var]])
+  meta[[shape_var]] <- as.factor(meta[[shape_var]])
+  
+  # Extract site scores + axis labels
+  if (inherits(ord, "metaMDS")) {
+    
+    scores_df <- as.data.frame(scores(ord, display = "sites"))
+    x_col <- colnames(scores_df)[1]
+    y_col <- colnames(scores_df)[2]
+    x_lab <- "NMDS1"
+    y_lab <- "NMDS2"
+    stress_label <- paste("Stress =", round(ord$stress, 3))
+    
+  } else if (is.list(ord) && !is.null(ord$points)) {
+    scores_df <- as.data.frame(ord$points)
+    colnames(scores_df)[1:2] <- c("Axis.1", "Axis.2")
+    x_col <- "Axis.1"
+    y_col <- "Axis.2"
+    
+    if (!is.null(ord$eig)) {
+      eig_pos <- ord$eig[ord$eig > 0]
+      eig_pct <- round(eig_pos / sum(eig_pos) * 100, 1)
+      x_lab <- paste0("PCoA1 (", eig_pct[1], "%)")
+      y_lab <- paste0("PCoA2 (", eig_pct[2], "%)")
+    } else {
+      x_lab <- "Axis.1"
+      y_lab <- "Axis.2"
+    }
+    
+    stress_label <- NULL
+    
+  } else {
+    stop("`ord` must be metaMDS or a cmdscale-like object with $points.")
+  }
+  
+  # Attach metadata
+  scores_df <- cbind(scores_df, meta)
+  
+  # Build plot
+  p <- ggplot(
+    scores_df,
+    aes(x = .data[[x_col]],y = .data[[y_col]],
+      color = .data[[col_var]],shape = .data[[shape_var]] )) +
+    geom_point(size = point_size, alpha = point_alpha) +
+    #stat_ellipse(
+    #  aes(group = .data[[col_var]], color = .data[[col_var]]),
+    #  type = ellipse_type,
+    #  level = ellipse_level,
+    #  linewidth = 0.6, 
+    #  show.legend = FALSE) +
+    labs(x = x_lab,
+         y = y_lab,
+         color = col_var,
+         shape = shape_var) +
+    theme_classic() +
+    theme(
+      plot.title = element_markdown(size = 12, face = "bold", hjust = 0.5),
+      strip.text = element_markdown(size = 10, face = "bold"),
+      axis.text.x = element_markdown(angle = 0, size = 8, hjust = 0.5, vjust = 1.05),
+      axis.text.y = element_markdown(angle = 0, size = 8, hjust = 1, vjust = 0.5),
+      strip.background = element_blank(),
+      legend.key.height = unit(0.4, "cm"),
+      legend.key.width  = unit(0.4, "cm"),
+      legend.title = element_blank(),
+      legend.text  = element_markdown(size = 8)
+    ) +
+    guides(
+      color = guide_legend(ncol = 1, override.aes = list(shape = 15, size = 3.5)),
+      shape = guide_legend(
+        ncol = 1,
+        override.aes = list(color = "black", size = 2.5)
+      )
+    )
+  
+  # Add ellipses
+  if (ellipse) {
+    p <- p + stat_ellipse(
+      aes(group = .data[[col_var]]),
+      type = ellipse_type,
+      level = ellipse_level,
+      linewidth = 0.6,
+      show.legend = FALSE
+    )
+  }
+  
+  # Add stress if NMDS
+  if (!is.null(stress_label)) {
+    p <- p + annotate(
+      "text",
+      x = -Inf,
+      y = -Inf,
+      label = stress_label,
+      hjust = -0.1,   # push slightly right
+      vjust = -1.0,   # push slightly up
+      size = 3.5
+    )
+  }
+  
+  if (!is.null(legend_inside)) {
+    p <- p +
+      theme(legend.position = c(0.02, 0.04),        # x, y from bottom-left (0,0) to top-right (1,1)
+            legend.justification = c(0, 0),           # anchor point of the legend box
+            legend.background = element_blank()) 
+    }
+  
+  return(p)
+}
+
+plot_ordination(
+  ord = amf_nmds,
+  meta = meta_rare,
+  col_var = "site",
+  shape_var = "fert_status",
+  legend_inside = TRUE
+)
 
 
+# plot beta-dispersion ---------------------------------------------------------
+plot_betadisper <- function(dist_matrix, 
+                            grouping, 
+                            offset = 0.02, 
+                            jitter_width = 0.2, 
+                            alpha = 0.5, 
+                            point_size = 1.5, 
+                            signif_label = NULL, 
+                            scale_axis=NULL) {
+  
+  
+  # Run betadisper and Tukey HSD
+  bd <- betadisper(dist_matrix, grouping, type = "median")
+  tukey <- TukeyHSD(bd)
+  
+  # Extract distances
+  disp_df <- data.frame(
+    distances = bd$distances,
+    group = bd$group
+  )
+  
+  # Calculate means and max for label placement
+  means_df <- disp_df %>%
+    group_by(group) %>%
+    summarise(
+      mean_dist = mean(distances),
+      max_dist  = max(distances),
+      .groups   = "drop"
+    )
+  
+  # Get Tukey letters only if more than 2 groups
+  if (nlevels(factor(grouping)) > 2) {
+    letters_raw <- multcompLetters(tukey$group[, "p adj"])$Letters
+    letters_df <- data.frame(
+      group = names(letters_raw),
+      letter = letters_raw
+    )
+    letters_df <- left_join(letters_df, means_df, by = "group")
+  } else {
+    # For 2 groups, just use the p-value as annotation
+    p_val <- tukey$group[, "p adj"]
+    letters_df <- means_df %>%
+      mutate(letter = c("a", ifelse(p_val < 0.05, "b", "a")))
+  }
+  
+  
+  # Plot
+  p <- ggplot(disp_df, aes(y = group, x = distances)) +
+    geom_jitter(height = 0.2, width = 0, alpha = 0.5, size = 1.5, color = "grey50") +
+    stat_summary(fun = median, geom = "crossbar", width = 0.5, color = "black", linewidth = 0.7) +
+    #stat_summary(fun.data = mean_se, geom = "errorbar", width = 0.3, color = "black") +
+    geom_text(data = letters_df,
+              aes(y = group, x = max_dist + 0.02, label = letter),
+              size = 4) + #, fontface = "bold") +
+    theme_classic() +
+    theme(
+      plot.title = element_markdown(size =12, face = "bold",hjust = 0.5, vjust = 0.5),
+      plot.subtitle = element_markdown(size = 10,hjust = 0.5, vjust = 0.5),
+      axis.text.x = element_markdown(size = 8, angle = 0, hjust = 0.5),
+      axis.text.y = element_markdown(size = 8),
+      legend.key.height = unit(0.5, "cm"), legend.key.width = unit(0.5, "cm"),
+      legend.title = element_blank(), legend.text = element_text(size = 8)
+      #legend.margin=ggplot2::margin(0,5,0,0),
+      #legend.box.margin=ggplot2::margin(0,5,0,0)
+    )+
+    guides(color = guide_legend(ncol=1))
+  
+  # Return both plot and objects invisibly for further use
+  #return(invisible(list(
+  #  plot    = p,
+  #  betadisper = bd,
+  #  tukey   = tukey,
+  #  data    = disp_df
+  #)))
+  
+  # Add stress if NMDS
+  if (!is.null(signif_label)) {
+    p <- p + annotate(
+      "text",
+      x = -Inf,
+      y = -Inf,
+      label = signif_label,
+      hjust = -0.1,   # push slightly right
+      vjust = -0.8,   # push slightly up
+      size = 2.5
+    )
+  }
+  
+  # Scale axis
+  if (!is.null(scale_axis)) {
+    p <- p +
+      scale_x_continuous(limits = c(0, max(disp_df$distances) + offset + 0.05),
+                         expand = c(0, 0))
+  }
+  
+  return(p)
+}
 
-
-
-
-
-
+# Basic usage 
+plot_betadisper(dist_matrix = bray_dist, 
+                grouping = meta_rare$site, 
+                signif_label = "Site, F=6.88, p=001", 
+                scale_axis = TRUE)
 
 
 # ****************************************************************--------------
