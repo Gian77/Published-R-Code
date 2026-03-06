@@ -70,7 +70,7 @@ extract_blasTAX(
 
 
 
-# FInalize and modify taxonomy table -------------------------------------------
+# Finalize and modify taxonomy table -------------------------------------------
 
 # Replace blanks ---------------------------------------------------------------
 blank2na = function(x, na.strings=c('','.','NA','na','N/A','n/a','NaN','nan')) {
@@ -145,6 +145,24 @@ FinalizeTaxonomy <- function(taxonomy){
 
 
 FinalizeTaxonomy(taxonomy_99)
+
+# Extract Glomeomycotina -------------------------------------------------------
+
+extract_Glomero <- function(taxonomy){
+  
+  FinalizeTaxonomy(
+    taxonomy %>%
+      dplyr::select(
+        "Zotu","Query","Kingdom","Phylum","Class","Order","Family","Genus","Species")
+  ) %>%
+    full_join(taxonomy %>% dplyr::select(Query, S_score), by = "Query") %>%
+    mutate(S_score = as.numeric(S_score)) %>%
+    mutate_if(is.character, ~ replace(., is.na(.), "Unclassified")) %>%
+    column_to_rownames("Zotu") %>%
+    filter(Phylum %in% "Mucoromycota")
+}
+
+FinalizeTaxonomy(taxonomy_99) %>% extract_Glomero()
 
 # Mixed effect models ----------------------------------------------------------
 
@@ -351,8 +369,39 @@ diagnostics_dharma(
 )
 
 
-# Plot beta-dversity -----------------------------------------------------------
+# Generate vegan NMDS or PCoA from a phyloseq object -----------------------------------------
+generate_ordination <- function(ps, 
+                                method = "NMDS",
+                                dist_method = "bray",
+                                k = 2) {
+  
+  # 1. Extract OTU table and ensure samples are ROWS for vegan
+  otu_tab <- as.data.frame(otu_table(ps))
+  if (taxa_are_rows(ps)) {
+    otu_tab <- t(otu_tab)
+  }
+  
+  # 2. Run Engine
+  if (toupper(method) == "NMDS") {
+    # Returns a 'monoMDS' / 'metaMDS' object
+    ord <- metaMDS(otu_tab, distance = dist_method, k = k, trymax = 100, trace = FALSE)
+    
+  } else if (toupper(method) == "PCOA") {
+    # Returns a list with points, eigenvalues, etc.
+    d <- vegdist(otu_tab, method = dist_method)
+    ord <- cmdscale(d, k = k, eig = TRUE)
+    
+  } else {
+    stop("Method must be 'NMDS' or 'PCoA'")
+  }
+  
+  return(ord)
+}
 
+generate_ordination(ps = physeq_90_rare, method = "PCOA")
+
+
+# Plot beta-dversity -----------------------------------------------------------
 plot_ordination <- function(ord,
                             meta,
                             col_var,
@@ -463,7 +512,7 @@ plot_ordination <- function(ord,
     )
   }
   
-  if (!is.null(legend_inside)) {
+  if (legend_inside) {
     p <- p +
       theme(legend.position = c(0.02, 0.04),        # x, y from bottom-left (0,0) to top-right (1,1)
             legend.justification = c(0, 0),           # anchor point of the legend box
@@ -478,8 +527,87 @@ plot_ordination(
   meta = meta_rare,
   col_var = "site",
   shape_var = "fert_status",
-  legend_inside = TRUE
+  legend_inside = FALSE
 )
+
+
+# plot ordination using phyloseq -----------------------------------------------
+
+plot_ordination_from_phyloseq <- function(ps, 
+                                          method = "PCOA", 
+                                          dist_method = "bray", 
+                                          col_var = NULL, 
+                                          shape_var = NULL, 
+                                          legend_inside = FALSE) {
+  
+  # 1. Extract OTU table and ensure samples are ROWS for vegan
+  otu_tab <- as.data.frame(otu_table(ps))
+  if (taxa_are_rows(ps)) { otu_tab <- t(otu_tab) }
+  
+  # 2. Run Engine
+  if (toupper(method) == "NMDS") {
+    ord <- meta_MDS(otu_tab, distance = dist_method, k = 2, trymax = 100, trace = FALSE)
+    df_coords <- as.data.frame(scores(ord, display = "sites"))
+    axis_labs <- c("NMDS1", "NMDS2")
+    subtitle <- paste("Stress:", round(ord$stress, 3))
+    
+  } else if (toupper(method) == "PCOA") {
+    d <- vegdist(otu_tab, method = dist_method)
+    ord <- cmdscale(d, k = 2, eig = TRUE)
+    df_coords <- as.data.frame(ord$points)
+    # Calculate % variation for axes
+    var_exp <- round(100 * (ord$eig / sum(ord$eig)), 1)
+    axis_labs <- c(paste0("PCoA1 (", var_exp[1], "%)"), 
+                   paste0("PCoA2 (", var_exp[2], "%)"))
+    
+  } else {
+    stop("Method must be 'NMDS' or 'PCoA'")
+  }
+  
+  # 3. Combine Coordinates with Metadata
+  colnames(df_coords) <- c("Axis1", "Axis2")
+  df_coords$ID <- rownames(df_coords)
+  
+  meta_df <- data.frame(sample_data(ps)) %>% rownames_to_column("ID")
+  plot_data <- inner_join(df_coords, meta_df, by = "ID")
+  
+  # 4. Check if grouping variables exist
+  if (!is.null(col_var) && !col_var %in% colnames(plot_data)) {
+    stop(paste("Error: Column", col_var, "not found in phyloseq sample_data!"))
+  }
+  
+  # 5. Build Plot
+  p <- ggplot(plot_data, aes(x = Axis1, y = Axis2)) +
+    geom_point(aes(color = .data[[col_var]], shape = .data[[shape_var]]), 
+               size = 3, alpha = 0.7) +
+    labs(x = axis_labs[1], 
+         y = axis_labs[2], 
+         color = col_var, 
+         shape = shape_var) +
+    theme_classic() +
+    guides(
+      color = guide_legend(ncol = 1, override.aes = list(shape = 15, size = 3.5)),
+      shape = guide_legend(
+        ncol = 1,
+        override.aes = list(color = "black", size = 2.5)
+      ))
+  
+  if (legend_inside) {
+    p <- p + theme(legend.position = "inside", 
+                   legend.position.inside = c(0.02, 0.02),
+                   legend.justification = c(0, 0), 
+                   legend.title = element_blank())
+  }
+  
+  return(p)
+}
+
+plot_ordination_from_phyloseq(
+  ps = physeq_90_rare, 
+  method = "PCoA", 
+  col_var = "site_id", 
+  shape_var = "fert_status",
+  legend_inside = TRUE)
 
 
 # plot beta-dispersion ---------------------------------------------------------
@@ -587,7 +715,189 @@ plot_betadisper(dist_matrix = bray_dist,
                 scale_axis = TRUE)
 
 
+# Generate a phyloseq object ---------------------------------------------------
+
+generate_phyloseq <- function(otu, metadata, taxonomy, sequences) {
+  # convert to data.frame
+  otu       <- as.data.frame(otu, stringsAsFactors = FALSE)
+  taxonomy  <- as.data.frame(taxonomy, stringsAsFactors = FALSE)
+  metadata  <- as.data.frame(metadata, stringsAsFactors = FALSE)
+  
+  # check alignment
+  taxa_missing <- setdiff(rownames(otu), rownames(taxonomy))
+  if (length(taxa_missing)) {
+    cli::cli_alert_warning("Some OTUs missing in taxonomy: {length(taxa_missing)}")
+  }
+  sample_missing <- setdiff(colnames(otu), rownames(metadata))
+  if (length(sample_missing)) {
+    cli::cli_alert_warning("Some samples missing in metadata: {length(sample_missing)}")
+  }
+  
+  # build refseq object first
+  refseq_obj <- refseq(sequences)
+  
+  # build phyloseq
+  ps <- phyloseq(
+    otu_table(otu, taxa_are_rows = TRUE),
+    sample_data(metadata),
+    tax_table(as.matrix(taxonomy)),
+    refseq_obj
+  ) %>%
+    phyloseq::prune_taxa(taxa_sums(.) > 0, .) %>%
+    phyloseq::prune_samples(sample_sums(.) > 0, .)
+  
+  cli::cli_alert_success("phyloseq object created with {ntaxa(ps)} taxa and {nsamples(ps)} samples")
+  
+  ps
+}
+
+generate_phyloseq(
+  otu = otutable_90,
+  metadata = metadata_99,
+  taxonomy = taxonomy_90,
+  sequences = zotu_90
+)
+
+
+# Multi PEROMANOVA for R2, F, and p --------------------------------------------
+extract_adonis <- function(ps) {
+  
+  # OTU matrix and metadata
+  otu <- as(t(otu_table(ps)), "matrix")
+  otu <- as.data.frame(otu)
+  metadata <- as.data.frame(as(sample_data(ps), "matrix"))
+  
+  metadata <- 
+    metadata %>% 
+    dplyr::select(site_id, fert_status, plot_rep) %>% 
+    rownames_to_column("sample_id") %>% 
+    filter(sample_id %in% sample_to_keep) %>%
+    mutate(
+      site = site_id, 
+      site = factor(recode(
+        site,LUX = "Lux Harbor",LC = "Lake City",HAN = "Hancock",
+        RHN = "Rhinelander",ESC = "Escanaba")),
+      fert_status = factor(recode(
+        fert_status, "FERT" = "Fertilized" ,  "UNFERT" ="Control"))
+    ) 
+  
+  # run PERMANOVA
+  ad1 <- adonis2(
+    otu ~ fert_status,
+    data = metadata,
+    method = "bray",
+    permutations = how(blocks = metadata$site, nperm = 999),
+    by = "margin"
+  )
+  
+  ad2 <- adonis2(
+    otu ~ fert_status + site,
+    data = metadata,
+    method = "bray",
+    permutations = 999,
+    by = "margin"
+  )
+  
+  bray_dist <- vegdist(otu, method = "bray")
+  bd <- betadisper(bray_dist, metadata$site)
+  bd_perm <- permutest(bd, permutations = 999)[[1]]
+
+  # dataset name
+  ps_name <- deparse(substitute(ps))
+  
+  res1 <- data.frame(
+    dataset = ps_name,
+    predictor = "fert_status",
+    R2 = ad1$R2[1],
+    F = ad1$F[1],
+    p = ad1$`Pr(>F)`[1],
+    stringsAsFactors = FALSE
+  )
+  
+  res2 <- data.frame(
+    dataset = ps_name,
+    predictor = "site",
+    R2 = ad2$R2[2],
+    F = ad2$F[2],
+    p = ad2$`Pr(>F)`[2],
+    stringsAsFactors = FALSE
+  )
+  
+  bd_summary <- data.frame(
+    predictor = "site",
+    Df = bd_perm["Groups", "Df"],
+    F = bd_perm["Groups", "F"],
+    p = bd_perm["Groups", "Pr(>F)"],
+    stringsAsFactors = FALSE
+  )
+  
+  return(cbind(res1, res2, bd_summary))
+}
+
+extract_adonis(ps = physeq_90_rare)
+
+# Assess clustering threshold through taxon counts -----------------------------
+
+# NOTE. The min_score is based on the S_score that this BLAST generated
+# taxonomy has, it won't be present if the classifciation is generated with a 
+# different classifier than blasTAX.
+assess_clustering_threshold <- function(taxon_name, 
+                                        ps_list,
+                                        tax_rank = "Species",
+                                        score_col = "S_score",
+                                        min_score = 0.9999) {
+  
+  counts <- sapply(ps_list, function(ps) {
+    tax_mat <- as(tax_table(ps), "matrix")
+    if (!tax_rank %in% colnames(tax_mat)) stop(paste("Tax rank", tax_rank, "not found"))
+    if (!score_col %in% colnames(tax_mat)) stop(paste("Score column", score_col, "not found"))
+    
+    # Filter by minimum score
+    idx <- which(tax_mat[, tax_rank] == taxon_name & tax_mat[, score_col] >= min_score)
+    length(idx)
+  })
+  
+  data.frame(
+    Threshold = names(ps_list),
+    OTU_Count = counts,
+    Taxon = taxon_name,
+    stringsAsFactors = FALSE
+  )
+}
+
+
+assess_clustering_threshold(
+  tax_rank = "Species",
+  taxon_name =  "Paraglomus brasilianum",
+  ps_list = list("90" = physeq_90_rare,"91" = physeq_91_rare,"92" = physeq_92_rare,
+                 "93" = physeq_93_rare,"94" = physeq_94_rare,"95" = physeq_95_rare,
+                 "96" = physeq_96_rare,"97" = physeq_97_rare,"98" = physeq_98_rare,
+                 "99" = physeq_99_rare,"100" = physeq_100_rare),
+  score_col = "S_score",
+  min_score = 0.99999999)
+
+
+
+
+
+
+
+
+
 # ****************************************************************--------------
+
+
+
+
+as.data.frame(taxonomy_90, stringsAsFactors = FALSE) %>% 
+  column_to_rownames("Zotu")
+
+
+
+
+
+
+
 
 
 
