@@ -38,7 +38,8 @@ pacman::p_load(
   scales,
   magrittr,
   cowplot,
-  agricolae
+  agricolae,
+  dunn.test
 )
 
 
@@ -54,10 +55,32 @@ palette2 <- c(
 )
 
 
-palette2 <- c(
+palette3 <- c(
   "#999999", "#E69F00", "#56B4E9", "#009E73",
   "#F0E442", "#0072B2", "#D55E11", "#CC79A7"
 )
+
+plot_palette <- function(pal, show_labels = TRUE) {
+  df <- data.frame(x = seq_along(pal), col = pal)
+  p <- ggplot2::ggplot(df, ggplot2::aes(x = x, y = 1, fill = col)) +
+    ggplot2::geom_tile() +
+    ggplot2::scale_fill_identity() +
+    ggplot2::coord_fixed(ratio = 1/2) +
+    ggplot2::theme_void()
+  if (show_labels) {
+    p <- p +
+      ggplot2::scale_x_continuous(breaks = df$x, labels = pal) +
+      ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
+  } else {
+    p <- p + ggplot2::theme(axis.text.x = ggplot2::element_blank())
+  }
+  p
+}
+
+plot_palette(palette1)
+plot_palette(palette2)
+plot_palette(palette3)
+
 
 # **********************************************************************--------
 # ***** PATHS ***** ------------------------------------------------------------
@@ -78,14 +101,14 @@ results_path <-
 
 otutable_ITS <-
   read.delim(file.path(data_path, "/data_ITS/otutable_UPARSE_225bp.txt"),
-    row.names = 1
+             row.names = 1
   )
 
 head(otutable_ITS)
 
 otutable_16S <-
   read.delim(file.path(data_path, "/data_16S/otutable_UPARSE_225bp.txt"),
-    row.names = 1
+             row.names = 1
   )
 
 head(otutable_16S)
@@ -185,11 +208,11 @@ bad_otu <-
       Kingdom %in% c("Fungi") & HL_hit_percent_id < 60
   ) %>%
   filter(!(Genus == "" & Kingdom == "Fungi_1" & Phylum != "" |
-    Genus == "" & Kingdom == "Fungi_1" & Phylum != "" |
-    Genus == "" & Kingdom == "Fungi_1" & Phylum != "" |
-    Genus == "" & Kingdom == "Fungi_1" & Phylum != "")) %>%
+             Genus == "" & Kingdom == "Fungi_1" & Phylum != "" |
+             Genus == "" & Kingdom == "Fungi_1" & Phylum != "" |
+             Genus == "" & Kingdom == "Fungi_1" & Phylum != "")) %>%
   filter(!(Kingdom == "Fungi_1" & Phylum != "" & Class != "" &
-    Order != "" & Family != "" & Genus != "")) %>% # save some potentially real fungi
+             Order != "" & Family != "" & Genus != "")) %>% # save some potentially real fungi
   as.data.frame()
 
 dim(bad_otu)
@@ -200,7 +223,7 @@ write.csv(x = bad_otu,
 # Re-format taxonomy table
 ReformatTaxonomy <- function(taxonomy_tab, range_col) {
   require(tidyverse)
-
+  
   taxonomy_tab <-
     taxonomy_tab %>% mutate_all(na_if, "")
   lastValue <- function(x) tail(x[!is.na(x)], 1)
@@ -306,9 +329,9 @@ sample_data(physeq_ITS)$is.neg <-
 
 contam_ITS <-
   decontam::isContaminant(physeq_ITS,
-    method = "prevalence",
-    neg = "is.neg",
-    threshold = 0.5
+                          method = "prevalence",
+                          neg = "is.neg",
+                          threshold = 0.5
   )
 
 contam_ITS
@@ -374,7 +397,7 @@ saveRDS(object = physeq_16S_clean, file = file.path(results_path, "phyloseq_16S.
 AlphaMetrics <- function(physeq) {
   require(vegan)
   require(tidyverse)
-
+  
   sample_data(physeq)$ReadNo <- sample_sums(physeq)
   sample_data(physeq)$hill_0 <- as.data.frame(as.matrix(t(physeq@otu_table))) %>% renyi(scale = c(0), hill = TRUE)
   sample_data(physeq)$hill_1 <- as.data.frame(as.matrix(t(physeq@otu_table))) %>% renyi(scale = c(1), hill = TRUE)
@@ -383,7 +406,7 @@ AlphaMetrics <- function(physeq) {
   sample_data(physeq)$invSimpson <- diversity(as.data.frame(otu_table(physeq)), index = "inv", MARGIN = 2)
   sample_data(physeq)$Shannon <- diversity(as.data.frame(otu_table(physeq)), index = "shannon", MARGIN = 2)
   sample_data(physeq)$EH <- 1 - sample_data(physeq)$Shannon / log(sample_data(physeq)$Richness)
-
+  
   return(physeq)
 }
 
@@ -475,12 +498,12 @@ plot_Richness_histo <-
 # histogram of Read No and Richness across Compartments
 Fig_S2 <-
   ggarrange(plot_readNO_histo,
-    plot_Richness_histo,
-    ncol = 1,
-    nrow = 2,
-    labels = c("a", "b"),
-    common.legend = TRUE,
-    legend = "bottom"
+            plot_Richness_histo,
+            ncol = 1,
+            nrow = 2,
+            labels = c("a", "b"),
+            common.legend = TRUE,
+            legend = "bottom"
   )
 
 Fig_S2
@@ -547,34 +570,34 @@ Fig_S3_rarecurve <-
     rarecurve_fungi %>%
       rename("SampleID" = Site) %>%
       left_join(.,
-        physeq_ITS_clean@sam_data %>%
-          as.matrix() %>%
-          as.data.frame() %>%
-          rownames_to_column("SampleID"),
-        by = "SampleID"
+                physeq_ITS_clean@sam_data %>%
+                  as.matrix() %>%
+                  as.data.frame() %>%
+                  rownames_to_column("SampleID"),
+                by = "SampleID"
       ) %>%
       PlotRareCurve(., fungi_depth, "Compartment") +
       labs(title = "ITS", x = "Number of DNA reads", y = "Number of OTUs") +
       ggplot2::annotate("text",
-        x = 13000, y = 460, label = "19849",
-        fontface = "bold", hjust = 0.5, vjust = 0.5,
-        col = "black"
+                        x = 13000, y = 460, label = "19849",
+                        fontface = "bold", hjust = 0.5, vjust = 0.5,
+                        col = "black"
       ),
     rarecurve_bacteria %>%
       rename("SampleID" = Site) %>%
       left_join(.,
-        physeq_16S_clean@sam_data %>%
-          as.matrix() %>%
-          as.data.frame() %>%
-          rownames_to_column("SampleID"),
-        by = "SampleID"
+                physeq_16S_clean@sam_data %>%
+                  as.matrix() %>%
+                  as.data.frame() %>%
+                  rownames_to_column("SampleID"),
+                by = "SampleID"
       ) %>%
       PlotRareCurve(., bacteria_depth, "Compartment") +
       labs(title = "16S", x = "Number of DNA reads", y = "Number of OTUs") +
       ggplot2::annotate("text",
-        x = 24000, y = 3800, label = "31244",
-        fontface = "bold", hjust = 0.5, vjust = 0.5,
-        col = "black"
+                        x = 24000, y = 3800, label = "31244",
+                        fontface = "bold", hjust = 0.5, vjust = 0.5,
+                        col = "black"
       ),
     ncol = 1,
     nrow = 2,
@@ -603,12 +626,12 @@ ggsave(plot = Fig_S3_rarecurve,
 # Calculate long dataframe with stats
 RareStats <- function(physeq) {
   require(tidyverse)
-
+  
   # calculate distribution outliers
   findoutlier <- function(x) {
     return(x < quantile(x, 0.25) - 1.5 * IQR(x) | x > quantile(x, 0.75) + 1.5 * IQR(x))
   }
-
+  
   # generate output dataframe
   df_output <-
     as.data.frame(as.matrix(physeq@otu_table)) %>%
@@ -622,7 +645,7 @@ RareStats <- function(physeq) {
     ) %>%
     mutate(outlier = ifelse(findoutlier(log10(ReadNo)), ReadNo, NA)) %>%
     ungroup()
-
+  
   return(df_output)
 }
 
@@ -754,24 +777,24 @@ ggsave(plot = grid.arrange(Fig_S5_rare_bact, top = title1),
 # ***** RAREFACTION ***** ------------------------------------------------------
 rarefyData <- function(physeq, depth_level) {
   require(tidyverse)
-
+  
   dataframe <-
     as.data.frame(as.matrix(t(physeq@otu_table)))
-
+  
   com_iter <- vector(mode = "list", length = 100)
-
+  
   for (i in seq_along(com_iter)) {
     com_iter[[i]] <- as.data.frame(
       vegan::rrarefy(dataframe, sample = depth_level)
     ) %>% rownames_to_column("SampleID")
   }
-
+  
   mean_100 <- do.call(rbind, com_iter)
   mean_100 <- mean_100 %>%
     group_by(SampleID) %>%
     summarise(across(everything(), mean)) %>%
     filter(rowSums(across(where(is.numeric))) >= depth_level)
-
+  
   print(mean_100 %>% as_tibble())
   return(mean_100)
 }
@@ -789,10 +812,10 @@ rarefyData(physeq_ITS_clean, fungi_depth)
 physeq_ITS_rare <-
   phyloseq(
     otu_table(rarefyData(physeq_ITS_clean, fungi_depth) %>%
-      column_to_rownames("SampleID") %>%
-      t() %>%
-      as.matrix() %>%
-      as.data.frame(), taxa_are_rows = TRUE),
+                column_to_rownames("SampleID") %>%
+                t() %>%
+                as.matrix() %>%
+                as.data.frame(), taxa_are_rows = TRUE),
     physeq_ITS_clean@sam_data,
     physeq_ITS_clean@tax_table,
     physeq_ITS_clean@refseq
@@ -845,10 +868,10 @@ bacteria_depth_soilrhizo <- 31244
 physeq_16S_roots_rare <-
   phyloseq(
     otu_table(rarefyData(physeq_16S_roots, bacteria_depth_root) %>%
-      column_to_rownames("SampleID") %>%
-      t() %>%
-      as.matrix() %>%
-      as.data.frame(), taxa_are_rows = TRUE),
+                column_to_rownames("SampleID") %>%
+                t() %>%
+                as.matrix() %>%
+                as.data.frame(), taxa_are_rows = TRUE),
     physeq_16S_roots@sam_data,
     physeq_16S_roots@tax_table,
     physeq_16S_roots@refseq
@@ -862,10 +885,10 @@ physeq_16S_roots_rare
 physeq_16S_soilrhizo_rare <-
   phyloseq(
     otu_table(rarefyData(physeq_16S_soilrhizo, bacteria_depth_soilrhizo) %>%
-      column_to_rownames("SampleID") %>%
-      t() %>%
-      as.matrix() %>%
-      as.data.frame(), taxa_are_rows = TRUE),
+                column_to_rownames("SampleID") %>%
+                t() %>%
+                as.matrix() %>%
+                as.data.frame(), taxa_are_rows = TRUE),
     physeq_16S_soilrhizo@sam_data,
     physeq_16S_soilrhizo@tax_table,
     physeq_16S_soilrhizo@refseq
@@ -942,7 +965,7 @@ physeq_ITS_rare_rhizo <-
 
 physeq_ITS_rare_soil <-
   subset_samples(physeq_ITS_rare, Compartment %in% c("soil") &
-    Treatment %in% c("IE", "NE", "IE_NE_MIX")) %>%
+                   Treatment %in% c("IE", "NE", "IE_NE_MIX")) %>%
   prune_taxa(taxa_sums(x = .) > 0, x = .) %>%
   prune_samples(sample_sums(x = .) > 0, x = .)
 
@@ -1071,7 +1094,7 @@ modify_taxonomy <- function(physeq) {
     dplyr::select(OTU_ID, BestMatch, everything()) %>% # Reorder columns
     mutate(Taxonomy = paste(OTU_ID, BestMatch, sep = " ")) %>%
     dplyr::select(-OTU_ID)
-
+  
   return(tax_table)
 }
 
@@ -1094,7 +1117,7 @@ physeq_16S_rare_rhizo <-
 
 physeq_16S_rare_soil <-
   subset_samples(physeq_16S_rare, Compartment %in% c("soil") &
-    Treatment %in% c("IE", "NE", "IE_NE MIX")) %>%
+                   Treatment %in% c("IE", "NE", "IE_NE MIX")) %>%
   prune_taxa(taxa_sums(x = .) > 0, x = .) %>%
   prune_samples(sample_sums(x = .) > 0, x = .)
 
@@ -1188,7 +1211,7 @@ MakeLegend <- function() {
       "IE", "NE", "IE_MIX", "NE_MIX",
       "IE_NE_MIX", "Fumigated", "Control"
     ))
-
+  
   legend_obj <-
     ggplot(data_legend, aes(x = 1, y = label, color = label)) +
     geom_point() +
@@ -1202,7 +1225,7 @@ MakeLegend <- function() {
       order = 1, ncol = 7, title = NULL,
       override.aes = list(shape = 15, size = 3)
     ))
-
+  
   return(get_legend(legend_obj))
 }
 
@@ -1235,7 +1258,7 @@ ggsave(plot = Fig_3_betadiv,
 Adonis2All <- function(physeq, method, strata = NULL, perm = 999) {
   require(tidyverse)
   require(vegan)
-
+  
   # Extract OTU and metadata
   otu <- physeq@otu_table %>%
     t() %>%
@@ -1244,7 +1267,7 @@ Adonis2All <- function(physeq, method, strata = NULL, perm = 999) {
   metadata <- physeq@sam_data %>%
     as.matrix() %>%
     as.data.frame()
-
+  
   # Run analysis
   df_adonis <- adonis2(
     formula(otu ~ Treatment),
@@ -1254,14 +1277,14 @@ Adonis2All <- function(physeq, method, strata = NULL, perm = 999) {
     permutations = perm,
     parallel = 8
   )
-
+  
   # Adjust p-values
   df_adj <- cbind(
     df_adonis,
     as.data.frame(p.adjust(df_adonis$`Pr(>F)`, method = "BH")) %>%
       rename("p.adj" = 1)
   )
-
+  
   # Return results
   return(list(
     formula = formula(otu ~ Treatment),
@@ -1315,7 +1338,7 @@ write.csv(x = adonis_result,
 BetadispExtr <- function(physeq, method, Var) {
   require(tidyverse)
   require(vegan)
-
+  
   # Interesting fact! within a function it is better to specify the otu
   # generated from a phyloeq object in multiple steps otherwise
   # does not really work if you include it in ().
@@ -1325,12 +1348,12 @@ BetadispExtr <- function(physeq, method, Var) {
     t() %>%
     as.matrix() %>%
     as.data.frame()
-
+  
   metadata <-
     physeq@sam_data %>%
     as.matrix() %>%
     as.data.frame()
-
+  
   disp <-
     betadisper(
       vegan::vegdist(otu, method = method),
@@ -1338,7 +1361,7 @@ BetadispExtr <- function(physeq, method, Var) {
     )
   anova_d <-
     anova(disp,
-      permutations = how(nperm = 999)
+          permutations = how(nperm = 999)
     )
   p_adj <-
     round(p.adjust(
@@ -1347,14 +1370,14 @@ BetadispExtr <- function(physeq, method, Var) {
     ), 4)
   dist_var <-
     vegan::permutest(disp,
-      permutations = 999,
-      pairwise = T
+                     permutations = 999,
+                     pairwise = T
     )
-
+  
   # Extract pairwise comparisons into a data frame, if present
   pairwise_df <- NULL
   pw <- dist_var$pairwise
-
+  
   if (!is.null(pw)) {
     # Often $observed and $permuted are named numeric vectors
     if (is.numeric(pw$observed) & is.numeric(pw$permuted)) {
@@ -1368,7 +1391,7 @@ BetadispExtr <- function(physeq, method, Var) {
         mutate(Permuted_adj = round(p.adjust(Permuted, method = "BH"), digits = 3))
     }
   }
-
+  
   # 6) Return a list with all relevant objects
   return(list(
     dist_var       = dist_var, # The permutest object
@@ -1391,7 +1414,7 @@ BetadispExtr(physeq_ITS_rare_root, "bray", "Treatment")[[1]]$tab
 # running betadisper ------------------------------------------------------------
 multipleBetadisper <- function() {
   require(vegan)
-
+  
   betadisp_res <-
     data.frame(
       rbind(
@@ -1426,7 +1449,7 @@ multipleBetadisper <- function() {
         "Control", "Control"
       )
     )
-
+  
   return(betadisp_res)
 }
 
@@ -1449,23 +1472,23 @@ pairwise_permanova <- function(physeq,
                                perm = 999) {
   require(vegan)
   require(tidyverse)
-
+  
   sp_matrix <- as.data.frame(t(as.matrix(otu_table(physeq,taxa_are_rows = TRUE))))
   metadata <- as.data.frame(as.matrix(sample_data(physeq)))
-
+  
   ## list contrasts
   group_var <- metadata %>% pull(Var)
   groups <- as.data.frame(t(combn(unique(group_var), m = 2)))
-
+  
   contrasts <- data.frame(
     group1 = groups$V1, group2 = groups$V2,
     R2 = NA, F_value = NA, df1 = NA, df2 = NA, p_value = NA
   )
-
+  
   for (i in seq(nrow(contrasts))) {
     sp_subset <- group_var == contrasts$group1[i] | group_var == contrasts$group2[i]
     contrast_matrix <- sp_matrix[sp_subset, ]
-
+    
     ## fit contrast using adonis
     fit <- vegan::adonis2(
       contrast_matrix ~ group_var[sp_subset],
@@ -1473,17 +1496,17 @@ pairwise_permanova <- function(physeq,
       perm = perm,
       parallel = 8
     )
-
+    
     contrasts$R2[i] <- round(fit$R2[1], digits = 3)
     contrasts$F_value[i] <- round(fit[["F"]][1], digits = 3)
     contrasts$df1[i] <- fit$Df[1]
     contrasts$df2[i] <- fit$Df[2]
     contrasts$p_value[i] <- fit$`Pr(>F)`[1]
   }
-
+  
   ## adjust p-values for multiple comparisons
   contrasts$p_value <- round(p.adjust(contrasts$p_value, method = adj), digits = 3)
-
+  
   return(list(
     contrasts = contrasts,
     "p-value adjustment" = adj,
@@ -1593,7 +1616,7 @@ write.csv(x = pairwise_combined,
 AlphaMetrics <- function(physeq) {
   require(vegan)
   require(tidyverse)
-
+  
   sample_data(physeq)$ReadNo <- sample_sums(physeq)
   sample_data(physeq)$hill_0 <- as.data.frame(as.matrix(t(physeq@otu_table))) %>% renyi(scale = c(0), hill = TRUE)
   sample_data(physeq)$hill_1 <- as.data.frame(as.matrix(t(physeq@otu_table))) %>% renyi(scale = c(1), hill = TRUE)
@@ -1602,7 +1625,7 @@ AlphaMetrics <- function(physeq) {
   sample_data(physeq)$invSimpson <- diversity(as.data.frame(otu_table(physeq)), index = "inv", MARGIN = 2)
   sample_data(physeq)$Shannon <- diversity(as.data.frame(otu_table(physeq)), index = "shannon", MARGIN = 2)
   sample_data(physeq)$EH <- 1 - sample_data(physeq)$Shannon / log(sample_data(physeq)$Richness)
-
+  
   return(physeq)
 }
 
@@ -1625,15 +1648,15 @@ AlphaMetrics(physeq_16S_rare_control) %>% sample_data()
 CompSampl <- function(df, formula, comparisons) {
   require(multcompView)
   require(lazyeval)
-
+  
   test_CC <-
     compare_means(formula, data = df, method = "wilcox.test", p.adjust.method = "none")
-
+  
   test_CC$adj.pval <-
     p.adjust(test_CC$p, method = "BH", n = comparisons)
-
+  
   # print(test_CC)
-
+  
   test_CC <-
     as.data.frame(test_CC)[, c(2, 3, 5)] # to change form p to p.adj do 4 to 5
   test_CC2 <-
@@ -1641,9 +1664,9 @@ CompSampl <- function(df, formula, comparisons) {
   colnames(test_CC2) <-
     c("group1", "group2", "p.adj") # change p to p.adj
   rbind(test_CC, test_CC2) -> test_all
-
+  
   print(test_all)
-
+  
   dist_CC <- as.dist(xtabs(test_all[, 3] ~ (test_all[, 2] + test_all[, 1])), diag = TRUE)
   # print(dist_CC)
   res_CC <-
@@ -1672,7 +1695,7 @@ physeq_ITS_rare_root@sam_data %>%
 PlotRich <- function(physeq, X_var, Y_var, my_labels, labels_y) {
   require(phyloseq)
   require(tidyverse)
-
+  
   # extract dataframe
   dataframe <-
     physeq@sam_data %>%
@@ -1680,12 +1703,12 @@ PlotRich <- function(physeq, X_var, Y_var, my_labels, labels_y) {
     as.data.frame() %>%
     as_tibble() %>%
     mutate(!!Y_var := as.numeric(!!sym(Y_var)))
-
+  
   # print factor order
-
+  
   # Calculate labels_y based on the maximum value of Y_var
   labels_y <- max(dataframe[, Y_var]) + 0.1 * max(dataframe[, Y_var])
-
+  
   # plot
   rich_plot <-
     ggplot(dataframe, aes(x = get(X_var), y = !!sym(Y_var))) +
@@ -1707,7 +1730,7 @@ PlotRich <- function(physeq, X_var, Y_var, my_labels, labels_y) {
     #  show.legend = FALSE) +
     stat_summary(
       geom = "text", angle = 0, label = my_labels,
-      fun = max, aes(y = labels_y), size = 3, color = "black"
+      fun = max, aes(y = labels_y), size = 2.5, color = "black"
     ) +
     # scale_color_manual(values=c("grey", "blue")) +
     expand_limits(y = 0) +
@@ -1718,8 +1741,11 @@ PlotRich <- function(physeq, X_var, Y_var, my_labels, labels_y) {
       axis.text.x = element_markdown(size = 7, colour = "black", angle = 33, hjust = 1, vjust = 1),
       axis.text.y = element_markdown(size = 7, angle = 0, hjust = 0.5),
       legend.position = "none"
+    ) +
+    scale_y_continuous(
+      expand = expansion(mult = c(0.05, 0.15))
     )
-
+  
   return(rich_plot)
 }
 
@@ -2119,7 +2145,7 @@ physeq_16S_soil_fumigated_control <-
 ExtractLongDF <- function(physeq) {
   require(phyloseq)
   require(tidyverse)
-
+  
   otu <- physeq@otu_table %>%
     as.matrix() %>%
     as.data.frame()
@@ -2129,16 +2155,16 @@ ExtractLongDF <- function(physeq) {
   metadata <- physeq@sam_data %>%
     as.matrix() %>%
     as.data.frame()
-
+  
   long_df <-
     otu %>%
     rownames_to_column("OTU_ID") %>%
     left_join(., taxonomy %>%
-      tidyr::separate(Taxonomy,
-        into = c("OTU_ID", "BestMatch"),
-        sep = " ", extra = "merge", fill = "right", remove = FALSE
-      ) %>%
-      dplyr::select(OTU_ID, Taxonomy, BestMatch), by = "OTU_ID") %>%
+                tidyr::separate(Taxonomy,
+                                into = c("OTU_ID", "BestMatch"),
+                                sep = " ", extra = "merge", fill = "right", remove = FALSE
+                ) %>%
+                dplyr::select(OTU_ID, Taxonomy, BestMatch), by = "OTU_ID") %>%
     dplyr::select(.data = ., starts_with("sam"), OTU_ID, Taxonomy, BestMatch) %>%
     group_by(BestMatch, Taxonomy, OTU_ID) %>%
     pivot_longer(cols = c(-OTU_ID, -Taxonomy, -BestMatch), names_to = "Sample_ID", values_to = "Count") %>%
@@ -2149,7 +2175,7 @@ ExtractLongDF <- function(physeq) {
       by = "Sample_ID"
     ) %>%
     ungroup()
-
+  
   return(long_df)
 }
 
@@ -2162,7 +2188,7 @@ df_long_ITS_NE_NE_MIX
 GetWilcoxPval <- function(df) {
   require(tidyverse)
   require(broom)
-
+  
   summary_df <- df %>%
     group_by(BestMatch, Treatment) %>%
     summarise(
@@ -2186,21 +2212,21 @@ GetWilcoxPval <- function(df) {
       names_glue = "{.value}_{Treatment}",
       values_fn = mean # or first, median, etc.
     )
-
+  
   res_pval <- df %>%
     group_by(BestMatch) %>%
     nest(data = -BestMatch) %>%
     mutate(test = map(data, ~ wilcox.test(Count ~ Treatment, data = .x, exact = FALSE) %>%
-      tidy())) %>%
+                        tidy())) %>%
     unnest(test) %>%
     mutate(p.adjust = round(p.adjust(p.value, method = "BH"), 4)) %>%
     filter(p.adjust <= 0.05)
-
+  
   # Step 3: Join with summary stats
   final_result <- res_pval %>%
     left_join(summary_df, by = "BestMatch") %>%
     as.data.frame()
-
+  
   return(final_result)
 }
 
@@ -2364,7 +2390,7 @@ diff_16S_soil_fumigated_control <-
 PlotBestMatch <- function(physeq, diff_wilcox) {
   require(phyloseq)
   require(tidyverse)
-
+  
   plot_diff <-
     psmelt(physeq) %>%
     filter(BestMatch %in% diff_wilcox$BestMatch) %>%
@@ -2399,7 +2425,7 @@ PlotBestMatch <- function(physeq, diff_wilcox) {
     ) +
     guides(colour = guide_legend(ncol = 1, override.aes = list(shape = 15, size = 3))) +
     labs(y = NULL, x = "log10(Abundance)")
-
+  
   return(plot_diff)
 }
 
@@ -2437,13 +2463,13 @@ plot_16S_soil_fumigated_control
 # checks
 dplyr::intersect(diff_16S_soil_fumigated_control$BestMatch, diff_16S_rhizo_IE_NE_MIX$BestMatch)
 dplyr::intersect(diff_16S_soil_fumigated_control$BestMatch, diff_16S_rhizo_IE_NE_MIX %>%
-  separate(BestMatch, c("Genus", "Species"), sep = " ", remove = FALSE) %>%
-  pull(Genus))
+                   separate(BestMatch, c("Genus", "Species"), sep = " ", remove = FALSE) %>%
+                   pull(Genus))
 
 dplyr::intersect(diff_16S_soil_fumigated_control$BestMatch, diff_16S_rhizo_IE_MIX__NE_MIX$BestMatch)
 dplyr::intersect(diff_16S_soil_fumigated_control$BestMatch, diff_16S_rhizo_IE_MIX__NE_MIX %>%
-  separate(BestMatch, c("Genus", "Species"), sep = " ", remove = FALSE) %>%
-  pull(Genus))
+                   separate(BestMatch, c("Genus", "Species"), sep = " ", remove = FALSE) %>%
+                   pull(Genus))
 
 # Composite plot --------------------
 data.frame(
@@ -2480,9 +2506,9 @@ ggsave(
   filename = "Fig_5_diff_abund_fungi_rhizosphere.pdf",
   plot =
     grid.arrange(fungi_wilcox,
-      top = text_grob("Rhizosphere differentially abundant fungi",
-        size = 12, face = 2
-      )
+                 top = text_grob("Rhizosphere differentially abundant fungi",
+                                 size = 12, face = 2
+                 )
     ),
   device = "pdf"
 )
@@ -2514,9 +2540,9 @@ ggsave(
   filename = "Fig_6_diff_abund_bacteria_root_wilcox.pdf",
   plot =
     grid.arrange(bacteria_root_wilcox,
-      top = text_grob("Root differentially abundant bacteria",
-        size = 12, face = 2
-      )
+                 top = text_grob("Root differentially abundant bacteria",
+                                 size = 12, face = 2
+                 )
     ),
   device = "pdf"
 )
@@ -2568,9 +2594,9 @@ ggsave(
   path = results_path,
   filename = "Fig_7_diff_abund_bacteria_rhizo_soil.pdf",
   plot = grid.arrange(bacteria_rhizo_soil_wilcox,
-    top = text_grob("Differentially abundant bacteria",
-      size = 12, face = 2
-    )
+                      top = text_grob("Differentially abundant bacteria",
+                                      size = 12, face = 2
+                      )
   ),
   device = "pdf"
 )
@@ -2818,6 +2844,26 @@ leaf_area_tukey$groups %>%
   rownames_to_column("plant") %>%
   arrange(plant)
 
+
+# dunn test
+leaf_area_long <- leaf_area %>%
+  mutate(SampleID = paste("Sample", 1:10, sep = "_")) %>%
+  pivot_longer(-SampleID, names_to = "plant", values_to = "area")
+
+dunn.test(x = leaf_area_long$area,
+          g = leaf_area_long$plant,
+          method = "bh",   # or "bh" for Benjamini–Hochberg
+          kw = TRUE,               # prints the KW statistic too
+          label = TRUE,
+          wrap = TRUE)
+
+# Wilcoxon tests
+leaf_area %>%
+  mutate(SampleID = paste("Sample", 1:10, sep = "_")) %>%
+  pivot_longer(-SampleID, names_to = "plant", values_to = "area") %>% 
+  CompSampl(., formula(area ~ plant), comparisons = PairCalc(4))
+
+
 # >>>>> FIGURE 2D <<<<< --------------------------------------------------------
 
 Fig2D_leaf_area_plot <-
@@ -2872,6 +2918,12 @@ leaf_height_tukey <-
   HSD.test(trt = "plant", 
            group = TRUE,
            console = TRUE)
+
+# Wilcoxon tests
+plant_height %>%
+  mutate(SampleID = paste("Sample", 1:10, sep = "_")) %>%
+  pivot_longer(-SampleID, names_to = "plant", values_to = "height")%>% 
+  CompSampl(., formula(height ~ plant), comparisons = PairCalc(4))
 
 leaf_height_tukey$groups %>%
   rownames_to_column("plant") %>%
@@ -2933,6 +2985,12 @@ leaf_mass_tukey <-
   HSD.test(trt = "plant", 
            group = TRUE,
            console = TRUE)
+
+# Wilcoxon tests
+dry_mass %>%
+  mutate(SampleID = paste("Sample", 1:10, sep = "_")) %>%
+  pivot_longer(-SampleID, names_to = "plant", values_to = "dry_mass") %>% 
+  CompSampl(., formula(dry_mass ~ plant), comparisons = PairCalc(4))
 
 leaf_mass_tukey$groups %>%
   rownames_to_column("plant") %>%
