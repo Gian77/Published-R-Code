@@ -2547,6 +2547,21 @@ ggplot(lmer_otu_chem_data,
 
 # Trying same plotting strategy
 
+x_limits_yield <- 
+  lmer_otu_chem_data %>%
+  group_by(site) %>% 
+  group_map(~ broom.mixed::tidy(fitGLM_yield_fixslope, effects = "ran_vals") ) %>%
+  bind_rows() %>%
+  summarise(
+    min = min(estimate - 1.96*std.error),
+    max = max(estimate + 1.96*std.error)
+  )
+
+x_limits_yield
+
+intercept_yield <- fixef(fitGLM_yield_fixslope)[[1]]["fert_statusFertilized"]
+intercept_yield
+
 Figure_X_yield <-
     ggarrange(
       # Hill_0: Raw data with fixed effect means  
@@ -2560,11 +2575,10 @@ Figure_X_yield <-
                      color = "black", size = 4, shape = 18) +
         stat_summary(aes(group = 1), fun = mean, geom = "line", 
                      color = "black", size = 1) +
-        labs(title = "Hill 0 (richness)",
-             subtitle = "Black line connects fixed effect means",
+        labs(title = "Switchgrass yield ",
+             #subtitle = "Black line connects fixed effect means",
              x = "Treatment",
-             y = "OTUs",
-             color = NULL) +
+             y = "Dry matter yield (mg/ha)") +
         scale_color_manual(values = palette_site) +
         theme_classic() +
         theme(
@@ -2582,24 +2596,18 @@ Figure_X_yield <-
       # Hill_2: Random effect deviations
       broom.mixed::tidy(fitGLM_yield_fixslope, effects = "ran_vals") %>% 
         as.data.frame() %>%
-        separate(level, into = c("plot_rep", "site"), sep = ":", 
-                 extra = "merge", fill = "left") %>% 
-        mutate(level = ifelse(is.na(plot_rep), site, paste(site, plot_rep, sep = ":"))) %>% 
-        mutate(group = recode(group, "site" = "Site", 
-                              "plot_rep:site" = "Site:Plot")) %>%
-        arrange(level) %>% 
-        ggplot(aes(x = estimate, y = level, color = group)) +
+        dplyr::rename( site = "level") %>%  
+        arrange(site) %>% 
+        ggplot(aes(x = estimate, y = site, color = site)) +
         geom_point(size = 4, shape = 18) +
         geom_errorbar(aes(xmin = estimate - 1.96*std.error, 
                           xmax = estimate + 1.96*std.error),
                       height = 0, 
                       orientation = "y") +
         geom_vline(xintercept = 0, linetype = "dashed", color = "black") +
-        labs(title = "Hill 2 Random Effects",
-             subtitle = "deviations by site & plot",
-             x = "Deviation from Fixed Effect",
-             y = "Site:plot",
-             color = NULL) +
+        labs(title = "Deviation from Fixed Effect",
+             x = "Deviation from fixed-effect means",
+             y = NULL) +
         scale_color_manual(values = palette_site)+
         theme_classic()+ 
         theme(
@@ -2612,13 +2620,30 @@ Figure_X_yield <-
           #legend.margin=ggplot2::margin(0,5,0,0),
           #legend.box.margin=ggplot2::margin(0,5,0,0)
         ) +
-        guides(color = guide_legend(ncol = 1)),
+        guides(color = guide_legend(ncol = 1)) +
+        scale_x_continuous(
+          limits = c(x_limits_yield$min, x_limits_yield$max),
+          sec.axis = sec_axis(
+            transform = ~ . + intercept_yield,
+            name = "Dry matter yield (mg/ha)")
+        ),
       
       ncol = 2, nrow = 1,
       labels = c("A","B"),
-      legend = "right")
+      #align = "hv",
+      legend = "right", 
+      common.legend = TRUE)
 
 Figure_X_yield
+
+ggsave(
+  file.path(data_path, "results/Fig_XX_yield.pdf"),
+  plot = ggpubr::annotate_figure(
+    Figure_X_yield,
+    top = text_grob("EFFECT OF NITROGEN ON SWITCHGRASS YEILD", size = 12, face = "bold")
+  ),
+  device = "pdf"
+)
 
 
 
