@@ -332,38 +332,36 @@ diagnostics_dharma <- function(model,
   # Generate simulated residuals
   resid <- simulateResiduals(fittedModel = model, n = n)
   
-  par(mfrow = c(5, 1))
+  # Set plot layout and ensure it resets on exit (even if function errors)
+  n_plots <- if (!is.null(group_var2)) 6 else 5
+  old_par <- par(mfrow = c(n_plots, 1))
+  on.exit(par(old_par), add = TRUE)   # always resets, even on error
   
-  # goodness-of-fit tests
-  # 1) KS test for correct distribution of residuals - if the overall distribution
-  # conforms to expectations.
+  # 1) KS test for correct distribution of residuals
   testUniformity(resid)
   
-  # 2) Dispersion test (under and overdispersion). Tests if the simulated dispersion
-  # is equal to the observed dispersion.
+  # 2) Dispersion test (under and overdispersion)
   testDispersion(resid)
   
-  # 3) Outlier test (observations outside simulation envelope). Tests if there are 
-  # more simulation outliers than expected.
+  # 3) Outlier test
   testOutliers(resid, type = "bootstrap")
   
-  # 4) KS test for correct distribution within and between groups - tests residuals 
-  # against a categorical predictor.
+  # 4) KS test against categorical predictor
   testCategorical(resid, group_var1)
   
-  # KS test by interaction(group_var1, group_var2) (e.g., site:plot)
+  # 5) KS test by interaction (only if group_var2 provided)
   if (!is.null(group_var2)) {
     testCategorical(resid, interaction(group_var1, group_var2, drop = TRUE))
   }
   
-  par(mfrow = c(1, 1))
+  # 6) Quantile deviations
+  plotResiduals(resid, group = lmer_otu_chem_data[,group_var1])
   
-  # Return residuals invisibly in case user wants to do further checks
   invisible(resid)
 }
 
 diagnostics_dharma(
-  model     = pielou_j_base,
+  model     = pielou_j_betaMM_base,
   group_var1 = alpha_df$site,
   group_var2 = alpha_df$plot_rep
 )
@@ -877,8 +875,75 @@ assess_clustering_threshold(
   min_score = 0.99999999)
 
 
+# Calculate how many taxon ASV or OTUs are across site_var ----------------------
+assess_taxon_sites <- function(taxon_name, 
+                               ps_list, 
+                               tax_rank = "Species", 
+                               site_var = "site") {
+  
+  results <- lapply(names(ps_list), function(thresh) {
+    ps <- ps_list[[thresh]]
+    
+    # Taxonomy table
+    tax_mat <- as(tax_table(ps), "matrix")
+    
+    # Identify OTUs for this taxon
+    hits <- rownames(tax_mat)[tax_mat[, tax_rank] == taxon_name]
+    
+    if (length(hits) == 0) {
+      return(data.frame(
+        Threshold = thresh,
+        Total_OTUs = 0,
+        stringsAsFactors = FALSE
+      ))
+    }
+    
+    # OTU table
+    otu_mat <- as(otu_table(ps), "matrix")
+    if (!taxa_are_rows(ps)) otu_mat <- t(otu_mat)
+    otu_sub <- otu_mat[hits, , drop = FALSE]
+    
+    # Metadata
+    meta <- as(sample_data(ps), "data.frame")
+    
+    site_levels <- unique(meta[[site_var]])
+    site_assign <- rep(NA_character_, length(hits))
+    
+    # Assign each OTU to the first site where it occurs
+    for (i in seq_along(hits)) {
+      otu <- hits[i]
+      samples_with_otu <- which(otu_sub[otu, ] > 0)
+      sites_with_otu <- unique(meta[[site_var]][samples_with_otu])
+      site_assign[i] <- sites_with_otu[1]  # assign to first site
+    }
+    
+    # Count OTUs per site
+    site_counts <- table(factor(site_assign, levels = site_levels))
+    
+    df <- data.frame(
+      Threshold = thresh,
+      Total_OTUs = length(hits),
+      t(as.matrix(site_counts)),
+      stringsAsFactors = FALSE
+    )
+    
+    colnames(df)[3:ncol(df)] <- site_levels
+    df
+  })
+  
+  do.call(rbind, results)
+}
 
-
+assess_taxon_sites(
+  taxon_name =  "Paraglomus brasilianum",
+  ps_list = list(
+    "90" = physeq_90_rare, "91" = physeq_91_rare, "92" = physeq_92_rare,
+    "93" = physeq_93_rare, "94" = physeq_94_rare, "95" = physeq_95_rare,
+    "96" = physeq_96_rare, "97" = physeq_97_rare, "98" = physeq_98_rare,
+    "99" = physeq_99_rare, "100" = physeq_100_rare
+  ),
+  site_var = "site_id"
+)
 
 
 
@@ -887,21 +952,181 @@ assess_clustering_threshold(
 # ****************************************************************--------------
 
 
+# plotting contaminant OTUs ----------------------------------------------------
+PlotContam <- function(df, contam){
+  # Make phyloseq object of presence-absence in negative controls and true samples
+  physeq_pa <- transform_sample_counts(df, function(abund) 1*(abund>0))
+  physeq_pa_neg <- subset_samples(physeq_pa, is.neg%in%c("TRUE"))
+  physeq_pa_pos <- subset_samples(physeq_pa, is.neg%in%c("FALSE"))
+  # Make data.frame of prevalence in positive and negative samples
+  df_contam <- data.frame(pa.pos=taxa_sums(physeq_pa_pos), 
+                          pa.neg=taxa_sums(physeq_pa_neg),
+                          contaminant=contam$contaminant, 
+                          Pvalue=contam$p)
+  head(df_contam) %T>% print()
+  # plotting 
+  ggplot(data=df_contam, aes(x=pa.neg, y=pa.pos, color=contaminant)) + 
+    geom_point(size=2, alpha=0.7) +
+    labs(x="Prevalence in negative controls", y="Prevalence in true samples") +
+    theme_classic() +
+    scale_colour_manual("Contaminant OTUs", values = c("grey", "red")) +
+    theme(plot.title = element_text(size = 12, face = "bold", hjust = 0.5),
+          plot.subtitle = element_text(size = 10, face = "bold", hjust = 0.5),
+          axis.title = element_text(angle = 0, size = 10, face = "bold"),
+          axis.text.x = element_text(angle =0, size = 8, hjust = 0.5, vjust = 1), 
+          axis.text.y = element_text(angle = 0, size = 7, hjust = 0.5, vjust = 0.5),
+          legend.key.height = unit(0.2, "cm"), legend.key.width = unit(0.3, "cm"), 
+          legend.title = element_text(size = 10, face = "bold"), 
+          legend.text = element_text(size = 8)) -> plot_cont
+  return(plot_cont)
+}
+
+PlotContam(physeq_ITS, contam_ITS)
+PlotContam(physeq_16s, contam_16s) 
+PlotContam(physeq_18s, contam_18s) 
+
+sample_data(physeq_ITS)$Index <- as.numeric(as.character(seq(nrow(sample_data(physeq_ITS)))))
+sample_data(physeq_16s)$Index <- as.numeric(as.character(seq(nrow(sample_data(physeq_16s)))))
+sample_data(physeq_18s)$Index <- as.numeric(as.character(seq(nrow(sample_data(physeq_18s)))))
+
+# Function to plot sample depth ------------------------------------------------
+PlotDepth <- function(physeq){
+  df <- as(sample_data(physeq), "matrix")
+  df <- as.data.frame(df)
+  # reconvert to numeric
+  df$LibSize <- as.numeric(as.character(df$LibSize))
+  df$Index <- as.numeric(as.character(df$Index))
+  # order
+  df <- df[order(df$LibSize), ]
+  df$Index <- seq(nrow(df))
+  # inspect
+  str(df) %T>% print()
+  head(df) %T>% print()
+  ggplot(data=df, aes(x=Index, y=LibSize, color=is.neg)) +
+    geom_point(alpha =0.7, size=2) +
+    theme_classic() +
+    scale_colour_manual("Negative control", values = c("grey", "red")) +
+    theme(plot.title = element_text(size = 12, face = "bold", hjust = 0.5),
+          plot.subtitle = element_text(size = 10, face = "bold", hjust = 0.5),
+          axis.title = element_text(angle = 0, size = 10, face = "bold"),
+          axis.text.x = element_text(angle =0, size = 8, hjust = 0.5, vjust = 1), 
+          axis.text.y = element_text(angle = 0, size = 7, hjust = 0.5, vjust = 0.5),
+          legend.key.height = unit(0.2, "cm"), legend.key.width = unit(0.3, "cm"), 
+          legend.title = element_text(size = 10, face = "bold"), 
+          legend.text = element_text(size = 8)) -> plot_dist
+  return(plot_dist)  
+}
+
+PlotDepth(physeq_ITS)
 
 
-as.data.frame(taxonomy_90, stringsAsFactors = FALSE) %>% 
-  column_to_rownames("Zotu")
+
+# *** FIGURE S1 - dcontam ------------------------------------------------------
+ggarrange(
+  ggarrange(PlotDepth(physeq_ITS) +
+              labs(title="ITS", 
+                   subtitle = "Samples read depth", 
+                   x="Sample index", 
+                   y="Read number"),
+            PlotDepth(physeq_16s) +
+              labs(title="16S", 
+                   subtitle = "Samples read depth",
+                   x="Sample index",
+                   y="Read number"),
+            PlotDepth(physeq_18s) +
+              labs(title="18S", 
+                   subtitle = "Samples read depth",
+                   x="Sample index",
+                   y="Read number"),
+            labels = c("A","B","C"),
+            widths = c(1,1,1),
+            align = "hv" ,
+            ncol = 3, 
+            nrow = 1, 
+            common.legend = TRUE, 
+            legend = c("bottom")),
+  ggarrange(
+    PlotContam(physeq_ITS, contam_ITS) +
+      labs(subtitle="Contaminants n. 13"),
+    PlotContam(physeq_16s, contam_16s) +
+      labs(subtitle="Contaminants n. 38"),
+    PlotContam(physeq_18s, contam_18s) +
+      labs(subtitle="Contaminants n. 40"),
+    widths = c(1,1,1),
+    labels = c("C","D","E"),
+    align = "hv" ,
+    ncol = 3, 
+    nrow = 1,
+    common.legend = TRUE,
+    legend = c("bottom")),
+  widths =  c(1, 1.2),
+  ncol = 1, 
+  nrow = 2) -> Fig_S1
+
+Fig_S1
+
+# BARPLOTS ---------------------------------------------------------------------
+palette_30 <-c("#a35151","#2b8c8a","#dba4a4","#111b77","#283dff","#636bb7","#bfc5ff","#195637","#117744","#60ffaf",
+               "#b7ffdb","#cc1c1c","#ff0000","#fcb067","#ffe8d3","#d8d6d4","#82807f","#3f3e3d","#560d0d","#825121",
+               "#5b5b19","#fcfc00","#ffff9e","#521899","#ae09ea","#fa7efc","#ffb7ef","#a0fffc","#14fffa","#e0f8fc",
+               "#FF8000","#000000")
 
 
 
 
 
 
+ExtractBar <- function(physeq, last_gen, Rank){
+  #tax_table(physeq)[is.na(tax_table(physeq))]<-"Unclassified"
+  print(head(tax_table(physeq)))
+  top30 <- 
+    names(sort(taxa_sums(physeq), TRUE)[1:last_gen]) # get 30 top genera
+  physeq_gen <- 
+    prune_taxa(top30, physeq)
+  print(head(physeq_gen@sam_data))
+  df_bar <- 
+    physeq_gen %>%
+    tax_glom(taxrank = Rank) %>%                     
+    transform_sample_counts(function(x) {x/sum(x)} ) %>% 
+    psmelt() %>%                                         
+    #filter(Abundance > 0.01) %>%                         
+    arrange(get(Rank))                                     
+  print(levels(df_bar[,Rank]))
+  return(df_bar)
+}
+
+bar_df_ITS <-
+  ExtractBar(ppro_pcoa_ITS, 50, "Genus")
+bar_df_ITS$Genus
 
 
+PlotBar <- function(df, Rank){
+  barplot <-
+    ggplot(df, aes(x = Description, 
+                   y = Abundance, 
+                   fill = get(Rank))) + 
+    geom_bar(stat = "identity") +
+    theme_classic() +
+    scale_fill_manual(values =palette_30) +
+    #facet_grid(~Niche, scales = "free_x", space="free_x") +
+    #facet_wrap(~ Niche ~ Crop, scales = "free_x", ncol=10) + 
+    theme(plot.title = element_text(size = 12, face = "bold", hjust = 0.5),
+          plot.subtitle = element_text(size = 10, face = "bold", hjust = 0.5),
+          axis.title = element_text(angle = 0, size = 10, face = "bold"),
+          axis.text.x = element_blank(), axis.ticks.x = element_blank(), 
+          axis.text.y = element_text(angle = 0, size = 7, hjust = 0.5, vjust = 0.5),
+          legend.key.height = unit(0.2, "cm"), legend.key.width = unit(0.3, "cm"), 
+          legend.title = element_text(size = 10, face = "bold"), 
+          legend.text = element_text(size = 8)) +
+    guides(fill = guide_legend(ncol = 1, title = "Taxa"))
+  return(barplot)
+}
 
-
-
-
+physeq_ITS_gen <-
+  ppro_pcoa_ITS %>%
+  subset_samples(Niche%in%c("Soil", "Leaf", "Root"))
+physeq_ITS_gen <-
+  prune_taxa(taxa_sums(physeq_ITS_gen) > 0, physeq_ITS_gen) 
+PlotBar(ExtractBar(physeq_ITS_gen, 50, "Genus"), "Genus")
 
 

@@ -1,0 +1,39 @@
+sample_id,site,treatment,plot_rep,pH,p_ppm,k_ppm,ca_ppm,mg_ppm,cec,dry_matter_yield_mg_ha,moisture_at_harvest
+LuxArbor_Fertilized_1,Lux Arbor,Fertilized,1,6.1,42,41,910,89,5.4,11.99,10
+LuxArbor_Control_1,Lux Arbor,Control,1,6,32,52,809,123,6.4,4.28,42.3
+LuxArbor_Control_2,Lux Arbor,Control,2,5.8,22,49,753,111,7.22,6.89,43.5
+LuxArbor_Fertilized_2,Lux Arbor,Fertilized,2,5.5,23,45,669,93,7.84,6.93,39.1
+LuxArbor_Fertilized_3,Lux Arbor,Fertilized,3,5.6,22,63,710,129,7.19,5.84,40.8
+LuxArbor_Control_3,Lux Arbor,Control,3,5.7,21,73,711,126,7.19,5.74,46.3
+LuxArbor_Fertilized_4,Lux Arbor,Fertilized,4,5.5,15,54,804,133,7.67,3.45,47
+LuxArbor_Control_4,Lux Arbor,Control,4,5.7,17,60,955,134,7.25,3.68,48.3
+LakeCity_Fertilized_1,Lake City,Fertilized,1,6.9,97,43,751,75,4.49,5.94,27.9
+LakeCity_Control_1,Lake City,Control,1,6.9,79,51,718,73,4.33,11.51,37.1
+LakeCity_Fertilized_2,Lake City,Fertilized,2,6.5,28,35,608,74,3.75,5.87,36.6
+LakeCity_Control_2,Lake City,Control,2,6.6,37,31,652,59,3.83,6.78,34
+LakeCity_Control_3,Lake City,Control,3,6.5,29,19,735,52,4.16,5.7,33.3
+LakeCity_Fertilized_3,Lake City,Fertilized,3,6.6,32,27,887,74,5.12,6.62,35
+LakeCity_Fertilized_4,Lake City,Fertilized,4,6.7,23,18,747,48,4.18,8.47,41
+LakeCity_Control_4,Lake City,Control,4,6.9,29,19,689,55,3.95,6.03,41.3
+Hancock_Control_2,Hancock,Control,2,6.2,124,138,975,191,10.42,6.76,27.8
+Hancock_Fertilized_2,Hancock,Fertilized,2,6.2,142,127,1007,137,8.9,7.73,26.9
+Hancock_Fertilized_3,Hancock,Fertilized,3,6,28,20,228,31,1.45,0.75,17.9
+Hancock_Control_3,Hancock,Control,3,5.9,33,26,253,38,1.65,0.93,16.8
+Hancock_Fertilized_4,Hancock,Fertilized,4,6.4,67,34,414,68,2.72,2.36,19.9
+Hancock_Control_4,Hancock,Control,4,6.6,38,25,344,57,2.26,1.24,18.6
+Escanaba_Control_1,Escanaba,Control,1,6.9,11,48,1323,133,7.85,8.91,46
+Escanaba_Fertilized_1,Escanaba,Fertilized,1,7.1,9,39,1397,152,8.35,10.92,46.1
+Escanaba_Control_2,Escanaba,Control,2,7,10,44,1462,150,8.67,8.03,47
+Escanaba_Fertilized_2,Escanaba,Fertilized,2,7,8,48,1504,157,8.95,12.95,46.1
+Escanaba_Control_3,Escanaba,Control,3,6.8,10,37,1210,131,7.24,7.14,46.8
+Escanaba_Fertilized_3,Escanaba,Fertilized,3,6.6,13,36,1102,114,6.55,10.29,45.3
+Escanaba_Fertilized_4,Escanaba,Fertilized,4,6.8,7,50,1318,149,7.96,9.78,48.6
+Escanaba_Control_4,Escanaba,Control,4,6.9,8,43,1296,135,7.72,7.93,45.1
+Rhinelander_Fertilized_1,Rhinelander,Fertilized,1,6.1,297,61,628,20,7.06,6.64,62.1
+Rhinelander_Control_1,Rhinelander,Control,1,5.9,328,53,483,13,6.26,3.27,28.6
+Rhinelander_Fertilized_2,Rhinelander,Fertilized,2,5.2,268,64,315,13,10.25,8.53,67.6
+Rhinelander_Control_2,Rhinelander,Control,2,5.1,297,56,244,9,11.04,6.33,49.4
+Rhinelander_Fertilized_3,Rhinelander,Fertilized,3,5.3,251,71,299,40,9.21,8.83,68.1
+Rhinelander_Control_3,Rhinelander,Control,3,5.4,237,97,380,53,8.59,4.33,33.5
+Rhinelander_Control_4,Rhinelander,Control,4,5.3,282,107,350,43,10.78,3.89,33
+Rhinelander_Fertilized_4,Rhinelander,Fertilized,4,5.4,291,112,371,49,9.750513,7.59,68.9
