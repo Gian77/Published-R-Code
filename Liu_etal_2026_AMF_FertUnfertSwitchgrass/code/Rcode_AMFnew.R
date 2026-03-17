@@ -2391,6 +2391,8 @@ diagnostics_dharma(
   group_var2 = NULL
 )
 
+anova(fit_yield_fixslope, fit_yield_randslope)
+
 # INTERPRETATION. 
 # _ The singular fit warning is the key issue here, and it's telling me the random
 #   slopes model is too complex for your data. Look at this in the random
@@ -2454,6 +2456,15 @@ fitGLM_yield_fixslope <-
           data = lmer_otu_chem_data)
 
 summary(fitGLM_yield_fixslope)
+
+fitGLM_yield_fixslope_no_p <- 
+  glmmTMB(dry_matter ~ fert_status + (1 | site),
+          dispformula = ~site,   # allows variance to differ by site
+          data = lmer_otu_chem_data)
+
+summary(fitGLM_yield_fixslope_no_p)
+
+anova(fitGLM_yield_fixslope_no_p, fitGLM_yield_fixslope)
 
 # FIGURE S3 glmmTMB diagnostics ------------------------------------------------
 diagnostics_dharma(
@@ -2644,6 +2655,203 @@ ggsave(
   ),
   device = "pdf"
 )
+
+
+ggplot(lmer_otu_chem_data,
+       aes(x = p_ppm, y = dry_matter)) +
+  geom_point(size = 3, aes(color = site)) +
+  geom_smooth(method = "lm", se = TRUE) +
+  theme_bw()
+
+
+
+ggplot(lmer_otu_chem_data,
+       aes(x = p_ppm, y = dry_matter)) +
+  geom_point(alpha = 0.8, size = 2, aes(color = site)) +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(title = "Switchgrass yield ",
+       #subtitle = "Black line connects fixed effect means",
+       x = "Dry matter yield (mg/ha)",
+       y = "Phosporus (mg/ha)") +
+  scale_color_manual(values = palette_site) +
+  theme_classic() +
+  theme(
+    plot.title = element_markdown(size =12, face = "bold",hjust = 0.5, vjust = 0.5),
+    plot.subtitle = element_markdown(size = 10,hjust = 0.5, vjust = 0.5),
+    axis.text.x = element_markdown(size = 8),
+    axis.text.y = element_markdown(size = 8),
+    legend.key.height = unit(0.5, "cm"), legend.key.width = unit(0.5, "cm"),
+    legend.title = element_blank(), legend.text = element_text(size = 8)
+  )+
+  guides(color = guide_legend(ncol=1))
+
+
+
+pred_df <- expand.grid(
+  p_ppm = seq(min(lmer_otu_chem_data$p_ppm),
+              max(lmer_otu_chem_data$p_ppm),
+              length.out = 100),
+  site = unique(lmer_otu_chem_data$site),
+  fert_status = unique(lmer_otu_chem_data$fert_status)
+)
+
+# INTERPRETATION. expand.grid() builds all combinations of: 
+# 100 phosphorus values spanning your observed range
+# every site
+# every fertilization status
+# This grid represents locations in predictor space where we want model 
+# predictions. Using 100 points simply creates a smooth visual representation of 
+# the model equation. It is essentially evaluating the fitted model equation over
+# a smooth predictor range, not simulating new observations.
+
+pred_df$dry_matter <- predict(
+  fitGLM_yield_fixslope,
+  newdata = pred_df,
+  type = "response"
+)
+
+
+ggplot(lmer_otu_chem_data,
+       aes(x = p_ppm, y = dry_matter, color = site)) +
+  geom_point(alpha = 0.8, size = 2) +
+  geom_line(data = pred_df,
+            aes(x = p_ppm, y = dry_matter, color = site,
+                linetype = fert_status),
+            linewidth = 1) +
+  labs(title = "Switchgrass yield",
+       x = "Phosphorus (ppm)",
+       y = "Dry matter yield (mg/ha)") +
+  scale_color_manual(values = palette_site) +
+  theme_classic() +
+  theme(
+    plot.title = element_markdown(size =12, face = "bold",hjust = 0.5),
+    axis.text.x = element_markdown(size = 8),
+    axis.text.y = element_markdown(size = 8),
+    legend.title = element_blank(),
+    legend.text = element_text(size = 8)
+  )
+
+
+# Create prediction data
+pred_df <- data.frame(
+  p_ppm = seq(min(lmer_otu_chem_data$p_ppm),
+              max(lmer_otu_chem_data$p_ppm),
+              length.out = 100),
+  fert_status = "Control"   # choose a reference level
+)
+
+# 2. Predict fixed-effect values
+pred_df$dry_matter <- predict(
+  fitGLM_yield_fixslope,
+  newdata = pred_df,
+  re.form = NA,
+  type = "response"
+)
+
+ggplot(lmer_otu_chem_data,
+       aes(x = p_ppm, y = dry_matter, color = site)) +
+  geom_point(alpha = 0.8, size = 2) +
+  geom_line(data = pred_df,
+            aes(x = p_ppm, y = dry_matter),
+            inherit.aes = FALSE,
+            color = "black",
+            linewidth = 1.2) +
+  labs(title = "Switchgrass yield ",
+       #subtitle = "Black line connects fixed effect means",
+       x = "Dry matter yield (mg/ha)",
+       y = "Phosporus (mg/ha)") +
+  scale_color_manual(values = palette_site) +
+  theme_classic() +
+  theme(
+    plot.title = element_markdown(size =12, face = "bold",hjust = 0.5, vjust = 0.5),
+    plot.subtitle = element_markdown(size = 10,hjust = 0.5, vjust = 0.5),
+    axis.text.x = element_markdown(size = 8),
+    axis.text.y = element_markdown(size = 8),
+    legend.key.height = unit(0.5, "cm"), legend.key.width = unit(0.5, "cm"),
+    legend.title = element_blank(), legend.text = element_text(size = 8)
+  )+
+  guides(color = guide_legend(ncol=1))
+
+
+# We can specify which prediction we want with the random effect formula argument re.form:
+lmer_otu_chem_data %>% 
+  mutate(fit.m = predict(fitGLM_yield_fixslope, re.form = NA),
+         fit.c = predict(fitGLM_yield_fixslope, re.form = NULL),
+         resid = resid(fitGLM_yield_fixslope)) %>% 
+  as.data.frame() %>% 
+  ggplot(aes(x = p_ppm, y = fit.m + resid)) +
+  geom_smooth(aes(y = fit.c, col = site), size = 1, se = F, method = "lm") +
+  geom_point(pch = 16, col = "grey") +
+  geom_smooth(aes(y = fit.m), col = 1, size = 2, se = F, method = "lm") 
+
+
+lmer_otu_chem_data %>% 
+  mutate(fit.m = predict(fitGLM_yield_fixslope, re.form = NA),
+         fit.c = predict(fitGLM_yield_fixslope, re.form = NULL),
+         resid = resid(fitGLM_yield_fixslope))  %>%
+  ggplot(aes(x = p_ppm, y = dry_matter, col = site)) +
+  geom_point() +
+  geom_smooth(method = 'lm', se = F)  +
+  geom_smooth(aes(y = fit.m), method = 'lm', col = 1, size = 2) 
+
+
+
+# This below is probably the bets way to plot it 
+
+
+# Create prediction grid
+pred_df <- expand.grid(
+  p_ppm = seq(min(lmer_otu_chem_data$p_ppm), 
+              max(lmer_otu_chem_data$p_ppm), length.out = 100),
+  site = unique(lmer_otu_chem_data$site),
+  fert_status = levels(lmer_otu_chem_data$fert_status)[1]  # fix one level
+)
+
+# Predict with random intercepts (conditional)
+pred_df$fit.c <- predict(fitGLM_yield_fixslope, 
+                           newdata = pred_df, 
+                           re.form = NULL)
+
+# Predict population level (marginal)
+pred_df$fit.m <- predict(fitGLM_yield_fixslope, 
+                           newdata = pred_df, 
+                           re.form = NA)
+
+# Partial residuals for observed points
+lmer_otu_chem_data$resid <- resid(fitGLM_yield_fixslope)
+lmer_otu_chem_data$fit.m <- predict(fitGLM_yield_fixslope, re.form = NA)
+
+# Plot
+ggplot() +
+  # Site-specific lines (parallel, same slope, different intercepts)
+  geom_line(data = pred_df, 
+            aes(x = p_ppm, y = fit.c, col = site), 
+            linewidth = 1) +
+  # Population-level line
+  geom_line(data = pred_df %>% distinct(p_ppm, fit.m),
+            aes(x = p_ppm, y = fit.m), 
+            col = "black", linewidth = 2) +
+  # Partial residual points
+  geom_point(data = lmer_otu_chem_data,
+             aes(x = p_ppm, y = fit.m + resid), 
+             pch = 16, col = "grey60") +
+  labs(x = "P (ppm)", y = "Dry matter", col = "Site") +
+  scale_color_manual(values = palette_site) +
+  theme_classic() +
+  theme(
+    plot.title = element_markdown(size =12, face = "bold",hjust = 0.5, vjust = 0.5),
+    plot.subtitle = element_markdown(size = 10,hjust = 0.5, vjust = 0.5),
+    axis.text.x = element_markdown(size = 8),
+    axis.text.y = element_markdown(size = 8),
+    legend.key.height = unit(0.5, "cm"), legend.key.width = unit(0.5, "cm"),
+    legend.title = element_blank(), legend.text = element_text(size = 8)
+  )+
+  guides(color = guide_legend(ncol=1))
+
+
+
+
+
 
 
 
