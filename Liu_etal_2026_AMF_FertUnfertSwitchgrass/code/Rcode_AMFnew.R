@@ -2249,13 +2249,33 @@ mean_otutable_AMF_rare <-
            sep = "_", remove = FALSE)
 
 head(mean_otutable_AMF_rare)
-
 setdiff(mean_otutable_AMF_rare$sample_id, chem_data$sample_id)
+
+# OPTIONAL. We already have too many predictors and not enoug observations. 
+# Adding community composition metrics, bray and jaccard.
+
+pcoa_meanAMF_bray <- 
+  ordinate(mean_physeq_AMF_rare, method="PCoA", distance="bray")
+
+pcoa_meanAMF_jacc <- 
+  ordinate(mean_physeq_AMF_rare, method="PCoA", distance="jaccard")
 
 # combined dataset
 otu_chem_data <-
-mean_otutable_AMF_rare %>% 
-  left_join(chem_data, by = "sample_id")
+  mean_otutable_AMF_rare %>% 
+  left_join(chem_data, by = "sample_id") %>% 
+  left_join(
+    as.data.frame(pcoa_meanAMF_bray$vectors) %>% 
+      dplyr::select(Axis.1, Axis.2) %>% 
+      rownames_to_column("sample_id"), 
+    by= "sample_id") %>% 
+  rename(bray.1 = Axis.1, bray.2 = Axis.2) %>% 
+  left_join(
+    as.data.frame(pcoa_meanAMF_jacc$vectors) %>% 
+      dplyr::select(Axis.1, Axis.2) %>% 
+      rownames_to_column("sample_id"),
+    by= "sample_id") %>% 
+  rename(jacc.1 = Axis.1, jacc.2 = Axis.2)
 
 head(otu_chem_data)
 
@@ -2464,7 +2484,7 @@ fitGLM_yield_fixslope_no_p <-
 
 summary(fitGLM_yield_fixslope_no_p)
 
-anova(fitGLM_yield_fixslope_no_p, fitGLM_yield_fixslope)
+anova( fitGLM_yield_fixslope, fitGLM_yield_fixslope_no_p)
 
 # FIGURE S3 glmmTMB diagnostics ------------------------------------------------
 diagnostics_dharma(
@@ -2668,11 +2688,11 @@ ggplot(lmer_otu_chem_data,
 ggplot(lmer_otu_chem_data,
        aes(x = p_ppm, y = dry_matter)) +
   geom_point(alpha = 0.8, size = 2, aes(color = site)) +
-  geom_smooth(method = "lm", se = TRUE) +
+  #geom_smooth(method = "lm", se = TRUE) +
   labs(title = "Switchgrass yield ",
        #subtitle = "Black line connects fixed effect means",
-       x = "Dry matter yield (mg/ha)",
-       y = "Phosporus (mg/ha)") +
+       x = "Phosporus (mg/ha)",
+       y =  "Dry matter yield (mg/ha)") +
   scale_color_manual(values = palette_site) +
   theme_classic() +
   theme(
@@ -2833,8 +2853,8 @@ ggplot() +
             col = "black", linewidth = 2) +
   # Partial residual points
   geom_point(data = lmer_otu_chem_data,
-             aes(x = p_ppm, y = fit.m + resid), 
-             pch = 16, col = "grey60") +
+             aes(x = p_ppm, y = fit.m + resid, col = site), 
+             pch = 16, size = 3) +
   labs(x = "P (ppm)", y = "Dry matter", col = "Site") +
   scale_color_manual(values = palette_site) +
   theme_classic() +
