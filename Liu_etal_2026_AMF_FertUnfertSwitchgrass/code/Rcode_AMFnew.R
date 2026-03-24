@@ -62,6 +62,8 @@ pacman::p_load(
   merTools,
   multcompView,
   gllvm, # Generalized linear latent variable models (GLLVM) for multivariate data
+  ggdendro,
+  ggraph,
   install=FALSE
 )
 
@@ -2225,7 +2227,8 @@ mean_physeq_AMF_rare <-
     site_name = gsub(" ", "", site),
     sample_id = paste(site_name, fert_status, plot_rep , sep="_")
   ) %>% 
-  merge_samples("sample_id", fun = mean)
+  merge_samples("sample_id", fun = mean) %>% 
+  subset_taxa(!Genus %in% c("Mortierella", "Jimgerdemannia"))
 
 
 mean_physeq_AMF_rare@sam_data
@@ -2238,9 +2241,9 @@ head(mean_otutable_AMF_rare)
 #mean_otutable_AMF_rare$hill_0 <- specnumber(mean_otutable_AMF_rare)
 #mean_otutable_AMF_rare$hill_1 <- exp(diversity(mean_otutable_AMF_rare, index = "shannon"))
 #mean_otutable_AMF_rare$hill_2 <- diversity(mean_otutable_AMF_rare, index = "invsimpson")
-mean_otutable_AMF_rare$hill_0 <- renyi(x = mean_otutable_AMF_rare, scales = c(0), hill = TRUE)
-mean_otutable_AMF_rare$hill_1 <- renyi(x = mean_otutable_AMF_rare, scales = c(1), hill = TRUE)
-mean_otutable_AMF_rare$hill_2 <- renyi(x= mean_otutable_AMF_rare, scales = c(2), hill = TRUE)
+mean_otutable_AMF_rare$hill_0 <- vegan::renyi(x = mean_otutable_AMF_rare, scales = c(0), hill = TRUE)
+mean_otutable_AMF_rare$hill_1 <- vegan::renyi(x = mean_otutable_AMF_rare, scales = c(1), hill = TRUE)
+mean_otutable_AMF_rare$hill_2 <- vegan::renyi(x= mean_otutable_AMF_rare, scales = c(2), hill = TRUE)
 
 mean_otutable_AMF_rare <- 
   mean_otutable_AMF_rare %>% 
@@ -2278,6 +2281,24 @@ otu_chem_data <-
   rename(jacc.1 = Axis.1, jacc.2 = Axis.2)
 
 head(otu_chem_data)
+
+ggplot(otu_chem_data, aes(x=bray.1, y=bray.2, 
+                          col = site.x, shape = fert_status)) +
+  geom_point()
+
+ggplot(otu_chem_data, aes(x=jacc.1, y=jacc.2, 
+                          col = site.x, shape = fert_status)) +
+  geom_point()
+
+adonis2(
+  otu_chem_data ~ fert_status,
+  data = meta_rare,
+  method = "bray",
+  permutations = how(blocks = meta_rare$site, nperm = 999),
+  by = "margin"
+)
+
+
 
 # Testing effect of N and P on biomass and hill 0 ------------------------------
 lmer_otu_chem_data <-
