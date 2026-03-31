@@ -25,42 +25,41 @@ options(scipen = 9999, pillar.sigfig = 6, digits = 6, max.print = 10000000)
 if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")
 
 pacman::p_load(
-  mlr3,
-  mlr3verse,
-  mlr3filters,
-  mlr3pipelines,
-  mlr3learners,
-  mlr3extralearners,
-  mlr3tuning,
-  paradox,
-  mlr3misc,
-  mlr3viz,
-  iml,
-  shapviz,
-  styler,
-  magrittr,
-  job,
-  vegan,
-  AICcPermanova,
-  tidyverse,
-  ggtext,
-  ggpubr,
-  gridExtra,
-  ggdendro,
-  ggraph,
-  patchwork,
-  GGally, # not needed 
-  reshape2, # not needed 
-  caret,
-  yaImpute,
-  precrec,
-  data.table,
-  pls,
-  fastDummies,
-  janitor,
-  knitr,
-  install = TRUE
+  mlr3,              # Core package for machine learning in R using the mlr3 framework
+  mlr3verse,         # Meta-package loading common mlr3 extensions for a full ML workflow
+  mlr3filters,       # Feature selection and filter methods for mlr3
+  mlr3pipelines,     # Pipeline operators for building complex preprocessing and modeling workflows
+  mlr3learners,      # Collection of standard machine learning learners for mlr3
+  mlr3extralearners, # Community-contributed set of additional learners for mlr3
+  mlr3tuning,        # Hyperparameter tuning and optimization tools for mlr3
+  paradox,           # Parameter space definition and sampling framework used by mlr3
+  mlr3misc,          # Utility functions supporting other mlr3 packages
+  mlr3viz,           # Visualization tools for mlr3 objects (learners, benchmarks, etc.)
+  iml,               # Interpretable Machine Learning – model-agnostic interpretation tools
+  shapviz,           # Fast SHAP value computation and visualization
+  styler,            # Code formatter for enforcing tidyverse-style R code layout
+  magrittr,          # Provides the pipe operator (%>%) used for functional chaining
+  job,               # Lightweight parallel computing framework for R jobs
+  AICcPermanova,     # PERMANOVA implementation with AICc model selection for ecological data
+  tidyverse,         # Core collection of tidy data science packages (ggplot2, dplyr, tidyr, etc.)
+  ggtext,            # Enhanced text rendering in ggplot2 (markdown, HTML formatting)
+  ggpubr,            # Publication-ready ggplot2 visualizations with simple syntax helpers
+  gridExtra,         # Functions to arrange multiple grid-based plots in a layout
+  patchwork,         # Combine separate ggplots into a unified layout using + and /
+  data.table,        # High-performance data manipulation and aggregation
+  pls,               # Partial Least Squares and Principal Component Regression
+  fastDummies,       # Fast creation of dummy (one-hot encoded) variables
+  janitor,           # Data cleaning and exploration helper functions
+  knitr,             # Dynamic report generation integrating R code and text
+  install = FALSE
 )
+
+
+# GGally, # not needed 
+# reshape2, # not needed 
+# caret,
+# yaImpute,
+# precrec,
 
 # Tracking package versions with renv ------------------------------------------
 renv::init()      # initializes renv in your project
@@ -83,6 +82,8 @@ data_path
 # **********************************************************************--------
 # ***** MACHINE LEARNING ***** -------------------------------------------------
 
+# (A) CHEMSITRY AND AMF METRICS ------------------------------------------------
+
 # Prepare the data -------------------------------------------------------------
 model_data <- 
   otu_chem_data %>%
@@ -104,13 +105,20 @@ mutate(across(.cols = c(1, 4:17), .fns = as.numeric))
 head(model_data)
 dim(model_data)
 
+# Check for 
+plot(model_data$hill_2, model_data$hill_0)
+plot(model_data$p_ppm, model_data$p_h)
+plot(model_data$ca_ppm, model_data$mg_ppm)
+plot(model_data$ca_ppm, model_data$cec)
+
 # ******************************************************************************
 
 # 1) recode fert_status to 0-1 and remove site ---------------------------------
 model_data_encoded <- 
   model_data %>%
   mutate(Status_fertilized = as.integer(fert_status == "Fertilized")) %>% 
-  dplyr::select(-fert_status, -moisture_at_harvest)
+  dplyr::select(-fert_status, -moisture_at_harvest) %>% 
+  dplyr::select(-hill_1, -jacc.1, -jacc.2, -bray.2, -mg_ppm, -cec)
 
 head(model_data_encoded)
 str(model_data_encoded)
@@ -122,13 +130,17 @@ task <- as_task_regr(
   id     = "biomass"
 )
 
+task
+
 # 3) Learners for benchmarking -------------------------------------------------
 
 # WARNING. Predicotrs are on different scale so it is necessary to rescale.
+learner_null <- lrn("regr.featureless")
+learner_null$id <- "Featureless"
 
 learner_enet <- as_learner(
   po("encode", method = "one-hot") %>>%
-    po("scale") %>>%
+    po("scale") %>>%          # scaling it here 
     lrn("regr.cv_glmnet",
         alpha = 0.5,
         standardize = FALSE,  # IMPORTANT: avoid double scaling
@@ -136,15 +148,38 @@ learner_enet <- as_learner(
 )
 learner_enet$id <- "Elastic_Net"
 
-learner_enet <- as_learner(
+learner_ridge <- as_learner(
   po("encode", method = "one-hot") %>>%
-    po("scale") %>>%
-    lrn("regr.cv_glmnet",
-        alpha = 0.5,
+    lrn("regr.cv_glmnet", 
+        alpha = 0, 
         standardize = FALSE,  # IMPORTANT: avoid double scaling
         nfolds = 4)
 )
-learner_enet$id <- "Elastic_Net"
+learner_ridge$id <- "Ridge"
+
+learner_lasso <- as_learner(
+  po("encode", method = "one-hot") %>>%
+    po("scale") %>>%
+    lrn("regr.cv_glmnet",
+        alpha = 1,
+        standardize = FALSE, # IMPORTANT: avoid double scaling
+        nfolds = 4)
+)
+learner_lasso$id <- "Lasso"
+
+learner_kriging <- as_learner(
+  po("encode", method = "one-hot") %>>%
+    po("scale") %>>%
+    lrn("regr.km")
+)
+learner_kriging$id <- "Kriging_GPR"
+
+learner_tree <- as_learner(
+  po("encode", method = "one-hot") %>>%
+    po("scale") %>>%
+    lrn("regr.rpart", cp = 0.01)
+)
+learner_tree$id <- "Decision_Tree"
 
 learner_svm <- as_learner(
   po("encode", method = "one-hot") %>>%
@@ -165,20 +200,43 @@ learner_rf <- as_learner(
 )
 learner_rf$id <- "Random_Forest"
 
-learners <- list(learner_enet, learner_ridge, learner_svm, learner_rf)
+learner_xgb <- as_learner(
+  po("encode", method = "one-hot") %>>%
+    po("scale") %>>%
+    lrn("regr.xgboost",
+        nrounds = 100,
+        eta = 0.05,
+        max_depth = 2,
+        lambda = 1,
+        alpha = 1)
+)
+learner_xgb$id <- "XGBoost"
+
+learners <- list(learner_null,
+                 learner_enet, learner_ridge, learner_lasso,learner_kriging,
+                 learner_tree, learner_svm, learner_rf, learner_xgb)
+
+# Reduce the learners to a more simple set
+learners <- list(learner_null, 
+                 learner_ridge, learner_enet, learner_lasso, 
+                 learner_svm, learner_rf)
+
+learners <- list(learner_null, learner_enet, learner_tree, 
+                 learner_svm, learner_rf)
+
 
 # 4) Group resampling by site --------------------------------------------------
 
 # Group by site and remove site
 task$set_col_roles("site", roles = "group")
+
+# Remove the site column
 task$select(setdiff(task$feature_names, "site"))
+task
 
 # Resampling strategy with site as Random effect
 resampling_outer <- rsmp("cv", folds = 5)
 resampling_outer$instantiate(task)
-
-# Should see it respects site boundaries
-resampling_outer$instance
 resampling_outer
 
 # NOTE. To avoidn model instability (see below) inclueding repeats may help,
@@ -187,11 +245,12 @@ resampling_outer
 # split to crown a fake winner if that model has to perform well across 50 
 # different test sets (10 repeats × 5 folds).
 
-resampling_outer <- rsmp("repeated_cv", folds = 5, repeats = 10)
+resampling_outer <- rsmp("repeated_cv", folds = 5, repeats = 3)
 resampling_outer$instantiate(task)
+resampling_outer
 
 # 5) Benckmark -----------------------------------------------------------------
-set.seed(83928)
+set.seed(64387628)
 
 bmr <- mlr3::benchmark(
   benchmark_grid(
@@ -201,22 +260,52 @@ bmr <- mlr3::benchmark(
   store_models = TRUE
 )
 
+bmr
+
+autoplot(bmr, measure = msr("regr.rmse"), type = "boxplot")
+
 # WARNING. Small data set can cause model instability, that is why if I ran this 
 # multiple time I almost always have a new best_learner (See the NOTE above). 
 
 # 6) Model performace summary --------------------------------------------------
 results <- 
-  bmr$aggregate(list(msr("regr.rsq"),msr("regr.rmse"),msr("regr.mae"))) %>% 
-  as.data.table()
+  bmr$aggregate(list(msr("regr.rsq"),msr("regr.rmse"),msr("regr.mae")))
 
-results[order(-regr.rsq)]
-results[order(regr.rmse)][1]$regr.rsq 
+results %>% arrange(desc(regr.rsq))
+
+# Alternative way
+results_df <- 
+  bmr$score(list(msr("regr.rsq"),msr("regr.rmse"),msr("regr.mae"))) %>%
+  as.data.frame()
+
+results_df %>%
+  group_by(learner_id) %>%
+  summarise(
+    rsq_mean  = mean(regr.rsq, na.rm = TRUE),
+    rsq_sd    = sd(regr.rsq, na.rm = TRUE),
+    rmse_mean = mean(regr.rmse, na.rm = TRUE),
+    rmse_sd   = sd(regr.rmse, na.rm = TRUE),
+    mae_mean  = mean(regr.mae, na.rm = TRUE),
+    mae_sd    = sd(regr.mae, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  arrange(rmse_sd)
+
 
 # 7) Select best learner and etrain best learner on full data
 
+# Selection based on RMSE
 best_learner_id <- 
   results[order(regr.rmse)][1]$learner_id 
 best_learner_id
+
+# Selection based on R2, decreasing = TRUE becasue is negative 
+best_learner_id <- 
+  results[order(regr.rsq, decreasing = TRUE)][1]$learner_id 
+best_learner_id
+
+# or 
+best_learner_id <- "Random_Forest"
 
 best_learner <- 
   learners[[which(sapply(learners, function(x) x$id) == best_learner_id)]]$clone()
@@ -354,8 +443,8 @@ Fig_XX_null_models <-
       axis.text.x = element_markdown(size = 8),
       axis.text.y = element_markdown(size = 8),
       legend.key.height = unit(0.5, "cm"), legend.key.width = unit(0.5, "cm"),
-      legend.title = element_blank(), legend.text = element_text(size = 8)) + 
-  ylim(0, 15) ,
+      legend.title = element_blank(), legend.text = element_text(size = 8)) ,
+  #ylim(0, 20) ,
 data.frame(rsq = null_rsq_distribution_constr) %>% 
   ggplot(aes(x = rsq)) +
   geom_histogram(bins = 30, fill = "gray", color = "white") +
@@ -380,8 +469,8 @@ data.frame(rsq = null_rsq_distribution_constr) %>%
     axis.text.x = element_markdown(size = 8),
     axis.text.y = element_markdown(size = 8),
     legend.key.height = unit(0.5, "cm"), legend.key.width = unit(0.5, "cm"),
-    legend.title = element_blank(), legend.text = element_text(size = 8)) + 
-  ylim(0, 15),
+    legend.title = element_blank(), legend.text = element_text(size = 8))  ,
+  #ylim(0, 30),
 labels = c("A", "B"),
 ncol = 2,
 nrow = 1)
@@ -392,7 +481,7 @@ Fig_XX_null_models
 # 8) Re-running with the best learner and auto-tuning -----------------------------
 
 # Define tuning space for SVM
-search_space <- ps(
+search_space_svm <- ps(
   regr.ksvm.C = p_dbl(lower = 0.1, upper = 10, logscale = TRUE),
   regr.ksvm.sigma = p_dbl(lower = 0.01, upper = 10, logscale = TRUE)
 )
@@ -417,7 +506,7 @@ at_svm <- auto_tuner(
   learner = best_learner,
   resampling = resampling_inner,
   measure = msr("regr.rmse"),
-  search_space = search_space,
+  search_space = search_space_svm,
   terminator = trm("evals", n_evals = 30),
   tuner = mlr3verse::tnr("random_search")
 )
@@ -436,7 +525,7 @@ at_rf <- auto_tuner(
 at_rf
 
 # Resample with tuning (nested cv) for st_rf
-set.seed(12227)
+set.seed(657564)
 
 rr_tuned <- 
   mlr3::resample(
@@ -447,6 +536,8 @@ rr_tuned <-
 )
 
 rr_tuned$aggregate(list(msr("regr.rsq"),msr("regr.rmse"),msr("regr.mae")))
+
+autoplot(rr_tuned, measure = msr("regr.rmse"), type = "boxplot")
 
 # INTERPRETATION. The R2 drop from the benchmark RF to the tuned RF, why?
 # Well, this is a very well-known phenomenon called Tuning Bias (or "overfitting
@@ -527,12 +618,11 @@ get_fold_importance <- function(rr, task) {
   rbindlist(imps)
 }
 
-# Using the tuned model --------------------------------------------------------
+# 1) Using the tuned model --------------------------------------------------------
 imp_df <-
   get_fold_importance(rr = rr_tuned, task = task)
 
 str(imp_df)
-
 
 # Filter the folds based on model performance
 rr_tuned$score(msr("regr.rsq"))$regr.rsq 
@@ -555,23 +645,76 @@ task$data(cols = c("site", task$target_names)) %>%
     sd   = sd(dry_matter_yield_mg_ha)
   )
 
-# Using the bmr isnetad --------------------------------------------------------
+# 2) Auto-tunign ineffective - Retaining benchmark model----------------------------
+
 # Extracting the model form the benchmark instead of using the tuned version.
+
+rr_svm_from_bmr <- bmr$resample_result(learner_id = "SVM")
+
+lapply(seq_len(rr_svm_from_bmr$iters), function(i) {
+  test_idx <- rr_svm_from_bmr$resampling$test_set(i)
+  unique(task$data(rows = test_idx, cols = "site")[[1]])
+})
+
+imp_df_svm <-
+  get_fold_importance(rr = rr_svm_from_bmr, task = task)
+
+imp_df_svm
+
+# Aggregate importance
+imp_summary <-
+  imp_df_svm %>%
+  as.data.frame() %>%
+  group_by(feature) %>% 
+  dplyr::summarise(
+    mean_importance = mean(importance),
+    sd_importance   = sd(importance)
+  ) %>% 
+  arrange(mean_importance)
+
+imp_summary
+
+# Rank stability importance across folds
+imp_df_svm[, rank := rank(importance), by = fold]
+
+rank_summary <- imp_df_svm[, .(
+  mean_rank = mean(rank),
+  sd_rank   = sd(rank)
+), by = feature][order(mean_rank)]
+
+rank_summary
+
+rank_summary[, importance_score := (max(mean_rank) + 1) - mean_rank]
+
+
+# Random Forest
 rr_rf_from_bmr <- bmr$resample_result(learner_id = "Random_Forest")
 
-fold_sites <- lapply(seq_len(rr_rf_from_bmr$iters), function(i) {
+lapply(seq_len(rr_rf_from_bmr$iters), function(i) {
   test_idx <- rr_rf_from_bmr$resampling$test_set(i)
   unique(task$data(rows = test_idx, cols = "site")[[1]])
 })
 
-fold_sites
-
-imp_df <-
+imp_df_rf <-
   get_fold_importance(rr = rr_rf_from_bmr, task = task)
 
-str(imp_df)
+str(imp_df_rf)
 
 # Aggregate importance
+# Aggregate importance
+imp_summary <-
+  imp_df_rf %>%
+  as.data.frame() %>%
+  group_by(feature) %>% 
+  dplyr::summarise(
+    mean_importance = mean(importance),
+    sd_importance   = sd(importance)
+  ) %>% 
+  arrange(mean_importance)
+
+imp_summary
+
+
 imp_summary <- imp_df[, .(
   mean_imp = mean(importance),
   sd_imp   = sd(importance)
@@ -590,7 +733,6 @@ rank_summary <- imp_df[, .(
 print(rank_summary)
 
 rank_summary[, importance_score := (max(mean_rank) + 1) - mean_rank]
-
 
 # **** FIGURE XXX - Ranked features per fold **** ------------------------------
 
@@ -740,9 +882,8 @@ ggarrange(
 )
 
 
-
-
-
+# ***********************************************************************-------
+# (A) 99% OTUS to GENUS LEVEL --------------------------------------------------
 
 
 

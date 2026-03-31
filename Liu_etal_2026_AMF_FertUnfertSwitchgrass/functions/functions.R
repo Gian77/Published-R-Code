@@ -146,23 +146,88 @@ FinalizeTaxonomy <- function(taxonomy){
 
 FinalizeTaxonomy(taxonomy_99)
 
-# Extract Glomeomycotina -------------------------------------------------------
+# Calculate hill numbers across interations (rarefied hill) --------------------
 
-extract_Glomero <- function(taxonomy){
+calc_hill_rarefied <- function(otu_mat, 
+                               depth, 
+                               n_iter = 100, 
+                               q = 0,
+                               return_iter = FALSE, 
+                               seed = 2026) {
   
-  FinalizeTaxonomy(
-    taxonomy %>%
-      dplyr::select(
-        "Zotu","Query","Kingdom","Phylum","Class","Order","Family","Genus","Species")
-  ) %>%
-    full_join(taxonomy %>% dplyr::select(Query, S_score), by = "Query") %>%
-    mutate(S_score = as.numeric(S_score)) %>%
-    mutate_if(is.character, ~ replace(., is.na(.), "Unclassified")) %>%
-    column_to_rownames("Zotu") %>%
-    filter(Phylum %in% "Mucoromycota")
+  # Filter samples by depth (CRITICAL)
+  keep_samples <- rowSums(otu_mat) >= depth
+  
+  if (any(!keep_samples)) {
+    message(sprintf(
+      "Filtering samples: keeping %d / %d (removed %d below depth %d)",
+      sum(keep_samples), length(keep_samples), sum(!keep_samples), depth
+    ))
+  }
+  
+  otu_mat <- otu_mat[keep_samples, , drop = FALSE]
+  
+  # Check
+  if (!q %in% c(0, 1, 2)) {
+    stop("q must be 0, 1, or 2")
+  }
+  
+  set.seed(seed)
+  
+  n_samples <- nrow(otu_mat)
+  samples <- rownames(otu_mat)
+  
+  # helper: compute Hill number for one matrix
+  hill_fun <- function(mat) {
+    
+    if (q == 0) {
+      return(vegan::specnumber(mat))
+    }
+    
+    p <- mat / rowSums(mat)
+    
+    if (q == 1) {
+      return(exp(-rowSums(p * log(p + 1e-12))))
+    }
+    
+    if (q == 2) {
+      return(1 / rowSums(p^2))
+    }
+  }
+  
+  # storage
+  hill_mat <- matrix(NA, nrow = n_samples, ncol = n_iter,
+                     dimnames = list(samples, paste0("iter_", seq_len(n_iter))))
+  
+  # iterate rarefaction
+  for (i in seq_len(n_iter)) {
+    rare_mat <- vegan::rrarefy(otu_mat, sample = depth)
+    hill_mat[, i] <- hill_fun(rare_mat)
+  }
+  
+  # return per-iteration if requested
+  if (return_iter) {
+    return(as.data.frame(hill_mat))
+  }
+  
+  # otherwise return mean + sd
+  data.frame(
+    sample_id = samples,
+    hill_mean = rowMeans(hill_mat),
+    hill_sd   = apply(hill_mat, 1, sd),
+    q = q,
+    depth = depth,
+    n_iter = n_iter
+  )
 }
 
-FinalizeTaxonomy(taxonomy_99) %>% extract_Glomero()
+
+# Mean + SD (recommended) across iterations
+calc_hill_rarefied(otu_mat = otutable_AMF, depth = 5000, n_iter = 100, q = 0)
+
+# Get all iterations (long-format later if needed)
+calc_hill_rarefied(otu_mat = otutable_AMF,, depth = 1000, 
+                   n_iter = 100, q = 1, return_iter = TRUE)
 
 # Mixed effect models ----------------------------------------------------------
 
@@ -245,78 +310,6 @@ run_lmem_robust <- function(df,
 summary(run_lmem_robust(alpha_df, hill_0, "fixslope"))
 
 
-# Diagnostics plots ------------------------------------------------------ 
-diagnostic_plots <- function(fit) {
-  
-  # Extract diagnostic data using broom + direct model functions
-  diag_data <- 
-    data.frame(
-      # This grabs the actual response variable used in the model (e.g., hill_0)
-      # Change [[2]] to the name of your predictor if you want to color by it specifically
-      .treatment_group = model.frame(fit)[, 2],
-      .cooksd = cooks.distance(fit),
-      .hat = hatvalues(fit),
-      .fitted = fitted(fit),
-      .resid = residuals(fit),
-      .std.resid = residuals(fit, type = "pearson")
-      # NOTE. In LMMs, standardized residuals can be computed using the Pearson 
-      # method, which accounts for the variance structure of the model. This is 
-      # often more appropriate than simple standardization for linear models.
-    )
-  
-  print(head(diag_data))
-  
-  # 2. Histogram
-  p1 <- ggplot(diag_data, aes(x = .resid)) +
-    geom_histogram(aes(y = after_stat(density)), bins = 20, color = "grey", fill = "grey") +
-    stat_function(
-      fun = dnorm, 
-      args = list(mean = mean(diag_data$.resid), sd = sd(diag_data$.resid)),
-      color = "red"
-    ) +
-    labs(x = "Residuals", y = "Density", title = "Histogram of Residuals") +
-    theme_bw()
-  
-  # 3. Normal Q-Q
-  p2 <- ggplot(diag_data, aes(sample = .std.resid)) +
-    stat_qq(shape = 1) + # Fixed: shape goes here
-    stat_qq_line(color = "red") +
-    labs(title = "Normal Q-Q") +
-    theme_bw()
-  
-  # 4. Scale-Location
-  p3 <- ggplot(diag_data, aes(x = .fitted, 
-                              y = sqrt(abs(.std.resid)), 
-                              color = .treatment_group)) +
-    geom_point(shape = 1) + # Fixed: shape goes here
-    geom_smooth(method = "lm", formula = 'y ~ x', se = FALSE, color = "red") +
-    labs(x = "Fitted Values", y = expression(sqrt("|Pearson Resid|")), 
-         title = "Scale-Location") +
-    theme_bw() +
-    theme(legend.title = element_blank()) +
-    scale_color_manual(values = c("grey", "red"))
-  
-  # 5. Influence (Cook's D)
-  cooks_threshold <- 4 / nrow(diag_data)
-  
-  p4 <- ggplot(diag_data, aes(x = seq_along(.cooksd), y = .cooksd)) +
-    geom_segment(aes(xend = seq_along(.cooksd), yend = 0)) +
-    geom_point(shape = 1) +
-    geom_hline(yintercept = cooks_threshold, linetype = "dashed", color = "red") +
-    geom_text(
-      aes(label = ifelse(.cooksd > cooks_threshold, seq_along(.cooksd), "")),
-      color = "red",
-      hjust = -0.2, vjust = -0.5,
-      size = 3)+
-    labs(x = "Observation Index", y = "Cook's Distance", title = "Influence Check") +
-    theme_bw()
-  
-  # Combine
-  return(ggarrange(p1, p2, p3, p4, ncol = 2, nrow = 2, labels = "AUTO"))
-}
-
-
-diagnostic_plots(run_lmem(alpha_df, hill_0, "fixslope"))
 
 
 # DHARMA diagnostics plots -----------------------------------------------------
@@ -1128,5 +1121,98 @@ physeq_ITS_gen <-
 physeq_ITS_gen <-
   prune_taxa(taxa_sums(physeq_ITS_gen) > 0, physeq_ITS_gen) 
 PlotBar(ExtractBar(physeq_ITS_gen, 50, "Genus"), "Genus")
+
+# **********************************************************************--------
+
+# Extract Glomeomycotina -------------------------------------------------------
+
+extract_Glomero <- function(taxonomy){
+  
+  FinalizeTaxonomy(
+    taxonomy %>%
+      dplyr::select(
+        "Zotu","Query","Kingdom","Phylum","Class","Order","Family","Genus","Species")
+  ) %>%
+    full_join(taxonomy %>% dplyr::select(Query, S_score), by = "Query") %>%
+    mutate(S_score = as.numeric(S_score)) %>%
+    mutate_if(is.character, ~ replace(., is.na(.), "Unclassified")) %>%
+    column_to_rownames("Zotu") %>%
+    filter(Phylum %in% "Mucoromycota")
+}
+
+FinalizeTaxonomy(taxonomy_99) %>% extract_Glomero()
+
+# Diagnostics plots ------------------------------------------------------ 
+diagnostic_plots <- function(fit) {
+  
+  # Extract diagnostic data using broom + direct model functions
+  diag_data <- 
+    data.frame(
+      # This grabs the actual response variable used in the model (e.g., hill_0)
+      # Change [[2]] to the name of your predictor if you want to color by it specifically
+      .treatment_group = model.frame(fit)[, 2],
+      .cooksd = cooks.distance(fit),
+      .hat = hatvalues(fit),
+      .fitted = fitted(fit),
+      .resid = residuals(fit),
+      .std.resid = residuals(fit, type = "pearson")
+      # NOTE. In LMMs, standardized residuals can be computed using the Pearson 
+      # method, which accounts for the variance structure of the model. This is 
+      # often more appropriate than simple standardization for linear models.
+    )
+  
+  print(head(diag_data))
+  
+  # 2. Histogram
+  p1 <- ggplot(diag_data, aes(x = .resid)) +
+    geom_histogram(aes(y = after_stat(density)), bins = 20, color = "grey", fill = "grey") +
+    stat_function(
+      fun = dnorm, 
+      args = list(mean = mean(diag_data$.resid), sd = sd(diag_data$.resid)),
+      color = "red"
+    ) +
+    labs(x = "Residuals", y = "Density", title = "Histogram of Residuals") +
+    theme_bw()
+  
+  # 3. Normal Q-Q
+  p2 <- ggplot(diag_data, aes(sample = .std.resid)) +
+    stat_qq(shape = 1) + # Fixed: shape goes here
+    stat_qq_line(color = "red") +
+    labs(title = "Normal Q-Q") +
+    theme_bw()
+  
+  # 4. Scale-Location
+  p3 <- ggplot(diag_data, aes(x = .fitted, 
+                              y = sqrt(abs(.std.resid)), 
+                              color = .treatment_group)) +
+    geom_point(shape = 1) + # Fixed: shape goes here
+    geom_smooth(method = "lm", formula = 'y ~ x', se = FALSE, color = "red") +
+    labs(x = "Fitted Values", y = expression(sqrt("|Pearson Resid|")), 
+         title = "Scale-Location") +
+    theme_bw() +
+    theme(legend.title = element_blank()) +
+    scale_color_manual(values = c("grey", "red"))
+  
+  # 5. Influence (Cook's D)
+  cooks_threshold <- 4 / nrow(diag_data)
+  
+  p4 <- ggplot(diag_data, aes(x = seq_along(.cooksd), y = .cooksd)) +
+    geom_segment(aes(xend = seq_along(.cooksd), yend = 0)) +
+    geom_point(shape = 1) +
+    geom_hline(yintercept = cooks_threshold, linetype = "dashed", color = "red") +
+    geom_text(
+      aes(label = ifelse(.cooksd > cooks_threshold, seq_along(.cooksd), "")),
+      color = "red",
+      hjust = -0.2, vjust = -0.5,
+      size = 3)+
+    labs(x = "Observation Index", y = "Cook's Distance", title = "Influence Check") +
+    theme_bw()
+  
+  # Combine
+  return(ggarrange(p1, p2, p3, p4, ncol = 2, nrow = 2, labels = "AUTO"))
+}
+
+
+diagnostic_plots(run_lmem(alpha_df, hill_0, "fixslope"))
 
 

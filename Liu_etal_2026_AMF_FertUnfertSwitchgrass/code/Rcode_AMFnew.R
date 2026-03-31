@@ -111,10 +111,14 @@ dim(taxonomy_99)
 taxonomy_99 %>% filter(Query %in% "Query_998")
 taxonomy_99 %>% filter(Query %in% "Query_1124")
 
+taxonomy_99 %>% 
+  subset(Genus %in% c("Mortierella", "Jimgerdemannia"))
+
 # Adding columns and finalize taxonomy -----------------------------------------
 taxonomy_99_fix <-
   FinalizeTaxonomy(
     taxonomy_99 %>%
+      rownames_to_column("Zotu") %>% 
       dplyr::select(
         "Zotu",
         "Query",
@@ -131,11 +135,11 @@ taxonomy_99_fix <-
   mutate(S_score = as.numeric(S_score)) %>%
   mutate_if(is.character, ~ replace(., is.na(.), "Unclassified")) %>%
   column_to_rownames("Zotu") %>%
-  filter(Phylum %in% "Mucoromycota")
+  filter(Phylum %in% "Mucoromycota") %>% 
+  subset(!Genus %in% c("Mortierella", "Jimgerdemannia"))
 
 head(taxonomy_99_fix)
 as.factor(taxonomy_99_fix$Phylum)
-
 
 # 99% OTUs ---------------------------------------------------------------------
 
@@ -173,13 +177,6 @@ length(otu_99_filtered)
 length(zotus_to_remove)
 sum(names(otu_99) %in% zotus_to_remove)
 
-# save
-writeXStringSet(
-  otu_99_filtered,
-  filepath = file.path(data_path, "datasets/otu_99_filtered.fasta"),
-  format = "fasta"
-)
-
 # Phylogenetic tree ------------------------------------------------------------
 
 # I run this analysis on the HPCC. Then I import the phylogenetic tree in here.
@@ -204,11 +201,28 @@ metadata_99 <-
   read.csv(
     file = file.path(data_path, "datasets/metadata_pacbio.csv"),
     header = TRUE
-  ) %>%
+  ) 
+
+metadata_99 <- 
+  metadata_99 %>%
   column_to_rownames("SampleID") %>%
-  janitor::clean_names()
+  janitor::clean_names() %>% 
+  mutate(
+    site = site_id,
+    site = factor(recode(
+      site, LUX = "Lux Arbor",LC = "Lake City",HAN = "Hancock",
+      RHN = "Rhinelander",ESC = "Escanaba")),
+    site = fct_relevel(site, "Lux Arbor", "Lake City", "Escanaba", "Rhinelander","Hancock" ),
+    fert_status = factor(recode(
+      fert_status, "FERT" = "Fertilized", "UNFERT" = "Control")),
+    fert_status = fct_relevel(fert_status, "Fertilized", "Control"),
+    plot_rep = as.factor(plot_rep),
+    ) %>%
+  dplyr::select(
+    site, fert_status, plot_rep, pseudo_no, collection_date)
 
 head(metadata_99)
+str(metadata_99)
 
 # **********************************************************************--------
 
@@ -237,13 +251,25 @@ head(physeq_AMF@otu_table)
 head(physeq_AMF@sam_data)
 head(physeq_AMF@tax_table)
 
+physeq_AMF %>% subset_taxa(Genus %in% c("Mortierella", "Jimgerdemannia"))
+physeq_AMF %>% subset_taxa(Genus %in% c("Glomus"))
+
+physeq_AMF@refseq
+
+writeXStringSet(
+  physeq_AMF@refseq,
+  filepath = file.path(data_path, "datasets/otus_99_filtered.fasta"),
+  format = "fasta"
+)
+
 # **********************************************************************--------
 # ***** DECONTAMINATION ***** --------------------------------------------------
 # decontamination from a phyloseq object ---------------------------------------
+
 sample_data(physeq_AMF) %>% as.matrix()
 
 sample_data(physeq_AMF)$is.neg <-
-  sample_data(physeq_AMF)$description == "Control"
+  sample_data(physeq_AMF)$site == "Control"
 
 contam_AMF <-
   decontam::isContaminant(physeq_AMF,
@@ -264,7 +290,6 @@ left_join(
   taxonomy_99_fix%>% 
     rownames_to_column("OTU_ID"),
   by = "OTU_ID") %>% 
-  dplyr::select( OTU_ID, freq, BestMatch) %>% 
   left_join(
     otutable_99 %>% 
       rownames_to_column("OTU_ID") %>% 
@@ -276,222 +301,164 @@ left_join(
       dplyr::select(OTU_ID, Abund),
     by = "OTU_ID")
 
-# NOTE. These looks like all real taxa to me. I am not going to remove any!
-
-# function to remove taxa by OTU name
-remove_taxa <- function(physeq, badTaxa) {
-  allTaxa <- taxa_names(physeq)
-  myTaxa <- allTaxa[!(allTaxa %in% badTaxa)]
-  return(prune_taxa(myTaxa, physeq))
-}
-
-subset(contam_AMF, contaminant %in% c("TRUE"))
+# INTERPRETATION. These looks like all real taxa to me. I am not going to 
+# remove any taxa! I will just remove the control sample(s).
 
 # Filtering the phyloseq object
 physeq_AMF_clean <-
-  remove_taxa(
-    physeq_AMF,
-    rownames(subset(contam_AMF, contaminant %in% c("TRUE")))
-  ) %>%
+physeq_AMF %>%
   subset_samples(!is.neg %in% TRUE) %>% # remove the control samples
   prune_taxa(taxa_sums(x = .) > 0, x = .) # make sure there aren't OTUs that are 0
+
+physeq_AMF_clean
+physeq_AMF_clean@sam_data
 
 # ***** FINAL PHYLOSEQ OBJECTS ***** -------------------------------------------
 physeq_AMF_clean
 physeq_AMF_clean@sam_data
 
-# **********************************************************************--------
-# ***** RAREFACTION ***** ------------------------------------------------------
-
-# Add rarefaction metrics
-physeq_AMF_clean <- add_rarefaction_metrics(data = physeq_AMF_clean)
-physeq_AMF_clean@sam_data %>% as.matrix()
-
-rarefaction_plot <- plot_rarefaction_metrics(physeq_AMF_clean)
-print(rarefaction_plot)
-
-# Identify best rarefaction depth cutoff 
-physeq_AMF_clean@sam_data %>% 
-  as.matrix() %>% 
-  as.data.frame() %>% 
-  arrange(read_num)
-  
-rare_depth_cutoff = 4568
-
-# Perform mutiple rarefaction
-AMF_otutable_rarefied <-
-  multi_rarefy(
-    physeq = physeq_AMF_clean,
-    depth_level = rare_depth_cutoff,
-    num_iter = 100,
-    threads = 8,
-    set_seed = 1026
-  )
-
-rowSums(AMF_otutable_rarefied)
-dim(AMF_otutable_rarefied)
-
-# Update otu_table
-physeq_AMF_rare <-
-  update_otu_table(physeq = physeq_AMF_clean, otu_rare = AMF_otutable_rarefied)
-
-physeq_AMF_rare
-sample_sums(physeq_AMF_rare)
-
-# Update metadata 
-sample_data(physeq_AMF_rare)$site_id
-
-sample_data(physeq_AMF_rare) <- 
-  sample_data(
-  as.data.frame(as.matrix(physeq_AMF_rare@sam_data)) %>%
-    mutate(
-      site = site_id,
-      site = factor(recode(
-        site,
-        LUX = "Lux Arbor",
-        LC = "Lake City",
-        HAN = "Hancock",
-        RHN = "Rhinelander",
-        ESC = "Escanaba")),
-      fert_status = factor(recode(
-        fert_status, 
-        "FERT" = "Fertilized",
-        "UNFERT" = "Control"))
-      ) %>%
-    dplyr::select(
-      site,
-      fert_status,
-      plot_rep,
-      pseudo_no,
-      x_cord,
-      y_cord,
-      read_num,
-      collection_date
-    )
-)
-
-sample_data(physeq_AMF_rare) 
-
 # save the metadata
 write.csv(
-  x = as.data.frame(as.matrix(physeq_AMF_rare@sam_data)),
-  file = file.path(data_path, "datasets/medatata_filtered.csv")
+  x = as.data.frame(as.matrix(physeq_AMF_clean@sam_data)),
+  file = file.path(data_path, "datasets/medatata_amf.csv")
 )
-
 
 # **********************************************************************--------
 # **** 1. ALPHA DIVERSITY **** -------------------------------------------------
-# Adding alpha metrics ---------------------------------------------------------
-AlphaMetrics <- function(physeq) {
-  sample_data(physeq)$ReadNo <- sample_sums(physeq)
-  sample_data(physeq)$hill_0 <- as.data.frame(as.matrix(t(physeq@otu_table))) %>% 
-    renyi(scales = c(0), hill = TRUE)
-  sample_data(physeq)$hill_1 <- as.data.frame(as.matrix(t(physeq@otu_table))) %>% 
-    renyi(scales = c(1), hill = TRUE)
-  sample_data(physeq)$hill_2 <- as.data.frame(as.matrix(t(physeq@otu_table))) %>% 
-    renyi(scales = c(2), hill = TRUE)
-  sample_data(physeq)$pielou_j <- log(sample_data(physeq)$hill_1) / log(sample_data(physeq)$hill_0)
-  return(physeq)
-}
 
-# NOTE. Pileau J is the classic 0–1 evenness measure based on Shannon.
+# NOTE. I am not attaching the metrics as these metrics are not the final one
+# calculated over iterations.
 
-physeq_AMF_rare <- 
-  AlphaMetrics(physeq_AMF_rare)
-physeq_AMF_rare
+add_rarefaction_metrics(physeq_AMF_clean) %>% 
+  sample_data() %>% 
+  as.matrix() %>% 
+  as.data.frame() %>% 
+  arrange(read_num)
 
-head(physeq_AMF_rare@sam_data)
+rarefaction_plot <- 
+  add_rarefaction_metrics(physeq_AMF_clean) %>% 
+  plot_rarefaction_metrics()
 
-# Extract dataset
+rarefaction_plot
+
+rare_depth_cutoff = 6512
+
+# Extarct data.frame from phyloseq object
+meta_AMF <- as.data.frame(as.matrix(physeq_AMF_clean@sam_data))
+otutable_AMF <- as.data.frame(t(as.matrix(physeq_AMF_clean@otu_table)))
+
+# NOTE. E[D(X)] instead of  D(E[X]) is the right way to calculate alpha metrics. 
+# First you calculate the diversity metric for each rarefied iteration, then you
+# average those diversity metrics across all iterations to get the expected value
+# of the diversity metric after rarefaction.
+
+# Calculate hill numbers
+hill_all <- map_dfr(c(0, 1, 2), function(q) {
+  calc_hill_rarefied(
+    otu_mat = otutable_AMF,
+    depth   = rare_depth_cutoff,
+    n_iter  = 100,
+    q       = q
+  ) %>%
+    dplyr::select(sample_id, hill_mean) %>%
+    mutate(q = paste0("q", q))
+})  %>%
+  pivot_wider(
+    names_from  = q,
+    values_from = hill_mean,
+    names_prefix = "hill_"
+    )
+
+hill_all
+
+
 alpha_df <-
   physeq_AMF_rare@sam_data %>%
   as.matrix() %>%
   as.data.frame() %>%
-  mutate(across(.cols = c(5:7, 9:13), .fns = as.numeric)) %>%
-  mutate(
-    site = factor(site),
-    plot_rep = factor(paste("R", plot_rep, sep = "")),
-    fert_status = factor(fert_status)
-    )
+  rownames_to_column("sample_id") %>% 
+  left_join(hill_all, by = "sample_id") %>% 
+  mutate(across(.cols = 1:4, .fns = as.factor))
 
 str(alpha_df)
 head(alpha_df)
 
-# hill_0 -----------------------------------------------------------------------
+
+# hill_q0 -----------------------------------------------------------------------
 
 alpha_df %>% 
-  ggplot2::ggplot(aes(x = hill_0)) +
+  ggplot2::ggplot(aes(x = hill_q0)) +
   geom_histogram(binwidth = 20) +
-  labs(title = "hill_0") +
+  labs(title = "hill_q0") +
   theme(plot.title = element_text(hjust = 0.5, face = "bold")) + 
   geom_vline(aes(
-    xintercept = mean(hill_0)), 
+    xintercept = mean(hill_q0)), 
     color = "darkred",
     linetype = "dashed", linewidth = 2, show.legend = FALSE)
 
 alpha_df %>% 
-  ggplot(aes(x = log(hill_0))) +
+  ggplot(aes(x = log(hill_q0))) +
   geom_histogram(binwidth = 0.1) +
-  labs(title = "hill_0") +
+  labs(title = "hill_q0") +
   theme(plot.title = element_text(hjust = 0.5, face = "bold")) + 
   geom_vline(aes(
-    xintercept = mean(log(hill_0))), 
+    xintercept = mean(log(hill_q0))), 
     color = "darkred",
     linetype = "dashed", linewidth = 2, show.legend = FALSE)
 
 # Model Comparison -------------------------------------------------------------
 # Does fertilizer affect richness? H0: mean richness (FERT) = 0
-summary(run_lmem(alpha_df, hill_0, "baseline"))
-summary(run_lmem(alpha_df, hill_0, "fixslope"))
-summary(run_lmem(alpha_df, hill_0, "randomslope"))
+summary(run_lmem(alpha_df, hill_q0, "baseline"))
+summary(run_lmem(alpha_df, hill_q0, "fixslope"))
+summary(run_lmem(alpha_df, hill_q0, "randomslope"))
 
 # Does fertilizer improve fit?
-anova( run_lmem(alpha_df, hill_0, "baseline"), 
-       run_lmem(alpha_df, hill_0, "fixslope") )
+anova( run_lmem(alpha_df, hill_q0, "baseline"), 
+       run_lmem(alpha_df, hill_q0, "fixslope") )
 
 # Does slope vary among sites?
-anova( run_lmem(alpha_df, hill_0, "fixslope"), 
-       run_lmem(alpha_df, hill_0, "randomslope") )
+anova( run_lmem(alpha_df, hill_q0, "fixslope"), 
+       run_lmem(alpha_df, hill_q0, "randomslope") )
 
 # INTERPRETATION. So the statistically supported model is the baseline model with 
 # no fertilizer effect and no slope variation among sites. Richness varies strongly
 # among plots and moderately among sites, but not due to fertilizer.
 
-# hill_1 -----------------------------------------------------------------------
+# hill_q1 -----------------------------------------------------------------------
 
 alpha_df %>% 
-  ggplot2::ggplot(aes(x = hill_1)) +
+  ggplot2::ggplot(aes(x = hill_q1)) +
   geom_histogram(binwidth = 15) +
-  labs(title = "hill_1") +
+  labs(title = "hill_q1") +
   theme(plot.title = element_text(hjust = 0.5, face = "bold")) + 
   geom_vline(aes(
-    xintercept = mean(hill_1)), 
+    xintercept = mean(hill_q1)), 
     color = "darkred",
     linetype = "dashed", linewidth = 2, show.legend = FALSE)
 
 alpha_df %>% 
-  ggplot(aes(x = log(hill_1))) +
+  ggplot(aes(x = log(hill_q1))) +
   geom_histogram(binwidth = 0.1) +
-  labs(title = "hill_1") +
+  labs(title = "hill_q1") +
   theme(plot.title = element_text(hjust = 0.5, face = "bold")) + 
   geom_vline(aes(
-    xintercept = mean(log(hill_1))), 
+    xintercept = mean(log(hill_q1))), 
     color = "darkred",
     linetype = "dashed", linewidth = 2, show.legend = FALSE)
 
 # Model Comparison -------------------------------------------------------------
 # Does fertilizer affect Shannon? H0: mean Shannon (FERT) = 0
-summary(run_lmem(alpha_df, hill_1, "baseline"))
-summary(run_lmem(alpha_df, hill_1, "fixslope"))
-summary(run_lmem(alpha_df, hill_1, "randomslope"))
+summary(run_lmem(alpha_df, hill_q1, "baseline"))
+summary(run_lmem(alpha_df, hill_q1, "fixslope"))
+summary(run_lmem(alpha_df, hill_q1, "randomslope"))
 
 # Does fertilizer improve fit?
-anova( run_lmem(alpha_df, hill_1, "baseline"), 
-       run_lmem(alpha_df, hill_1, "fixslope") )
+anova( run_lmem(alpha_df, hill_q1, "baseline"), 
+       run_lmem(alpha_df, hill_q1, "fixslope") )
 
 # Does slope vary among sites?
-anova( run_lmem(alpha_df, hill_1, "fixslope"), 
-       run_lmem(alpha_df, hill_1, "randomslope") )
+anova( run_lmem(alpha_df, hill_q1, "fixslope"), 
+       run_lmem(alpha_df, hill_q1, "randomslope") )
 
 # The "Zero Variance" Culprit
 # Look closely at the Random Effects section for all three models. You will see 
@@ -499,194 +466,77 @@ anova( run_lmem(alpha_df, hill_1, "fixslope"),
 # A "singular fit" occurs when one of your random effects has a variance of exactly
 # (or very near) zero.
 
-# hill_2 -----------------------------------------------------------------------
+# hill_q2 -----------------------------------------------------------------------
 
 alpha_df %>% 
-  ggplot2::ggplot(aes(x = hill_2)) +
+  ggplot2::ggplot(aes(x = hill_q2)) +
   geom_histogram(binwidth = 10) +
-  labs(title = "hill_2") +
+  labs(title = "hill_q2") +
   theme(plot.title = element_text(hjust = 0.5, face = "bold")) + 
   geom_vline(aes(
-    xintercept = mean(hill_2)), 
+    xintercept = mean(hill_q2)), 
     color = "darkred",
     linetype = "dashed", linewidth = 2, show.legend = FALSE)
 
 alpha_df %>% 
-  ggplot(aes(x = log(hill_2))) +
+  ggplot(aes(x = log(hill_q2))) +
   geom_histogram(binwidth = 0.1) +
-  labs(title = "hill_2") +
+  labs(title = "hill_q2") +
   theme(plot.title = element_text(hjust = 0.5, face = "bold")) + 
   geom_vline(aes(
-    xintercept = mean(log(hill_2))), 
+    xintercept = mean(log(hill_q2))), 
     color = "darkred",
     linetype = "dashed", linewidth = 2, show.legend = FALSE)
 
 # Model Comparison -------------------------------------------------------------
 # Does fertilizer affect Shannon? H0: mean Shannon (FERT) = 0
-summary(run_lmem(alpha_df, hill_2, "baseline"))
-summary(run_lmem(alpha_df, hill_2, "fixslope"))
-summary(run_lmem(alpha_df, hill_2, "randomslope"))
+summary(run_lmem(alpha_df, hill_q2, "baseline"))
+summary(run_lmem(alpha_df, hill_q2, "fixslope"))
+summary(run_lmem(alpha_df, hill_q2, "randomslope"))
 
 # Does fertilizer improve fit?
-anova( run_lmem(alpha_df, hill_2, "baseline"), 
-       run_lmem(alpha_df, hill_2, "fixslope") )
+anova( run_lmem(alpha_df, hill_q2, "baseline"), 
+       run_lmem(alpha_df, hill_q2, "fixslope") )
 
 # Does slope vary among sites?
-anova( run_lmem(alpha_df, hill_2, "fixslope"), 
-       run_lmem(alpha_df, hill_2, "randomslope") )
-
-# pielou_j ----------------------------------------------------------------------
-
-alpha_df %>% 
-  ggplot2::ggplot(aes(x = pielou_j)) +
-  geom_histogram(binwidth = 0.05) +
-  labs(title = "pielou j") +
-  theme(plot.title = element_text(hjust = 0.5, face = "bold")) + 
-  geom_vline(aes(
-    xintercept = mean(pielou_j)), 
-    color = "darkred",
-    linetype = "dashed", linewidth = 2, show.legend = FALSE)
-
-alpha_df %>% 
-  ggplot(aes(x = log(pielou_j))) +
-  geom_histogram(binwidth = 0.1) +
-  labs(title = "log(pielou j)") +
-  theme(plot.title = element_text(hjust = 0.5, face = "bold")) + 
-  geom_vline(aes(
-    xintercept = mean(log(pielou_j))), 
-    color = "darkred",
-    linetype = "dashed", linewidth = 2, show.legend = FALSE)
-
-alpha_df %>% 
-  rownames_to_column("sample_id") %>% 
-  ggplot(aes(x = "All Samples", y = pielou_j)) +
-  geom_boxplot(outlier.color = "darkred") +
-  geom_text_repel(aes(label = sample_id), color = "darkred") +
-  labs(title = "Pielou's Evenness (pielou_j)") +
-  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
-
-
-# NOTE. Pileau J does not follow a perfect normal distribution, in particular
-# there is/are outliers.
-
-# Option A) Use lmer but check residuals ---------------------------------------
-# Try the Same Baseline Model 
-fit_pj_base<- run_lmem(alpha_df, pielou_j, "baseline")
-summary(fit_pj_base)
+anova( run_lmem(alpha_df, hill_q2, "fixslope"), 
+       run_lmem(alpha_df, hill_q2, "randomslope") )
 
 # ***** MODEL DIAGNOSTICS ****** -----------------------------------------------
-
-# Custom diagnostics -----------------------------------------------------------
-diagnostic_plots(run_lmem(alpha_df, hill_0, "baseline"))
-diagnostic_plots(run_lmem(alpha_df, hill_0, "fixslope"))
 
 # DHARMA diagnostics -----------------------------------------------------------
 # Generate simulated residuals (n=1000 is standard) and plot.
 
 diagnostics_dharma(
-  model = run_lmem(alpha_df, hill_0, "baseline"),
+  model = run_lmem(alpha_df, hill_q0, "baseline"),
   group_var1 = alpha_df$site,
   group_var2 = alpha_df$plot_rep
 )
 
 diagnostics_dharma(
-  model = run_lmem(alpha_df, hill_0, "fixslope"),
+  model = run_lmem(alpha_df, hill_q0, "fixslope"),
   group_var1 = alpha_df$site,
   group_var2 = alpha_df$plot_rep
 )
 
 diagnostics_dharma(
-  model = fit_pj_base,
+  model = run_lmem(alpha_df, hill_q1, "baseline"),
   group_var1 = alpha_df$site,
   group_var2 = alpha_df$plot_rep
 )
-
-# INTERPRETASTION 
-# The KS test is significant. The residual distribution is significantly different 
-# from what the fitted Gaussian model expects. In other words, the residuals are 
-# not normally distributed, and the model is not a good fit for the data.
-# The dispersion test is n.s. so No over- or under-dispersion is detected.
-# No strong outlier problem.
-# Within-group Deviations detected, that means residual distribution differs 
-# systematically across sites and plots. This is consistent with: Bounded data,
-# Skew, Non-Gaussian residual shape.
-
-# Additional option: Logit Transform + LMM 
-alpha_df$logit_pj <- qlogis(alpha_df$pielou_j)
-
-fit_logit_pj_fixslipe <- lmer(
-  logit_pj ~ fert_status + (1 | site/plot_rep),
-  data = alpha_df
-)
-
-summary(fit_logit_pj_fixslipe)
 
 diagnostics_dharma(
-  model     = fit_logit_pj_fixslipe,
+  model = run_lmem(alpha_df, hill_q2, "fixslope"),
   group_var1 = alpha_df$site,
   group_var2 = alpha_df$plot_rep
 )
 
-# option B) Beta Mixed Model (BEST OPTION) -------------------------------------
-# Because Pielou J ∈ (0,1), the statistically principled model is
-
-pielou_j_betaMM_base <- glmmTMB(
-  pielou_j ~1 + (1 | site/plot_rep),
-  family = beta_family(),
-  data = alpha_df
-)
-
-summary(pielou_j_betaMM_base)
-
-pielou_j_betaMM_fixslipe <- glmmTMB(
-  pielou_j ~ fert_status + (1 | site/plot_rep),
-  family = beta_family(),
-  data = alpha_df
-)
-
-summary(pielou_j_betaMM_fixslipe)
-anova(pielou_j_betaMM_base, pielou_j_betaMM_fixslipe) 
-
-# NOTE. Even using flexibale variance calcualtion by site, glmmTMB models are not significant!
-summary(
-  glmmTMB(hill_0 ~ fert_status + (1 | site/plot_rep),
-          dispformula = ~site,   # allows variance to differ by site
-          data = alpha_df))
-
-summary(
-  glmmTMB(hill_2 ~ fert_status + (1 | site/plot_rep),
-          dispformula = ~site,   # allows variance to differ by site
-          data = alpha_df))
-
-
-
-# option C) robust mixed effect models -----------------------------------------
-
-# A robust mixed model downweights extreme observations so that outliers have less
-# influence on parameter estimates, instead of deleting them. robustlmm::rlmer) 
-# replace the normal likelihood with an M-estimation framework. Instead of minimizing 
-# ∑ri2 they minimize ∑ρ(ri).
-# Practically: Large residuals are downweighted, extreme observations influence 
-# the model less, fixed effects become more stable. rlmer keep the outlier(s),
-# estimates a weight for it, reduces its leverage automatically. Use robust LMM when
-# most data are roughly Gaussian, on only a few extreme points exist, you believe 
-# those points are real but atypical. 
-
-# NOTE. Robust mixed models are not the appropriate primary solution for Pielou’s
-# J simply because it is bounded between 0 and 1. They do not enforce predictions 
-# within (0,1), model mean–variance relationships typical of proportions, correct
-# skewness caused by boundary constraints, and ddress heteroscedasticity inherent 
-# to bounded data.
-
-summary(run_lmem_robust(alpha_df, pielou_j, "baseline"))
-summary(run_lmem_robust(alpha_df, pielou_j, "fixslope"))
-summary(run_lmem_robust(alpha_df, pielou_j, "randomslope"))
 
 # ***** VISUALIZING MIX MODELS ***** ------------------------------------------
 
 # 1. Basic Boxplot by Fertilizer Status ----------------------------------------
 ggplot(alpha_df, 
-       aes(x = fert_status, y = hill_0, fill = fert_status)) +
+       aes(x = fert_status, y = hill_q0, fill = fert_status)) +
   geom_boxplot(alpha = 0.7) +
   geom_jitter(width = 0.2, alpha = 0.3) +
   labs(title = "Hill Number by Fertilizer Status",
@@ -698,7 +548,7 @@ ggplot(alpha_df,
 # 2. Show Random Effects (Sites) -----------------------------------------------
 # Color by site to show between-site variability
 ggplot(alpha_df, 
-       aes(x = fert_status, y = hill_0, color = site)) +
+       aes(x = fert_status, y = hill_q0, color = site)) +
   geom_point(position = position_jitterdodge(jitter.width = 0.2, dodge.width = 0.5),
              alpha = 0.6, size = 2) +
   stat_summary(aes(group = site), fun = mean, geom = "line", 
@@ -716,7 +566,7 @@ ggplot(alpha_df,
 
 # Show each site separately
 ggplot(alpha_df, 
-       aes(x = fert_status, y = hill_0, fill = fert_status)) +
+       aes(x = fert_status, y = hill_q0, fill = fert_status)) +
   geom_boxplot(alpha = 0.6) +
   geom_jitter(width = 0.2, alpha = 0.5, aes(color = plot_rep)) +
   stat_summary(aes(group = site), fun = mean, geom = "line", 
@@ -732,10 +582,10 @@ ggplot(alpha_df,
 # 4. Model Predictions with Random Effects (ggeffects) -------------------------
 
 # Site-level predicted means
-ggeffects::ggpredict(run_lmem(alpha_df, hill_0, "baseline"), 
+ggeffects::ggpredict(run_lmem(alpha_df, hill_q0, "baseline"), 
                      terms = "site", type = "random") %>% plot()
 
-ggeffects::ggpredict(run_lmem(alpha_df, hill_0, "fixslope"), 
+ggeffects::ggpredict(run_lmem(alpha_df, hill_q0, "fixslope"), 
             terms = c("fert_status", "site")) %>% plot() 
 
 
@@ -743,16 +593,16 @@ ggeffects::ggpredict(run_lmem(alpha_df, hill_0, "fixslope"),
 alpha_df$site_plot <- 
   interaction(alpha_df$site, alpha_df$plot_rep, drop = TRUE)
 
-fit_hill_0_base <- lmer(
-  hill_0 ~ 1 + (1 | site) + (1 | site_plot),
+fit_hill_q0_base <- lmer(
+  hill_q0 ~ 1 + (1 | site) + (1 | site_plot),
   data = alpha_df,
   REML = FALSE
 )
 
-pred_hill_0_base <-
-  ggpredict(fit_hill_0_base, terms = "site_plot", type = "random")
+pred_hill_q0_base <-
+  ggpredict(fit_hill_q0_base, terms = "site_plot", type = "random")
 
-plot(pred_hill_0_base) +
+plot(pred_hill_q0_base) +
   labs(title = "Model Predictions: Hill Number by Fertilizer Status",
        subtitle = "Lines = site-specific predictions (random effects)",
        x = "Fertilizer Status",
@@ -763,12 +613,12 @@ plot(pred_hill_0_base) +
 # Extract fixed and random effects
 cbind(
   alpha_df,
-  run_lmem(alpha_df, hill_0, "baseline") %>% 
+  run_lmem(alpha_df, hill_q0, "baseline") %>% 
   merTools::predictInterval(newdata = alpha_df, 
                             which = "full", 
                             level = 0.95)) %>% 
   rename(fitted = fit) %>%
-  ggplot(aes(x = fert_status, y = hill_0)) +
+  ggplot(aes(x = fert_status, y = hill_q0)) +
   geom_jitter(aes(color = site), width = 0.2, alpha = 0.5) +
   geom_point(aes(y = fitted, group = site, color = site), 
              size = 3, shape = 17) +
@@ -784,7 +634,7 @@ cbind(
 # 6. Plot Random Effects Deviations (broom.mixed) ------------------------------
 
 broom.mixed::tidy(
-  run_lmem(alpha_df, hill_0, "baseline"), effects = "ran_vals") %>% 
+  run_lmem(alpha_df, hill_q0, "baseline"), effects = "ran_vals") %>% 
   ggplot(aes(x = estimate, y = level, color = group)) +
   geom_point(size = 3) +
   geom_errorbar(aes(xmin = estimate - 1.96*std.error, 
@@ -799,7 +649,7 @@ broom.mixed::tidy(
   theme_minimal()
 
 broom.mixed::tidy(
-  run_lmem(alpha_df, hill_0, "fixslope"), effects = "ran_vals") %>% 
+  run_lmem(alpha_df, hill_q0, "fixslope"), effects = "ran_vals") %>% 
   ggplot(aes(x = estimate, y = level, color = group)) +
   geom_point(size = 3) +
   geom_errorbar(aes(xmin = estimate - 1.96*std.error, 
@@ -815,12 +665,12 @@ broom.mixed::tidy(
 
 # 9. Full Diagnostic Plot Set (sjPlot) -----------------------------------------
 
-sjPlot::plot_model(run_lmem(alpha_df, hill_0, "baseline"), type = "re")
-sjPlot::plot_model(run_lmem(alpha_df, hill_0, "fixslope"), type = "re")
+sjPlot::plot_model(run_lmem(alpha_df, hill_q0, "baseline"), type = "re")
+sjPlot::plot_model(run_lmem(alpha_df, hill_q0, "fixslope"), type = "re")
 
 # Plot fixed effects with confidence intervals (can't do on the baseline as 
 # there is no fixed effects)
-plot_model(run_lmem(alpha_df, hill_0, "fixslope"), type = "est", 
+plot_model(run_lmem(alpha_df, hill_q0, "fixslope"), type = "est", 
            show.values = TRUE, 
            value.offset = 0.3) +
   labs(title = "Fixed Effect Estimates",
@@ -828,14 +678,14 @@ plot_model(run_lmem(alpha_df, hill_0, "fixslope"), type = "est",
   theme_minimal()
 
 # Comprehensive model diagnostics and predictions
-tab_model(run_lmem(alpha_df, hill_0, "baseline"), show.stat = TRUE)
-tab_model(run_lmem(alpha_df, hill_0, "fixslope"), show.stat = TRUE) 
+tab_model(run_lmem(alpha_df, hill_q0, "baseline"), show.stat = TRUE)
+tab_model(run_lmem(alpha_df, hill_q0, "fixslope"), show.stat = TRUE) 
 
 
 # 10. Raw Data + Model Predictions (emmeand) -----------------------------------
 
 # Panel A: Raw data
-ggplot(alpha_df, aes(x = fert_status, y = hill_0, fill = fert_status)) +
+ggplot(alpha_df, aes(x = fert_status, y = hill_q0, fill = fert_status)) +
   geom_boxplot(alpha = 0.7) +
   geom_jitter(width = 0.2, alpha = 0.3) +
   labs(title = "A. Raw Data",
@@ -844,7 +694,7 @@ ggplot(alpha_df, aes(x = fert_status, y = hill_0, fill = fert_status)) +
   theme(legend.position = "none")
 
 # Panel B: Model predictions
-emmeans::emmeans(run_lmem(alpha_df, hill_0, "fixslope"), ~ fert_status) %>% 
+emmeans::emmeans(run_lmem(alpha_df, hill_q0, "fixslope"), ~ fert_status) %>% 
   as.data.frame() %>% 
   ggplot(aes(x = fert_status, y = emmean, fill = fert_status)) +
   geom_col(alpha = 0.7) +
@@ -861,27 +711,33 @@ palette_fert <- c("#CC2D35", "#2D3142")
 
 palette_site <- c("#009E73", "#0072B2", "#825121", "#E69F00", "#CC79A7")
 
+palette_taxa <-c("#D21E2C","#058ED9","#ae09ea","#dba4a4","#117744",
+                 "#F7F7C5","#283dff","#521899","#82807f","#014443",
+                 "#FDDB8E","#bfc5ff","#111b77","#d8d6d4","#b7ffdb",
+                 "#fcb067","#ffb7ef","#000000","#560d0d","#60ffaf")
+                 #"#ea7f17","#fa7efc","#a35151","#825121","#A5A518")
+
 # Hill 0 and Hill 2 ------------------------------------------------------------
 
 # INTERPRETATION. Hill numbers are not independent indices. They are the same diversity 
 # continuum at different q values. So including all three is often redundant unless 
 # you want to demonstrate consistency across evenness weighting.
-# Hill_0 (q = 0) Pure richness, sensitive to rare taxa, influenced by sampling noise
-# Hill_2 (q = 2) Strongly dominated by abundant taxa, less sensitive to rare taxa, 
+# hill_q0 (q = 0) Pure richness, sensitive to rare taxa, influenced by sampling noise
+# hill_q2 (q = 2) Strongly dominated by abundant taxa, less sensitive to rare taxa, 
 # more stable across samples.
-# Hill_0 + Hill_2 They bracket the diversity spectrum "Fertilization did not affect 
+# hill_q0 + hill_q2 They bracket the diversity spectrum "Fertilization did not affect 
 # richness (q=0) nor diversity weighted toward dominant taxa (q=2)."
 
-# If Hill_0 = 150 → there are 150 observed taxa
-# If Hill_2 = 24, it means: The community has the same dominance structure as a 
+# If hill_q0 = 150 → there are 150 observed taxa
+# If hill_q2 = 24, it means: The community has the same dominance structure as a 
 # community with 24 equally abundant species.
 
 
 # calculate global limits across all strains
-x_limits_hill_0 <- 
+x_limits_hill_q0 <- 
   alpha_df %>%
   group_by(site) %>% 
-  group_map(~broom.mixed::tidy(run_lmem(alpha_df, hill_0, "baseline"), 
+  group_map(~broom.mixed::tidy(run_lmem(alpha_df, hill_q0, "baseline"), 
                                effects = "ran_vals")) %>%
   bind_rows() %>%
   summarise(
@@ -889,14 +745,14 @@ x_limits_hill_0 <-
     max = max(estimate + 1.96*std.error)
   )
 
-x_limits_hill_0
+x_limits_hill_q0
 
-intercept_hill_0 <- fixef(run_lmem(alpha_df, hill_0, "baseline"))["(Intercept)"]
+intercept_hill_q0 <- fixef(run_lmem(alpha_df, hill_q0, "baseline"))["(Intercept)"]
 
-x_limits_hill_2 <- 
+x_limits_hill_q2 <- 
   alpha_df %>%
   group_by(site) %>% 
-  group_map(~broom.mixed::tidy(run_lmem(alpha_df, hill_2, "baseline"), 
+  group_map(~broom.mixed::tidy(run_lmem(alpha_df, hill_q2, "baseline"), 
                                effects = "ran_vals")) %>%
   bind_rows() %>%
   summarise(
@@ -904,17 +760,17 @@ x_limits_hill_2 <-
     max = max(estimate + 1.96*std.error)
   )
 
-x_limits_hill_2
+x_limits_hill_q2
 
-intercept_hill_2 <- fixef(run_lmem(alpha_df, hill_2, "baseline"))["(Intercept)"]
+intercept_hill_q2 <- fixef(run_lmem(alpha_df, hill_q2, "baseline"))["(Intercept)"]
 
 # plotting
 Figure_1_alpha <-
   ggarrange(
     ggarrange(
-# Hill_0: Raw data with fixed effect means  
+# hill_q0: Raw data with fixed effect means  
 ggplot(alpha_df, 
-       aes(x = fert_status, y = hill_0, color = site)) +
+       aes(x = fert_status, y = hill_q0, color = site)) +
   geom_point(position = position_jitterdodge(jitter.width = 0.2, dodge.width = 0.5),
              alpha = 0.8, size = 2) +
   stat_summary(aes(group = site), fun = mean, geom = "line", 
@@ -942,9 +798,9 @@ ggplot(alpha_df,
     )+
   guides(color = guide_legend(ncol=1)),
 
-# Hill_2: Raw data with fixed effect means  
+# hill_q2: Raw data with fixed effect means  
 ggplot(alpha_df, 
-       aes(x = fert_status, y = hill_2, color = site)) +
+       aes(x = fert_status, y = hill_q2, color = site)) +
   geom_point(position = position_jitterdodge(jitter.width = 0.2, dodge.width = 0.5),
              alpha = 0.8, size = 2) +
   stat_summary(aes(group = site), fun = mean, geom = "line", 
@@ -979,9 +835,9 @@ legend = "right",
 common.legend = TRUE),
 
 ggarrange(
-# Hill_0: Random effect deviations
+# hill_q0: Random effect deviations
 broom.mixed::tidy(
-  run_lmem(alpha_df, hill_0, "baseline"), effects = "ran_vals") %>% 
+  run_lmem(alpha_df, hill_q0, "baseline"), effects = "ran_vals") %>% 
   as.data.frame() %>%
   separate(level, into = c("plot_rep", "site"), sep = ":", 
            extra = "merge", fill = "left") %>% 
@@ -1015,15 +871,15 @@ broom.mixed::tidy(
     ) +
   guides(color = guide_legend(ncol = 1)) +
   scale_x_continuous(
-    limits = c(x_limits_hill_0$min, x_limits_hill_0$max),
+    limits = c(x_limits_hill_q0$min, x_limits_hill_q0$max),
     sec.axis = sec_axis(
-      transform = ~ . + intercept_hill_0,
+      transform = ~ . + intercept_hill_q0,
       name ="OTUs")
     ),
 
-# Hill_2: Random effect deviations
+# hill_q2: Random effect deviations
 broom.mixed::tidy(
-  run_lmem(alpha_df, hill_2, "baseline"), effects = "ran_vals") %>% 
+  run_lmem(alpha_df, hill_q2, "baseline"), effects = "ran_vals") %>% 
   as.data.frame() %>%
   separate(level, into = c("plot_rep", "site"), sep = ":", 
            extra = "merge", fill = "left") %>% 
@@ -1057,9 +913,9 @@ broom.mixed::tidy(
     ) +
   guides(color = guide_legend(ncol = 1)) +
   scale_x_continuous(
-    limits = c(x_limits_hill_2$min, x_limits_hill_2$max),
+    limits = c(x_limits_hill_q2$min, x_limits_hill_q2$max),
     sec.axis = sec_axis(
-      transform = ~ . + intercept_hill_2,
+      transform = ~ . + intercept_hill_q2,
       name = "inverse Simpson")
     ),
 
@@ -1089,7 +945,7 @@ ggsave(
 # Additional question we can have: Which site is richer in term of diversity
 # metrics ?
 
-fit_hill0_site <- lmer(hill_0 ~ site + (1 | site:plot_rep),
+fit_hill0_site <- lmer(hill_q0 ~ site + (1 | site:plot_rep),
                data = alpha_df, REML = FALSE)
 
 anova(fit_hill0_site)   # overall test: does richness differ among sites?
@@ -1107,7 +963,7 @@ as.data.frame(fit_hill0_site_emm) |>
 
 # if you also want to control for fertilizer while comparing sites
 
-m_site_adj <- lmer(hill_0 ~ site + fert_status + (1 | site:plot_rep),
+m_site_adj <- lmer(hill_q0 ~ site + fert_status + (1 | site:plot_rep),
                    data = alpha_df, REML = FALSE)
 
 emm_site_adj <- emmeans(m_site_adj, ~ site)
@@ -1119,6 +975,7 @@ pairs(emm_site_adj, adjust = "tukey")
 # differences between sites, because plots are still your experimental units, 
 # and you have 3 pseudoreplicates per plot. Even when site is fixed, the 
 # hierarchical structure does not disappear. 
+
 
 # **********************************************************************--------
 # **** 2. BETA DIVERSITY **** --------------------------------------------------
@@ -1505,6 +1362,77 @@ Figure_2_beta <-
   theme(plot.tag = element_text(face = "bold"))
 
 Figure_2_beta
+
+# **********************************************************************--------
+# **** 3. COMPOSITION AND STRUCTURE **** --------------------------
+
+physeq_AMF_rare_Gen <-
+  physeq_AMF_rare %>% 
+  subset_taxa(!Genus %in% c("Mortierella", "Jimgerdemannia", "Unclassified")) %>% 
+  speedyseq::select_tax_table(Phylum,Class,Order,Family,Genus) %>% 
+  phyloseq::tax_glom(., taxrank="Genus")
+
+as.matrix(physeq_AMF_rare_Gen@tax_table) %>% as.data.frame()
+as.matrix(physeq_AMF_rare_Gen@otu_table) %>% as.data.frame()
+as.matrix(physeq_AMF_rare_Gen@sam_data) %>% as.data.frame()
+
+physeq_AMF_rare_Gen %>%
+  psmelt() %>%
+  arrange(Genus) %>%
+  head()
+
+bar_charts <-
+  ggarrange(
+    physeq_AMF_rare_Gen %>%
+      psmelt() %>%
+      arrange(Genus) %>%
+      ggplot(aes(
+        x = site, y = Abundance, fill = Genus)) +
+      geom_bar(stat = "identity") +
+      theme_classic() +
+      theme(
+        axis.title.x = element_blank(),
+        axis.text.x =  element_markdown(
+          size = 10,
+          angle = 0,
+          hjust = 0.5,
+          vjust = 0.5),
+        legend.text = element_text(face = "italic", size = 9)) +
+      guides(fill = guide_legend(nrow = 4)) +
+      scale_fill_manual(values = palette_taxa) +
+      labs(
+        title = "Rarefied abundances",
+        subtitle = " grouped by sampling site geography",
+        y = "Abundance"),
+    physeq_AMF_rare_Gen %>%
+      psmelt() %>%
+      arrange(Genus) %>%
+      ggplot(aes(
+        x = fert_status, y = Abundance, fill = Genus)) +
+      geom_bar(stat = "identity") +
+      theme_classic() +
+      theme(
+        axis.title.x = element_blank(),
+        axis.text.x =  element_markdown(
+          size = 10,
+          angle = 0,
+          hjust = 0.5,
+          vjust = 0.5),
+        legend.text = element_text(face = "italic", size = 9)) +
+      guides(fill = guide_legend(nrow = 4)) +
+      scale_fill_manual(values = palette_taxa) +
+      labs(
+        title = "Rarefied abundances",
+        subtitle = " grouped by Fetrilization vs. Control",
+        y = "Abundance"),
+    ncol = 2,
+    nrow = 1,
+    common.legend = TRUE,
+    legend = "bottom"
+  )
+
+bar_charts
+
 
 # **********************************************************************--------
 # BETA DIVERSITY 90% OTUS to ASVs ----------------------------------------------
@@ -1997,7 +1925,7 @@ plot_beta_percent_sites <-
 
 plot_beta_percent_sites
 
-# ***** FIGURE 3 - Alpha-diversity ***** ----------------------------------------
+# ***** FIGURE 3 - Beta-diversity ***** ----------------------------------------
 ggsave(
   file.path(data_path, "results/Fig_3_plot_beta_percent_sites.pdf"),
   plot = ggpubr::annotate_figure(
@@ -2081,6 +2009,225 @@ adonis_betadisp_90to100 <- rbind(
 )
 
 adonis_betadisp_90to100
+
+# **********************************************************************--------
+# **** 4. DIFFERENTIAL ABUNDANCE **** ------------------------------------------
+
+library(Maaslin2)
+
+# https://huttenhower.sph.harvard.edu/maaslin/
+
+meta_ITS_rare_root <- as.data.frame(as.matrix(physeq_ITS_rare_root@sam_data))
+otu_ITS_rare_root <- as.data.frame(t(as.matrix(physeq_ITS_rare_root@otu_table)))
+
+mlin2_ITS_root_Treat <- 
+  Maaslin2(
+    cores = 1,
+    output = "demo_output", 
+    min_abundance = 0.001,
+    min_prevalence = 0.1,
+    min_variance = 0.001,
+    input_data = otu_ITS_rare_root, 
+    input_metadata = meta_ITS_rare_root %>% 
+      dplyr::select(Treatment), 
+    correction = "BH",
+    normalization = 'NONE',
+    reference = c("Treatment", "NE"),
+    standardize = FALSE, 
+    plot_scatter = TRUE)
+
+mlin2_ITS_root_Treat$results
+
+head(mlin2_ITS_root_Treat$results)
+
+mlin2_ITS_root_Treat$results %>% 
+  filter(qval <= 0.05)
+
+
+# Running Maaslin2 to combination of Treatment, pairwise 
+
+run_maaslin2_all_pairs <- function(physeq, factor_variable, 
+                                   qval_threshold = 0.05, 
+                                   norm_method, trans_method,
+                                   ...) {
+  library(Maaslin2)
+  library(tidyverse)
+  library(phyloseq)
+  
+  # extract datasets
+  input_metadata <- as.data.frame(as.matrix(physeq@sam_data)) %>% 
+    dplyr::select(.data[[factor_variable]])
+  
+  input_data <- as.data.frame(t(as.matrix(physeq@otu_table)))
+  
+  # Get unique levels of the factor variable
+  factor_levels <- unique(input_metadata[[factor_variable]])
+  
+  # Store results
+  significant_results <- list()
+  
+  # Loop through each level and set it as the reference
+  for (ref in factor_levels) {
+    cat("\nRunning Maaslin2 with reference:", ref, "\n")
+    
+    result <- Maaslin2(
+      cores = 6,
+      input_data = input_data,
+      input_metadata = input_metadata,
+      output = tempfile(),  # Avoid creating permanent folders
+      reference = c(factor_variable, ref),
+      min_abundance = 0.001,
+      min_prevalence = 0.1,
+      correction = "BH",
+      normalization = norm_method,
+      transform = trans_method,
+      standardize = FALSE,
+      plot_scatter = TRUE,
+      ...
+    )
+    
+    # Extract significant results and add reference group
+    sig_results <- result$results %>%
+      filter(qval <= qval_threshold) %>%
+      mutate(reference_group = ref)
+    
+    # Store results
+    significant_results[[ref]] <- sig_results
+  }
+  
+  # Combine all significant results into a single dataframe
+  final_results <- bind_rows(significant_results)
+  
+  return(final_results)
+}
+
+
+mlin2_ITS_root_Treat <- 
+  run_maaslin2_all_pairs(
+    physeq_ITS_rare_root, 
+    factor_variable = "Treatment",
+    qval_threshold = 0.05, 
+    norm_method = "TSS", trans_method = "LOG") %>% 
+  mutate(group = "Root")
+
+mlin2_ITS_root_Treat
+
+mlin2_fungi <- 
+  rbind(
+    run_maaslin2_all_pairs(
+      physeq_ITS_root, 
+      factor_variable = "Treatment",
+      qval_threshold = 0.05, norm_method = "TSS", trans_method = "LOG") %>% 
+      mutate(group = "Root"),
+    run_maaslin2_all_pairs(
+      physeq_ITS_rhizo,
+      factor_variable = "Treatment",
+      qval_threshold = 0.05,norm_method = "TSS", trans_method = "LOG") %>% 
+      mutate(group = "Rhizosphere"),
+    run_maaslin2_all_pairs(
+      physeq_ITS_soil,
+      factor_variable = "Treatment",
+      qval_threshold = 0.05,norm_method = "TSS", trans_method = "LOG") %>%  
+      mutate(group = "Soil"),
+    run_maaslin2_all_pairs(
+      physeq_ITS_control,
+      factor_variable = "Treatment",
+      qval_threshold = 0.05,norm_method = "TSS", trans_method = "LOG") %>% 
+      mutate(group = "Control"))
+
+
+mlin2_fungi
+
+
+mlin2_bact <- 
+  rbind(
+    run_maaslin2_all_pairs(
+      physeq_16S_root, 
+      factor_variable = "Treatment",
+      qval_threshold = 0.05, norm_method = "TSS", trans_method = "LOG") %>% 
+      mutate(group = "Root"),
+    run_maaslin2_all_pairs(
+      physeq_16S_rhizo,
+      factor_variable = "Treatment",
+      qval_threshold = 0.05, norm_method = "TSS", trans_method = "LOG") %>%  
+      mutate(group = "Rhizosphere"),
+    run_maaslin2_all_pairs(
+      physeq_16S_soil,
+      factor_variable = "Treatment",
+      qval_threshold = 0.05, norm_method = "TSS", trans_method = "LOG") %>% 
+      mutate(group = "Soil"),
+    run_maaslin2_all_pairs(
+      physeq_16S_control,
+      factor_variable = "Treatment",
+      qval_threshold = 0.05, norm_method = "TSS", trans_method = "LOG") %>% 
+      mutate(group = "Control"))
+
+
+mlin2_bact
+
+
+
+# Plotting Maaslin2 ------------------------------------------------------------
+PlotMaaslin2 <- function(maaslin_results, physeq_object) {
+  require(tidyverse)
+  library(stringr)
+  require(ggtext)
+  
+  # Process the data: Remove duplicate comparisons
+  cleaned_results <- maaslin_results %>%
+    rowwise() %>%
+    mutate(pair = paste(sort(c(value, reference_group)), collapse = "-")) %>%
+    ungroup() %>%
+    distinct(feature, pair, .keep_all = TRUE) %>%
+    mutate(group  = fct_relevel(group,"Root","Rhizosphere","Soil"))  %>% 
+    left_join(as.data.frame(as.matrix(physeq_object@tax_table)) %>%
+                rownames_to_column("feature"), by = "feature") %>%
+    mutate(BestMatch_makrdown = str_c("*", str_trim(BestMatch), "*")) %>%
+    mutate(Taxonomy = paste(BestMatch_makrdown, str_c("(", str_trim(feature), ")"))) 
+  
+  # Generate the heatmap plot
+  p <- 
+    ggplot(cleaned_results, aes(x = pair, y = Taxonomy, fill = coef)) + 
+    geom_tile() +
+    geom_text(aes(label = round(coef, 2)), size = 4, show.legend = FALSE) +
+    theme_bw() +
+    theme(
+      strip.text = element_text(size = 10, face = "bold"),
+      strip.background = element_rect(fill = "white", color = "white"),
+      plot.title = element_markdown(size = 12, face = "bold", hjust = 0.5, vjust = 0.5),
+      plot.subtitle = element_markdown(size = 10, face = "bold", hjust = 0.5, vjust = 0.5),
+      axis.text.x = element_text(angle = 33, hjust = 1, vjust = 1, size = 10),
+      axis.text.y = element_markdown(size = 10),
+      axis.title = element_markdown(size = 10), 
+      legend.title = element_text(size = 10, face = "bold"), 
+      legend.text = element_text(size = 9),
+      legend.key.height = unit(0.4, "cm"),  
+      legend.key.width = unit(0.4, "cm"),
+      legend.position = "right"
+    ) +
+    facet_grid(~group) +
+    scale_fill_gradient2(name = "lfc",
+                         low = "blue", high = "red", mid = "#FFFFCC", na.value = "white",
+                         limits = c(-8, 8),
+                         breaks = c(-8, -4, 0, 4, 8))
+  
+  return(p)
+}
+
+
+
+PlotMaaslin2(mlin2_fungi, physeq_ITS_clean) + 
+  labs(x=NULL, y = NULL, title = "Fungi Microbiome Association with Linear Models")
+
+
+PlotMaaslin2(mlin2_bact, physeq_16S_clean) + 
+  labs(x=NULL, y = NULL, title = "Bacteria Microbiome Association with Linear Models")
+
+
+
+
+
+
 
 # **********************************************************************--------
 # ASSESS CLUSTERING THRESHOLD --------------------------------------------------
@@ -2238,12 +2385,12 @@ mean_otutable_AMF_rare <-
   as.data.frame(otu_table(mean_physeq_AMF_rare)) 
 head(mean_otutable_AMF_rare)
 
-#mean_otutable_AMF_rare$hill_0 <- specnumber(mean_otutable_AMF_rare)
-#mean_otutable_AMF_rare$hill_1 <- exp(diversity(mean_otutable_AMF_rare, index = "shannon"))
-#mean_otutable_AMF_rare$hill_2 <- diversity(mean_otutable_AMF_rare, index = "invsimpson")
-mean_otutable_AMF_rare$hill_0 <- vegan::renyi(x = mean_otutable_AMF_rare, scales = c(0), hill = TRUE)
-mean_otutable_AMF_rare$hill_1 <- vegan::renyi(x = mean_otutable_AMF_rare, scales = c(1), hill = TRUE)
-mean_otutable_AMF_rare$hill_2 <- vegan::renyi(x= mean_otutable_AMF_rare, scales = c(2), hill = TRUE)
+#mean_otutable_AMF_rare$hill_q0 <- specnumber(mean_otutable_AMF_rare)
+#mean_otutable_AMF_rare$hill_q1 <- exp(diversity(mean_otutable_AMF_rare, index = "shannon"))
+#mean_otutable_AMF_rare$hill_q2 <- diversity(mean_otutable_AMF_rare, index = "invsimpson")
+mean_otutable_AMF_rare$hill_q0 <- vegan::renyi(x = mean_otutable_AMF_rare, scales = c(0), hill = TRUE)
+mean_otutable_AMF_rare$hill_q1 <- vegan::renyi(x = mean_otutable_AMF_rare, scales = c(1), hill = TRUE)
+mean_otutable_AMF_rare$hill_q2 <- vegan::renyi(x= mean_otutable_AMF_rare, scales = c(2), hill = TRUE)
 
 mean_otutable_AMF_rare <- 
   mean_otutable_AMF_rare %>% 
@@ -2303,7 +2450,7 @@ adonis2(
 # Testing effect of N and P on biomass and hill 0 ------------------------------
 lmer_otu_chem_data <-
   otu_chem_data %>% 
-  dplyr::select(sample_id, hill_0, hill_2, dry_matter_yield_mg_ha, p_ppm, site.x, fert_status) %>% 
+  dplyr::select(sample_id, hill_q0, hill_q2, dry_matter_yield_mg_ha, p_ppm, site.x, fert_status) %>% 
   column_to_rownames("sample_id") %>% 
   rename(site = site.x, dry_matter = dry_matter_yield_mg_ha) %>% 
   mutate(across(.cols = c(1:4), .fns = as.numeric)) %>% 
@@ -2319,21 +2466,21 @@ str(lmer_otu_chem_data)
 # Distribution of outcome variable
 ggarrange(
 lmer_otu_chem_data %>% 
-  ggplot2::ggplot(aes(x = hill_0)) +
+  ggplot2::ggplot(aes(x = hill_q0)) +
   geom_histogram(binwidth = 20) +
-  labs(title = "hill_0") +
+  labs(title = "hill_q0") +
   theme(plot.title = element_text(hjust = 0.5, face = "bold")) + 
   geom_vline(aes(
-    xintercept = mean(hill_0)), 
+    xintercept = mean(hill_q0)), 
     color = "darkred",
     linetype = "dashed", linewidth = 2, show.legend = FALSE),
 lmer_otu_chem_data %>% 
-  ggplot2::ggplot(aes(x = hill_2)) +
+  ggplot2::ggplot(aes(x = hill_q2)) +
   geom_histogram(binwidth = 5) +
-  labs(title = "hill_2") +
+  labs(title = "hill_q2") +
   theme(plot.title = element_text(hjust = 0.5, face = "bold")) + 
   geom_vline(aes(
-    xintercept = mean(hill_2)), 
+    xintercept = mean(hill_q2)), 
     color = "darkred",
     linetype = "dashed", linewidth = 2, show.legend = FALSE),
 lmer_otu_chem_data %>% 
@@ -2350,34 +2497,34 @@ nrow = 1)
 
 # NOTE. Running the model with fixed slope as the standard in this case. 
 
-# Model for hill_0
-fit_hill_0_fixslope <- lmer(
-  hill_0 ~ fert_status + p_ppm + fert_status:p_ppm + (1 | site),
+# Model for hill_q0
+fit_hill_q0_fixslope <- lmer(
+  hill_q0 ~ fert_status + p_ppm + fert_status:p_ppm + (1 | site),
   data = lmer_otu_chem_data, REML = FALSE
 )
 
-summary(fit_hill_0_fixslope)
-plot(fit_hill_0_fixslope)
+summary(fit_hill_q0_fixslope)
+plot(fit_hill_q0_fixslope)
 
 diagnostics_dharma(
-  model     = fit_hill_0_fixslope,
+  model     = fit_hill_q0_fixslope,
   group_var1 = lmer_otu_chem_data$site,
   group_var2 = NULL
 )
 
-plot(ggpredict(fit_hill_0_fixslope, terms = c("p_ppm", "fert_status")))
+plot(ggpredict(fit_hill_q0_fixslope, terms = c("p_ppm", "fert_status")))
 
 # Model for diversity
-fit_hill_2_fixslope <- lmer(
-  hill_2 ~ fert_status + p_ppm + fert_status:p_ppm + (1 | site),
+fit_hill_q2_fixslope <- lmer(
+  hill_q2 ~ fert_status + p_ppm + fert_status:p_ppm + (1 | site),
   data = lmer_otu_chem_data, REML = FALSE
 )
 
-summary(fit_hill_2_fixslope)
-plot(fit_hill_2_fixslope)
+summary(fit_hill_q2_fixslope)
+plot(fit_hill_q2_fixslope)
 
 diagnostics_dharma(
-  model     = fit_hill_2_fixslope,
+  model     = fit_hill_q2_fixslope,
   group_var1 = lmer_otu_chem_data$site,
   group_var2 = NULL
 )
@@ -2528,16 +2675,16 @@ diagnostics_dharma(
 # or severe deviations from model assumptions, indicating that the model provides
 # a reliable description of the data.
 
-# glm model for hill_0
-fitGLM_hill_0_fixslope <- 
-  glmmTMB(hill_0 ~ fert_status + p_ppm + fert_status:p_ppm + (1 | site),
+# glm model for hill_q0
+fitGLM_hill_q0_fixslope <- 
+  glmmTMB(hill_q0 ~ fert_status + p_ppm + fert_status:p_ppm + (1 | site),
           dispformula = ~site,   # allows variance to differ by site
           data = lmer_otu_chem_data)
 
-summary(fitGLM_hill_0_fixslope)
+summary(fitGLM_hill_q0_fixslope)
 
 diagnostics_dharma(
-  model      = fitGLM_hill_0_fixslope,
+  model      = fitGLM_hill_q0_fixslope,
   group_var1 = lmer_otu_chem_data$site)
 
 
@@ -2545,7 +2692,7 @@ diagnostics_dharma(
 
 # Model for diversity
 fit_yield_hill_fixslope <- lmer(
-  dry_matter ~ hill_0 + p_ppm + hill_0:p_ppm + (1 | site),
+  dry_matter ~ hill_q0 + p_ppm + hill_q0:p_ppm + (1 | site),
   data = lmer_otu_chem_data,
   REML = FALSE
 )
@@ -2553,11 +2700,11 @@ fit_yield_hill_fixslope <- lmer(
 summary(fit_yield_hill_fixslope)
 anova(fit_yield_hill_fixslope)
 
-lmer_otu_chem_data$hill_0_sc <- scale(lmer_otu_chem_data$hill_0)
+lmer_otu_chem_data$hill_q0_sc <- scale(lmer_otu_chem_data$hill_q0)
 lmer_otu_chem_data$p_ppm_sc  <- scale(lmer_otu_chem_data$p_ppm)
 
 fit_yield_hill_fixslope <- lmer(
-  dry_matter ~ hill_0_sc + p_ppm_sc + hill_0_sc:p_ppm_sc + (1 | site),
+  dry_matter ~ hill_q0_sc + p_ppm_sc + hill_q0_sc:p_ppm_sc + (1 | site),
   data = lmer_otu_chem_data,
   REML = FALSE
 )
@@ -2616,7 +2763,7 @@ intercept_yield
 
 Figure_X_yield <-
     ggarrange(
-      # Hill_0: Raw data with fixed effect means  
+      # hill_q0: Raw data with fixed effect means  
       ggplot(lmer_otu_chem_data, 
              aes(x = fert_status, y =dry_matter  , color = site)) +
         geom_point(position = position_jitterdodge(jitter.width = 0.2, dodge.width = 0.5),
@@ -2645,7 +2792,7 @@ Figure_X_yield <-
         )+
         guides(color = guide_legend(ncol=1)),
       
-      # Hill_2: Random effect deviations
+      # hill_q2: Random effect deviations
       broom.mixed::tidy(fitGLM_yield_fixslope, effects = "ran_vals") %>% 
         as.data.frame() %>%
         dplyr::rename( site = "level") %>%  
@@ -3083,6 +3230,24 @@ mean_metadata_AMF_rare <-
            sep = "_", remove = FALSE)
 
 head(mean_metadata_AMF_rare)
+
+
+mean_physeq_AMF_rare@tax_table %>% 
+  as.matrix() %>% 
+  as.data.frame() %>% 
+  pull(Class) %>% 
+  unique()
+
+mean_physeq_AMF_rare@tax_table %>% 
+  as.matrix() %>% 
+  as.data.frame() %>% 
+  pull(Genus) %>% 
+  unique()
+
+mean_physeq_AMF_rare@tax_table %>% 
+  as.matrix() %>% 
+  as.data.frame() %>% 
+  subset(Genus %in% c("Mortierella", "Jimgerdemannia"))
 
 
 
