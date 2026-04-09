@@ -392,7 +392,7 @@ generate_ordination <- function(ps,
 generate_ordination(ps = physeq_90_rare, method = "PCOA")
 
 
-# Plot beta-dversity -----------------------------------------------------------
+# Plot ordination from vegan objects -------------------------------------------
 plot_ordination <- function(ord,
                             meta,
                             col_var,
@@ -505,8 +505,8 @@ plot_ordination <- function(ord,
   
   if (legend_inside) {
     p <- p +
-      theme(legend.position = c(0.02, 0.04),        # x, y from bottom-left (0,0) to top-right (1,1)
-            legend.justification = c(0, 0),           # anchor point of the legend box
+      theme(legend.position = c(1, 0.04),        # x, y from bottom-left (0,0) to top-right (1,1)
+            legend.justification = c(1, 0),           # anchor point of the legend box
             legend.background = element_blank()) 
     }
   
@@ -515,10 +515,10 @@ plot_ordination <- function(ord,
 
 plot_ordination(
   ord = amf_nmds,
-  meta = meta_rare,
+  meta = meta_AMF_rare,
   col_var = "site",
   shape_var = "fert_status",
-  legend_inside = FALSE
+  legend_inside = TRUE
 )
 
 
@@ -826,6 +826,162 @@ extract_adonis <- function(ps) {
 }
 
 extract_adonis(ps = physeq_90_rare)
+
+# Maaslin plotting function - Differential analysis ----------------------------
+
+PlotMaaslin2 <- function(
+    maaslin_results,
+    physeq_object,
+    group_levels   = c("Fertilized", "Control"),         # customizable factor order
+    lfc_limits     = NULL,                               # auto-detect if NULL
+    show_ns        = TRUE,                               # show non-significant taxa?
+    tile_border    = 0.3                                 # geom_tile border size
+) {
+  
+  require(tidyverse)
+  require(ggtext)
+  require(phyloseq)
+  
+  # ── 1. Validate inputs ────────────────────────────────────────────────────
+  stopifnot(
+    is.data.frame(maaslin_results),
+    inherits(physeq_object, "phyloseq"),
+    !is.null(tax_table(physeq_object))
+  )
+  
+  required_cols <- c("feature", "value", "coef", "qval")
+  missing_cols  <- setdiff(required_cols, names(maaslin_results))
+  if (length(missing_cols) > 0)
+    stop("Missing columns in maaslin_results: ", paste(missing_cols, collapse = ", "))
+  
+  # ── 2. Extract & join taxonomy ────────────────────────────────────────────
+  tax_df <- as.data.frame(as.matrix(tax_table(physeq_object))) %>%
+    rownames_to_column("feature")
+  
+  # ── 3. Clean & process results ────────────────────────────────────────────
+  cleaned_results <- maaslin_results %>%
+    # Remove duplicate pairwise comparisons
+    rowwise() %>%
+    mutate(pair = as.character(value)) %>%
+    ungroup() %>%
+    distinct(feature, pair, .keep_all = TRUE) %>%
+    
+    # Significance flag
+    mutate(
+      sig_label = case_when(
+        qval < 0.001 ~ "***",
+        qval < 0.01  ~ "**",
+        qval < 0.05  ~ "*",
+        TRUE ~ ""
+      ),
+      coef_label = if_else(sig_label != "",
+                           paste0(round(coef, 2), "\n", sig_label),
+                           as.character(round(coef, 2)))
+    ) %>%
+    
+    # Filter non-significant if requested
+    { if (!show_ns) filter(., qval <= 0.05) else . } %>%
+    
+    # Factor ordering for group facets (only levels that exist in data)
+    { if ("group" %in% names(.))
+      mutate(., group = fct_relevel(group,
+                                    intersect(group_levels, unique(group))))
+      else . } %>%
+    
+    # Join taxonomy
+    left_join(tax_df, by = "feature") %>%
+    
+    # Build italic markdown labels — fall back to feature ID if BestMatch is absent
+    mutate(
+      BestMatch_clean = if_else(
+        !is.na(BestMatch) & str_trim(BestMatch) != "",
+        str_trim(BestMatch),
+        feature
+      ),
+      Taxonomy = glue::glue("*{BestMatch_clean}* ({str_trim(feature)})")
+    ) %>%
+    
+    # Order taxa by mean absolute coefficient for a cleaner plot
+    mutate(Taxonomy = fct_reorder(Taxonomy, abs(coef), .fun = mean))
+  
+  # ── 4. Auto-scale fill limits ─────────────────────────────────────────────
+  if (is.null(lfc_limits)) {
+    max_abs <- max(abs(cleaned_results$coef), na.rm = TRUE)
+    max_abs <- ceiling(max_abs)          # round up to nearest integer
+    lfc_limits <- c(-max_abs, max_abs)
+  }
+  lfc_breaks <- pretty(lfc_limits, n = 5)
+  
+  # ── 5. Build plot ─────────────────────────────────────────────────────────
+  p <- ggplot(cleaned_results,
+              aes(x = pair, y = Taxonomy, fill = coef)) +
+    
+    geom_tile(color = "grey85", linewidth = tile_border) +
+    
+    geom_text(
+      aes(label = coef_label),
+      size      = 3.2,
+      lineheight = 0.85,
+      show.legend = FALSE
+    ) +
+    
+    scale_fill_gradient2(
+      name     = "Log-fold\nchange",
+      low      = "#2166AC",   # colorblind-friendlier blue
+      mid      = "#F7F7F7",   # neutral white-grey midpoint
+      high     = "#B2182B",   # colorblind-friendlier red
+      midpoint = 0,
+      limits   = lfc_limits,
+      breaks   = lfc_breaks,
+      oob      = scales::squish   # squish values outside limits rather than NA
+    ) +
+    
+    #labs(
+    #  x = NULL,
+    #  y = NULL,
+    #  caption = "† q < 0.25 | * q < 0.05 | ** q < 0.01 | *** q < 0.001"
+    #) +
+    
+    { if ("group" %in% names(cleaned_results))
+      facet_grid(~ group, scales = "free_x", space = "free_x")
+      else list() } +
+    
+    theme_bw(base_size = 11) +
+    theme(
+      # Facet strips
+      strip.text       = element_text(size = 10, face = "bold"),
+      strip.background = element_rect(fill = "grey96", color = "grey70"),
+      
+      # Axes
+      axis.text.x      = element_text(angle = 35, hjust = 1, vjust = 1, size = 9),
+      axis.text.y      = element_markdown(size = 9),
+      axis.ticks       = element_line(linewidth = 0.3),
+      
+      # Legend
+      legend.title     = element_text(size = 9, face = "bold"),
+      legend.text      = element_text(size = 8),
+      legend.key.height = unit(0.5, "cm"),
+      legend.key.width  = unit(0.35, "cm"),
+      legend.position  = "right",
+      
+      # Grid & panel
+      panel.grid       = element_blank(),
+      panel.border     = element_rect(color = "grey70"),
+      
+      # Caption
+      plot.caption     = element_text(size = 7.5, hjust = 0, color = "grey40")
+    )
+  
+  return(p)
+}
+
+
+str(mlin2_fert_status)
+
+PlotMaaslin2(maaslin_results=mlin2_fert_status$results,
+             physeq_object=physeq_AMF_rare)
+
+
 
 # Assess clustering threshold through taxon counts -----------------------------
 

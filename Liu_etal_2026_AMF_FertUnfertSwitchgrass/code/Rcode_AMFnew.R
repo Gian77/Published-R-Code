@@ -24,47 +24,63 @@ options(scipen = 9999, pillar.sigfig = 6, digits = 6, max.print = 10000000)
 if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")
 
 pacman::p_load(
-  renv,
-  pak,
-  styler,
-  janitor,
-  magrittr,
-  Biostrings,
-  ape,
-  msa,
-  DECIPHER,
-  phangorn,
-  decontam,
-  phyloseq,
-  speedyseq,
-  tidysq,
-  tidytree,
-  vegan,
-  AICcPermanova,
-  tidyverse,
-  ggtext,
-  ggpubr,
-  ggtree,
-  cowplot,
-  gridExtra,
-  ggrepel,
-  scales,
-  agricolae,
-  BRCore,
-  lme4, # Linear mixed-effect models
-  glmmTMB,
-  robustlmm,
-  DHARMa, # Simulated residuals
-  parallel,
-  ggeffects,
-  sjPlot, #Mixed effect model visuals
-  broom.mixed,
-  merTools,
-  multcompView,
-  gllvm, # Generalized linear latent variable models (GLLVM) for multivariate data
-  ggdendro,
-  ggraph,
-  install=FALSE
+  # --- Project & Package Management ---
+  renv,           # Reproducible environments (lockfile management)
+  pak,            # Fast, modern package installation dependency engine
+  cli,            # Attractive and informative command-line interfaces  
+  styler,         # Automated R code formatting to tidyverse standards
+  janitor,        # Data cleaning (heavily used for cleaning column names)
+  magrittr,       # Pipe operators (%>%) and functional sequence aliases
+  
+  # --- Sequence Analysis & Phylogenetics ---
+  Biostrings,     # Memory-efficient containers for DNA/RNA/AA sequences
+  ape,            # Analysis of Phylogenetics and Evolution (core tree handling)
+  msa,            # Multiple Sequence Alignment (Interface to Clustal, Muscle)
+  DECIPHER,       # Tools for sequence alignment, chimera detection, and probes
+  phangorn,       # Phylogenetic analysis (MP, ML, and distance-based methods)
+  tidysq,         # Tidy processing of biological sequences
+  tidytree,       # Tidyverse-style manipulation of phylogenetic tree objects
+  
+  # --- Microbial Ecology & Diversity ---
+  decontam,       # Statistical identification/removal of contaminant OTUs
+  phyloseq,       # Integration of OTU tables, taxonomy, and metadata
+  speedyseq,      # High-performance optimizations for phyloseq functions
+  vegan,          # Community ecology (Ordination, Alpha/Beta diversity)
+  AICcPermanova,  # Model selection for PERMANOVA using AICc
+  
+  # --- Data Science & Visualization ---
+  tidyverse,      # Core suite (ggplot2, dplyr, tidyr, purrr, etc.)
+  ggtext,         # Markdown/HTML rendering for ggplot2 labels
+  ggpubr,         # Publication-ready ggplot2 themes and figure arrangements
+  ggtree,         # Visualization and annotation of phylogenetic trees
+  cowplot,        # Powerful plot arrangement and theme adjustments
+  gridExtra,      # Miscellaneous functions for "grid" graphics (tables/plots)
+  ggrepel,        # Non-overlapping text labels for ggplot2
+  scales,         # Internal scaling and axis transformations for plots
+  ggh4x,          # Extensions for ggplot2 facets and axes (nested facets, etc.) 
+  
+  # --- Statistics & Modeling ---
+  agricolae,      # Agricultural research stats (Tukey's, LSD, experimental design)
+  BRCore,         # Custom/Internal core functions for standardized workflows
+  lme4,           # Linear and Generalized Linear Mixed-Effects Models (GLMM)
+  glmmTMB,        # Fast GLMMs with support for Zero-Inflation/Overdispersion
+  robustlmm,      # Robust Linear Mixed-Effects Models (outlier resistance)
+  DHARMa,         # Residual diagnostics for hierarchical (multi-level) models
+  parallel,       # Parallel computing support for multi-core processing
+  ggeffects,      # Estimated Marginal Means and marginal effects for models
+  sjPlot,         # Visualizing Mixed-Effects models and diagnostic tables
+  broom.mixed,    # Tidy summary outputs (tidiers) for mixed-effect models
+  merTools,       # Tools for analyzing lme4/merMod objects (uncertainty/prediction)
+  multcompView,   # Visualizing multiple comparison significance (compact letter display)
+  gllvm,          # Generalized Linear Latent Variable Models (multivariate stats)
+  maaslin3,       # Multivariate Association with Linear Models (microbiome stats) 
+  Maaslin2,       # Multivariate Association with Linear Models (microbiome stats)  
+  
+  # --- Networks & Hierarchical Viz ---
+  ggdendro,       # Extract/Plot dendrogram data using ggplot2
+  ggraph,         # Visualization of networks, graphs, and complex trees
+  
+  install = FALSE
 )
 
 
@@ -335,17 +351,86 @@ add_rarefaction_metrics(physeq_AMF_clean) %>%
   as.data.frame() %>% 
   arrange(read_num)
 
+# ***** FIGURE S1 - identify depth ***** ---------------------------------------
 rarefaction_plot <- 
   add_rarefaction_metrics(physeq_AMF_clean) %>% 
   plot_rarefaction_metrics()
 
-rarefaction_plot
+rarefaction_plot 
+
+ggsave(plot = rarefaction_plot, 
+       path = data_path,
+       filename = "results/Fig_S1_identify_raredepth_plots.pdf")
+
+
+# **********************************************************************--------
+# ***** RAREFACTION CURVES ***** -----------------------------------------------
 
 rare_depth_cutoff = 6512
 
+rarecurve_AMF <-
+  physeq_AMF_clean@otu_table %>%
+  t() %>%
+  as.matrix() %>%
+  as.data.frame() %>%
+  rarecurve(x = ., step = 20, sample = rare_depth_cutoff, tidy = TRUE)
+
+head(rarecurve_AMF)
+dim(rarecurve_AMF)
+
+Fig_S2_rarecurve <-
+rarecurve_AMF %>%
+  dplyr::rename(sample_id = Site) %>%
+  left_join(.,
+            physeq_AMF_clean@sam_data %>%
+              as.matrix() %>%
+              as.data.frame() %>%
+              rownames_to_column("sample_id"),
+            by = "sample_id") %>%
+  ggplot(aes(x = Sample, y = Species, group = sample_id, color = fert_status)) +
+  geom_line() +
+  geom_vline(xintercept = rare_depth_cutoff, color = "black", linetype = "dashed") +
+  theme_bw() +
+  theme(
+    plot.title = element_markdown(size = 12, face = "bold", hjust = 0.5, vjust = 0.5),
+    plot.subtitle = element_markdown(size = 10, face = "bold", hjust = 0.5, vjust = 0.5),
+    axis.text.x = element_markdown(angle = 0, size = 10, hjust = 0.5, vjust = 0.5),
+    axis.text.y = element_markdown(size = 10),
+    axis.title = element_markdown(size = 10, face = "bold", hjust = 0.5, vjust = 0.5),
+    legend.key.height = unit(0.5, "cm"),
+    legend.key.width = unit(0.5, "cm"),
+    legend.title = element_blank(),
+    legend.text = element_text(size = 10),
+    legend.position = c(0.98, 0.02),
+    legend.justification = c("right", "bottom")) +
+  labs(title = "Rarefaction curves Arbuscular Mycorrhizal Fungi (AMF)", 
+       x = "Number of DNA reads", 
+       y = "Number of 99% OTUs") 
+
+
+Fig_S2_rarecurve
+
+ggsave(plot = Fig_S2_rarecurve, 
+       path = data_path,
+       filename = "results/Fig_S2_rarefaction_curves.pdf")
+
+
 # Extarct data.frame from phyloseq object
-meta_AMF <- as.data.frame(as.matrix(physeq_AMF_clean@sam_data))
+meta_AMF <- 
+  as.data.frame(as.matrix(physeq_AMF_clean@sam_data)) %>% 
+  mutate(
+    site = as.factor(site),
+    site = fct_relevel(site, "Lux Arbor", "Lake City", "Escanaba", "Rhinelander","Hancock" ),
+    site_plot = factor(paste(site, plot_rep, sep=":")),
+    fert_status = as.factor(fert_status),
+    fert_status = fct_relevel(fert_status, "Fertilized", "Control"),
+  )
+
+str(meta_AMF)
+
 otutable_AMF <- as.data.frame(t(as.matrix(physeq_AMF_clean@otu_table)))
+
+str(otutable_AMF)
 
 # NOTE. E[D(X)] instead of  D(E[X]) is the right way to calculate alpha metrics. 
 # First you calculate the diversity metric for each rarefied iteration, then you
@@ -371,13 +456,10 @@ hill_all <- map_dfr(c(0, 1, 2), function(q) {
 
 hill_all
 
-
 alpha_df <-
-  physeq_AMF_rare@sam_data %>%
-  as.matrix() %>%
-  as.data.frame() %>%
+  meta_AMF %>%
   rownames_to_column("sample_id") %>% 
-  left_join(hill_all, by = "sample_id") %>% 
+  inner_join(hill_all, by = "sample_id") %>% 
   mutate(across(.cols = 1:4, .fns = as.factor))
 
 str(alpha_df)
@@ -589,10 +671,6 @@ ggeffects::ggpredict(run_lmem(alpha_df, hill_q0, "fixslope"),
             terms = c("fert_status", "site")) %>% plot() 
 
 
-# Plot-level predicted means
-alpha_df$site_plot <- 
-  interaction(alpha_df$site, alpha_df$plot_rep, drop = TRUE)
-
 fit_hill_q0_base <- lmer(
   hill_q0 ~ 1 + (1 | site) + (1 | site_plot),
   data = alpha_df,
@@ -663,6 +741,9 @@ broom.mixed::tidy(
        color = "Random Effect") +
   theme_minimal()
 
+# INTERPRETATION. These are Random effects plots so they do not change between
+# baseline and fixslope models.
+
 # 9. Full Diagnostic Plot Set (sjPlot) -----------------------------------------
 
 sjPlot::plot_model(run_lmem(alpha_df, hill_q0, "baseline"), type = "re")
@@ -680,6 +761,9 @@ plot_model(run_lmem(alpha_df, hill_q0, "fixslope"), type = "est",
 # Comprehensive model diagnostics and predictions
 tab_model(run_lmem(alpha_df, hill_q0, "baseline"), show.stat = TRUE)
 tab_model(run_lmem(alpha_df, hill_q0, "fixslope"), show.stat = TRUE) 
+
+tab_model(run_lmem(alpha_df, hill_q1, "baseline"), show.stat = TRUE)
+tab_model(run_lmem(alpha_df, hill_q1, "fixslope"), show.stat = TRUE) 
 
 
 # 10. Raw Data + Model Predictions (emmeand) -----------------------------------
@@ -714,8 +798,9 @@ palette_site <- c("#009E73", "#0072B2", "#825121", "#E69F00", "#CC79A7")
 palette_taxa <-c("#D21E2C","#058ED9","#ae09ea","#dba4a4","#117744",
                  "#F7F7C5","#283dff","#521899","#82807f","#014443",
                  "#FDDB8E","#bfc5ff","#111b77","#d8d6d4","#b7ffdb",
-                 "#fcb067","#ffb7ef","#000000","#560d0d","#60ffaf")
-                 #"#ea7f17","#fa7efc","#a35151","#825121","#A5A518")
+                 "#fcb067","#ffb7ef","#560d0d","#60ffaf", "#A5A518", "#000000") 
+                 
+c("#ea7f17","#fa7efc","#a35151","#825121",)
 
 # Hill 0 and Hill 2 ------------------------------------------------------------
 
@@ -919,17 +1004,18 @@ broom.mixed::tidy(
       name = "inverse Simpson")
     ),
 
-ncol = 2, nrow = 1,
+ncol = 2, 
+nrow = 1,
 labels = c("B","D"),
 legend = "right",
 common.legend = TRUE),
 ncol = 1, 
-nrow = 2
+nrow = 2, heights=c(0.6, 0.8)
 )
 
 Figure_1_alpha
 
-# ***** FIGURE 1 - Alpha-diversity ***** ----------------------------------------
+# ***** FIGURE 1 - Alpha-diversity ***** ---------------------------------------
 ggsave(
   file.path(data_path, "results/Fig_1_alphadiv.pdf"),
   plot = ggpubr::annotate_figure(
@@ -952,7 +1038,7 @@ anova(fit_hill0_site)   # overall test: does richness differ among sites?
 summary(fit_hill0_site)
 
 # Pairwise comparisons: “which sites differ?”
-fit_hill0_site_emm <- emmeans(fit_hill0_site, ~ site)
+fit_hill0_site_emm <- emmeans::emmeans(fit_hill0_site, ~ site)
 
 fit_hill0_site_emm                       # site means (model-adjusted)
 pairs(fit_hill0_site_emm, adjust = "tukey")  # Tukey-corrected pairwise tests
@@ -966,7 +1052,7 @@ as.data.frame(fit_hill0_site_emm) |>
 m_site_adj <- lmer(hill_q0 ~ site + fert_status + (1 | site:plot_rep),
                    data = alpha_df, REML = FALSE)
 
-emm_site_adj <- emmeans(m_site_adj, ~ site)
+emm_site_adj <- emmeans::emmeans(m_site_adj, ~ site)
 pairs(emm_site_adj, adjust = "tukey")
 
 # This answers: “Which sites are richer after adjusting for fertilizer?”
@@ -980,40 +1066,27 @@ pairs(emm_site_adj, adjust = "tukey")
 # **********************************************************************--------
 # **** 2. BETA DIVERSITY **** --------------------------------------------------
 
-# Extracting metadata and otutable ---------------------------------------------
-otutable_rare <- 
-  physeq_AMF_rare %>%
-  prune_taxa(taxa_sums(.) > 0, .) %>%
-  prune_samples(sample_sums(.) > 0, .) %>% 
-  otu_table() %>%  
-  as.matrix() %>% 
-  t() %>% 
-  as.data.frame()
+set.seed(26031)
 
-otutable_rare
+# Generating rarefied distance matrix ------------------------------------------
+rare_depth_cutoff = 6512
 
-meta_rare <- 
-  physeq_AMF_rare %>%
-  prune_taxa(taxa_sums(.) > 0, .) %>%
-  prune_samples(sample_sums(.) > 0, .) %>% 
-  sample_data() %>%   # Extract metadata table 
-  as.matrix() %>% 
-  as.data.frame() %>% 
-  mutate(fert_status = factor(recode(
-    fert_status, "FERT" = "Fertilized" ,  "UNFERT" ="Control"
-  )))
+dist_avg_AMF <- avgdist(
+  x = otutable_AMF,
+  sample = rare_depth_cutoff,
+  iterations = 100,
+  dmethod = "bray"
+)
 
-meta_rare$site_plot <- 
-  as.factor(
-    paste(meta_rare$plot_rep, meta_rare$site, sep=":"))
-  
-meta_rare$site_plot <- with(
-  meta_rare,
-  factor(site_plot,
-         levels = unique(site_plot[order(site, plot_rep)])))
+dist_avg_AMF
+labels(dist_avg_AMF)
 
-head(meta_rare)
+# Filter out the samples that were dropped sure to rarefaction from the metadata file
+meta_AMF_rare <- meta_AMF[ labels(dist_avg_AMF), ]
+dim(meta_AMF_rare)
 
+# Verify alignment (should be TRUE)
+identical(labels(dist_avg_AMF), rownames(meta_AMF[ labels(dist_avg_AMF), ]))
 
 # PERMANOVA ------------------------------------------------------------------- 
 
@@ -1043,10 +1116,10 @@ head(meta_rare)
 # fertilizer while accounting for site structure.
 
 adonis2(
-  otutable_rare ~ fert_status,
-  data = meta_rare,
+  dist_avg_AMF ~ fert_status,
+  data = meta_AMF_rare,
   method = "bray",
-  permutations = how(blocks = meta_rare$site, nperm = 999),
+  permutations = how(blocks = meta_AMF_rare$site, nperm = 999),
   by = "margin"
 )
 
@@ -1061,34 +1134,34 @@ adonis2(
 # permutations restricted within site. Gives marginal tests (Type III-like logic)
 
 adonis2(
-  otutable_rare ~ site,
-  data = meta_rare,
+  dist_avg_AMF ~ site,
+  data = meta_AMF_rare,
   method = "bray",
   permutations = 999,
   by = "term"
 )
 
 adonis2(
-  otutable_rare ~ fert_status + site,
-  data = meta_rare,
+  dist_avg_AMF ~ fert_status + site,
+  data = meta_AMF_rare,
   method = "bray",
   permutations = 999,
   by = "term"
 )
 
 adonis2(
-  otutable_rare ~ fert_status + site,
-  data = meta_rare,
+  dist_avg_AMF ~ fert_status + site,
+  data = meta_AMF_rare,
   method = "bray",
-  permutations = how(blocks = meta_rare$site, nperm = 999),
+  permutations = how(blocks = meta_AMF_rare$site, nperm = 999),
   by = "margin"
 )
 
 adonis2(
-  otutable_rare ~ fert_status + site,
-  data = meta_rare,
+  dist_avg_AMF ~ fert_status + site,
+  data = meta_AMF_rare,
   method = "bray",
-  permutations = how(blocks = meta_rare$site, nperm = 999),
+  permutations = how(blocks = meta_AMF_rare$site, nperm = 999),
   by = "terms"
 )
 
@@ -1099,52 +1172,52 @@ adonis2(
 # expect that, then the interaction is not justified.
 
 adonis2(
-  otutable_rare ~ fert_status * site,
-  data = meta_rare,
+  dist_avg_AMF ~ fert_status * site,
+  data = meta_AMF_rare,
   method = "bray",
   permutations = 999,
   by = "margin"
 )
 
 adonis2(
-  otutable_rare ~ fert_status * site,
-  data = meta_rare,
+  dist_avg_AMF ~ fert_status * site,
+  data = meta_AMF_rare,
   method = "bray",
-  permutations = how(blocks = meta_rare$site, nperm = 999),
+  permutations = how(blocks = meta_AMF_rare$site, nperm = 999),
   by = "margin"
 )
 
 adonis2(
-  otutable_rare ~ fert_status * site,
-  data = meta_rare,
+  dist_avg_AMF ~ fert_status * site,
+  data = meta_AMF_rare,
   method = "bray",
-  permutations = how(blocks = meta_rare$site, nperm = 999),
+  permutations = how(blocks = meta_AMF_rare$site, nperm = 999),
   by = "terms"
 )
 
 # 4) Does plot-level (beyond site) impact beta diversity? ----------------------
 adonis2(
-  otutable_rare ~ site_plot,
-  data = meta_rare,
+  dist_avg_AMF ~ site_plot,
+  data = meta_AMF_rare,
   method = "bray",
-  permutations = how(blocks = meta_rare$site, nperm = 999),
+  permutations = how(blocks = meta_AMF_rare$site, nperm = 999),
   by = "margin"
 )
 
 adonis2(
-  otutable_rare ~ site + site_plot,
-  data = meta_rare,
+  dist_avg_AMF ~ site + site_plot,
+  data = meta_AMF_rare,
   method = "bray",
-  permutations = how(blocks = meta_rare$site, nperm = 999),
+  permutations = how(blocks = meta_AMF_rare$site, nperm = 999),
   by = "terms"
 )
 
 # 5) Does fertilizer effect vary among plots within sites? ---------------------
 adonis2(
-  otutable_rare ~ site_plot * fert_status,
-  data = meta_rare,
+  dist_avg_AMF ~ site_plot * fert_status,
+  data = meta_AMF_rare,
   method = "bray",
-  permutations = how(blocks = meta_rare$site, nperm = 999),
+  permutations = how(blocks = meta_AMF_rare$site, nperm = 999),
   by = "margin"
 )
 
@@ -1153,31 +1226,29 @@ adonis2(
 # plot-specific treatment differences. Given n = 2 per plot, this term absorbs 
 # nearly all treatment contrast variability (No independent estimate of treatment 
 # variance). So it is mathematically allowed, but biologically unstable. 
-# I would not emphasize this interaction given the paired 
-# design and limited replication. The interaction term is essentially capturing:
-# Differences in pairwise Bray–Curtis distances among plots.
-# Not a replicated random slope.
+# I would not emphasize this interaction given the paired design and limited 
+# replication. The interaction term is essentially capturing: Differences in 
+# pairwise Bray–Curtis distances among plots. Not a replicated random slope.
 # Not a properly estimated treatment heterogeneity.
 
 # BETADISPER -------------------------------------------------------------------
 # Check homogeneity of variances -----------------------------------------------
-bray_dist <- vegdist(otutable_rare, method = "bray")
 
 # The logic is identical to PERMANOVA — the permutation scheme must match the 
 # scale at which the grouping variable exists:
 # _Between sites → free permutations
 # _Within sites (fert_status, plot) → restricted within sites
 
-bd_fert <- betadisper(bray_dist, meta_rare$fert_status)
-permutest(bd_fert, permutations = how(blocks = meta_rare$site, nperm = 999))
+bd_fert <- betadisper(dist_avg_AMF, meta_AMF_rare$fert_status)
+permutest(bd_fert, permutations = how(blocks = meta_AMF_rare$site, nperm = 999))
 TukeyHSD(bd_fert)
 
-bd_site <- betadisper(bray_dist, meta_rare$site)
+bd_site <- betadisper(dist_avg_AMF, meta_AMF_rare$site)
 permutest(bd_site, permutations = 999)
 TukeyHSD(bd_site)
 
-bd_plot <- betadisper(bray_dist, meta_rare$site_plot)
-permutest(bd_plot, permutations = how(blocks = meta_rare$site, nperm = 999))
+bd_plot <- betadisper(dist_avg_AMF, meta_AMF_rare$site_plot)
+permutest(bd_plot, permutations = how(blocks = meta_AMF_rare$site, nperm = 999))
 TukeyHSD(bd_plot)
 
 # NOTE. anova() is ok, but for publication you want permutest() because:
@@ -1194,45 +1265,51 @@ TukeyHSD(bd_plot)
 # Run NMDS
 set.seed(270226)
 
-amf_nmds <- metaMDS(otutable_rare, distance = "bray", k = 2, trymax = 100)
-amf_pcoa <- cmdscale(bray_dist, k = 2, eig = TRUE)
+amf_nmds <- metaMDS(dist_avg_AMF, k = 2, trymax = 200)
+amf_pcoa <- cmdscale(dist_avg_AMF, k = 2, eig = TRUE)
 
 plot_ordination(
   ord = amf_nmds,
-  meta = meta_rare,
+  meta = meta_AMF_rare,
   col_var = "site",
   shape_var = "fert_status"
 )
 
 plot_ordination(
   ord = amf_pcoa,
-  meta = meta_rare,
+  meta = meta_AMF_rare,
   col_var = "site",
   shape_var = "fert_status", 
   ellipse = FALSE
 )
 
+plot_ordination(
+  ord = amf_pcoa,
+  meta = meta_AMF_rare,
+  col_var = "site",
+  shape_var = "fert_status", 
+  ellipse = TRUE
+)
+
 
 # dispersion -------------------------------------------------------------------
-plot_betadisper(dist_matrix = bray_dist, 
-                grouping = meta_rare$fert_status)
+plot_betadisper(dist_matrix = dist_avg_AMF, 
+                grouping = meta_AMF_rare$fert_status)
 
-plot_betadisper(dist_matrix = bray_dist, 
-                grouping = meta_rare$site)
+plot_betadisper(dist_matrix = dist_avg_AMF, 
+                grouping = meta_AMF_rare$site)
 
-plot_betadisper(dist_matrix = bray_dist, 
-                grouping = meta_rare$site_plot)
+plot_betadisper(dist_matrix = dist_avg_AMF, 
+                grouping = meta_AMF_rare$site_plot)
 
 
-# ***** FIGURE 2 - Beta-diversity ***** -----------------------------------------
-
-# using ggarrange --------------------------------------------------------------
+# Plotting results together
 
 Figure_2_beta_long <-
 ggarrange(
   plot_ordination(
     ord = amf_pcoa,
-    meta = meta_rare,
+    meta = meta_AMF_rare,
     col_var = "site",
     shape_var = "fert_status",
     ellipse = FALSE,
@@ -1241,33 +1318,34 @@ ggarrange(
     labs(title = "PCoA") +
     scale_color_manual(values = palette_site),
   plot_betadisper(
-        dist_matrix = bray_dist,
-        grouping = meta_rare$fert_status,
+        dist_matrix = dist_avg_AMF,
+        grouping = meta_AMF_rare$fert_status,
         signif_label = "Treatment, F=1.006, p=0.243"
         ) +
         labs(title = "Within-treatment variance",
              y = NULL),
   plot_betadisper(
-    dist_matrix = bray_dist,
-    grouping = meta_rare$site,
+    dist_matrix = dist_avg_AMF,
+    grouping = meta_AMF_rare$site,
     signif_label = "Site, F=6.88, p=0.001"
   ) +
     labs(title = "Within-site variance",
          y = NULL),
   plot_betadisper(
-    dist_matrix = bray_dist,
-    grouping = meta_rare$site_plot,
+    dist_matrix = dist_avg_AMF,
+    grouping = meta_AMF_rare$site_plot,
     signif_label = "Plot, F=4.777, p=0.001"
   ) +
     labs(title = "Within-plot variance",
          y = NULL),
   ncol = 1,
   nrow = 4,
-  align = "h",
+  align = "hv",
   heights =  c(1.4, 0.6, 0.6, 1.2),
   labels = c("A", "B", "C", "D")
 )
 
+# ***** FIGURE 2 - Beta-diversity ***** -----------------------------------------
 Figure_2_beta_long
 
 ggsave(
@@ -1279,29 +1357,6 @@ ggsave(
   device = "pdf"
 )
 
-
-
-ggarrange(
-  plot_ordination(
-    ord = amf_nmds,
-    meta = meta_rare,
-    col_var = "site",
-    shape_var = "fert_status"
-  ) +
-    labs(title = "NMDS"),
-  plot_betadisper(
-    dist_matrix = bray_dist,
-    grouping = meta_rare$site,
-    signif_label = "Site, F=6.88, p=001"
-  ) +
-    labs(title = "Group dispersion"),
-  ncol = 2,
-  nrow = 1,
-  align = "h",
-  legend = "right",
-  widths = c(1.4, 1),
-  labels = c("A", "B")
-)
 
 # INTERPREATTION. NMDS space is different than PCoA space, that is why the spread
 # (variances) of the samples within sites is different — the axes and distances are
@@ -1363,12 +1418,31 @@ Figure_2_beta <-
 
 Figure_2_beta
 
-# **********************************************************************--------
-# **** 3. COMPOSITION AND STRUCTURE **** --------------------------
+# ***** FIGURE 2 - Beta-diversity ***** -----------------------------------------
 
+# Need to modufy this if want to add the title!
+ggsave(
+  file.path(data_path, "results/Fig_2_betadiv_wide.pdf"),
+  plot = grid.arrange(
+    Figure_2_beta,
+    top = text_grob("BETA DIVERSITY", size = 12, face = "bold")
+  ),
+  device = "pdf"
+)
+
+
+# **********************************************************************--------
+ # **** 3. COMPOSITION AND STRUCTURE **** --------------------------
+
+physeq_AMF_rare <-
+  physeq_AMF_clean %>%
+  rarefy_even_depth(rngseed = 26031, sample.size = rare_depth_cutoff)
+
+# Condense at genus level
 physeq_AMF_rare_Gen <-
-  physeq_AMF_rare %>% 
-  subset_taxa(!Genus %in% c("Mortierella", "Jimgerdemannia", "Unclassified")) %>% 
+  physeq_AMF_rare %>%
+  transform_sample_counts(function(x) 100 * x / sum(x)) %>% 
+  #subset_taxa(!Genus %in% c("Mortierella", "Jimgerdemannia", "Unclassified")) %>% 
   speedyseq::select_tax_table(Phylum,Class,Order,Family,Genus) %>% 
   phyloseq::tax_glom(., taxrank="Genus")
 
@@ -1376,62 +1450,503 @@ as.matrix(physeq_AMF_rare_Gen@tax_table) %>% as.data.frame()
 as.matrix(physeq_AMF_rare_Gen@otu_table) %>% as.data.frame()
 as.matrix(physeq_AMF_rare_Gen@sam_data) %>% as.data.frame()
 
+# Create a long format data.frame ----------------------------------------------
 physeq_AMF_rare_Gen %>%
   psmelt() %>%
   arrange(Genus) %>%
   head()
 
-bar_charts <-
-  ggarrange(
-    physeq_AMF_rare_Gen %>%
-      psmelt() %>%
-      arrange(Genus) %>%
-      ggplot(aes(
-        x = site, y = Abundance, fill = Genus)) +
-      geom_bar(stat = "identity") +
-      theme_classic() +
-      theme(
-        axis.title.x = element_blank(),
-        axis.text.x =  element_markdown(
-          size = 10,
-          angle = 0,
-          hjust = 0.5,
-          vjust = 0.5),
-        legend.text = element_text(face = "italic", size = 9)) +
-      guides(fill = guide_legend(nrow = 4)) +
-      scale_fill_manual(values = palette_taxa) +
-      labs(
-        title = "Rarefied abundances",
-        subtitle = " grouped by sampling site geography",
-        y = "Abundance"),
-    physeq_AMF_rare_Gen %>%
-      psmelt() %>%
-      arrange(Genus) %>%
-      ggplot(aes(
-        x = fert_status, y = Abundance, fill = Genus)) +
-      geom_bar(stat = "identity") +
-      theme_classic() +
-      theme(
-        axis.title.x = element_blank(),
-        axis.text.x =  element_markdown(
-          size = 10,
-          angle = 0,
-          hjust = 0.5,
-          vjust = 0.5),
-        legend.text = element_text(face = "italic", size = 9)) +
-      guides(fill = guide_legend(nrow = 4)) +
-      scale_fill_manual(values = palette_taxa) +
-      labs(
-        title = "Rarefied abundances",
-        subtitle = " grouped by Fetrilization vs. Control",
-        y = "Abundance"),
-    ncol = 2,
-    nrow = 1,
-    common.legend = TRUE,
-    legend = "bottom"
+# Plotting 
+bar_charts_gen <-
+  physeq_AMF_rare_Gen %>%
+  psmelt() %>%
+  mutate(Genus = fct_relevel(Genus, "Unclassified", after = Inf)) %>%
+  ggplot(aes(x = Sample, y = Abundance, fill = Genus)) +
+  geom_bar(stat = "identity", width = 1) + # width=1 removes gaps between bars
+  ggh4x::facet_nested(. ~ site + fert_status, 
+               scales = "free_x", 
+               space = "free_x", 
+               switch = "x",
+               nest_line = element_line(color = "black")) + # Optional line to join groups
+  theme_classic() +
+  theme(
+    plot.title=element_text(size = 12, face="bold", hjust=0.5),
+    plot.subtitle=element_text(size = 10),
+    axis.text.x = element_blank(), 
+    axis.ticks.x = element_blank(),
+    axis.title.x = element_blank(),
+    axis.line.x = element_blank(),
+    strip.placement = "outside", 
+    strip.background = element_blank(),
+    strip.text = element_text(size = 9, face = "bold"),
+    panel.spacing = unit(0.3, "lines"), 
+    legend.key.height = unit(0.4, "cm"),
+    legend.key.width  = unit(0.4, "cm"),
+    legend.title = element_blank(),
+    legend.text = element_text(face = "italic", size = 8)
+  ) +
+  scale_fill_manual(values = palette_taxa) +
+  labs(y = "DNA reads (%)") +
+  guides(
+    fill = guide_legend(ncol = 1, 
+                         override.aes = list(shape = 15)))
+
+
+bar_charts_gen
+
+# ***** FIGURE 3 - Genus Composition ***** -------------------------------------
+
+ggsave(
+  file.path(data_path, "results/Fig_3_bar_charts_gen_relab.pdf"),
+  plot = grid.arrange(
+    bar_charts_gen,
+    top = text_grob("ARBUSCULAR MYCORRHIZAL FUNGI COMMUNITY COMPOSITION", 
+                    size = 12, face = "bold")
+  ),
+  device = "pdf"
+)
+
+# Condense at family level
+physeq_AMF_rare_Fam <-
+  physeq_AMF_rare %>%
+  transform_sample_counts(function(x) 100 * x / sum(x)) %>% 
+  #subset_taxa(!Genus %in% c("Mortierella", "Jimgerdemannia", "Unclassified")) %>% 
+  speedyseq::select_tax_table(Phylum,Class,Order,Family) %>% 
+  phyloseq::tax_glom(., taxrank="Family")
+
+physeq_AMF_rare_Fam %>%
+  psmelt() %>%
+  arrange(Family) %>%
+  head()
+
+
+bar_charts_fam <-
+  physeq_AMF_rare_Fam %>%
+  psmelt() %>%
+  mutate(Family = fct_relevel(Family, "Unclassified", after = Inf)) %>%
+  ggplot(aes(x = Sample, y = Abundance, fill = Family)) +
+  geom_bar(stat = "identity", width = 1) + # width=1 removes gaps between bars
+  ggh4x::facet_nested(. ~ site + fert_status, 
+                      scales = "free_x", 
+                      space = "free_x", 
+                      switch = "x",
+                      nest_line = element_line(color = "black")) + # Optional line to join groups
+  theme_classic() +
+  theme(
+    plot.title=element_text(size = 12, face="bold", hjust=0.5),
+    plot.subtitle=element_text(size = 10),
+    axis.text.x = element_blank(), 
+    axis.ticks.x = element_blank(),
+    axis.title.x = element_blank(),
+    axis.line.x = element_blank(),
+    strip.placement = "outside", 
+    strip.background = element_blank(),
+    strip.text = element_text(size = 9, face = "bold"),
+    panel.spacing = unit(0.3, "lines"), 
+    legend.key.height = unit(0.4, "cm"),
+    legend.key.width  = unit(0.4, "cm"),
+    legend.title = element_blank(),
+    legend.text = element_text(face = "italic", size = 8)
+  ) +
+  scale_fill_manual(values = c(palette_taxa[1:9], "black")) +
+  labs(y = "DNA reads (%)") +
+  guides(
+    fill = guide_legend(ncol = 1, 
+                        override.aes = list(shape = 15)))
+
+bar_charts_fam
+
+# ***** FIGURE 4 - Family Composition ***** -------------------------------------
+
+ggsave(
+  file.path(data_path, "results/Fig_3_bar_charts_fam_relab.pdf"),
+  plot = grid.arrange(
+    bar_charts_fam,
+    top = text_grob("ARBUSCULAR MYCORRHIZAL FUNGI COMMUNITY COMPOSITION", 
+                    size = 12, face = "bold")
+  ),
+  device = "pdf"
+)
+
+# **********************************************************************--------
+# **** 4. DIFFERENTIAL ABUNDANCE **** ------------------------------------------
+
+str(physeq_AMF_rare)
+
+metadata_AMF_rare <- 
+  as.data.frame(as.matrix(physeq_AMF_rare@sam_data)) %>% 
+  mutate(across(.cols = 1:2, .fns = as.factor))
+
+str(metadata_AMF_rare)
+
+otutable_AMF_rare <- 
+  as.data.frame(t(as.matrix(physeq_AMF_rare@otu_table)))
+
+str(otutable_AMF_rare)
+
+# Identify differentially abundant taxa  ---------------------------------------
+
+table(metadata_AMF_rare$site, metadata_AMF_rare$fert_status)
+
+# Test differential abundance between Fertilized vs Control, controlling for site
+
+mlin2_fert_status <- 
+  Maaslin2(
+  cores = 4,
+  output = "demo_output",
+  input_data = otutable_AMF_rare,
+  input_metadata = metadata_AMF_rare %>% dplyr::select(fert_status, site),
+  fixed_effects = "fert_status",
+  random_effects = "site",
+  reference = "fert_status,Control", # no space between variable and level 
+  normalization = "NONE",
+  standardize = FALSE,
+  plot_scatter = FALSE
+)
+
+mlin2_fert_status$results %>%
+  dplyr::filter(metadata == "fert_status", qval <= 0.05)
+
+mlin2_fert_status$results %>%
+  dplyr::filter(metadata == "site", qval <= 0.05)
+
+# INTERPRETATION. Multiple testing penalty is brutal here. When testing ~2870 
+# features BH correction inflates q-values. You need very strong, consistent 
+# effects to pass q ≤ 0.05
+
+# Look at raw p-values (not q-values)
+mlin2_fert_status$results %>%
+  dplyr::filter(metadata == "fert_status") %>%
+  dplyr::arrange(pval) %>%
+  head(20)
+
+# Check effect sizes
+mlin2_fert_status$results %>%
+  dplyr::filter(metadata == "fert_status") %>%
+  dplyr::arrange(desc(abs(coef))) %>%
+  head(20)
+
+# Testing at Genus level
+
+# NOTE! I remove all Unclassified OTUs clusters at genus as they will inflate the 
+# p-value correction and they are not informative. 
+
+metadata_AMF_rare_gen <- 
+  sample_data(
+    physeq_AMF_rare_Gen %>% 
+      subset_taxa(Genus != "Unclassified") %>%
+      prune_taxa(taxa_sums(x = .) > 0, x = .) %>% 
+      prune_samples(sample_sums(x=.) > 0, x =.) 
+    )%>% 
+  as.matrix() %>% 
+  as.data.frame() %>% 
+  mutate(across(.cols = 1:2, .fns = as.factor)) 
+
+otutable_AMF_rare_gen <- 
+  otu_table(
+    physeq_AMF_rare_Gen %>% 
+      subset_taxa(Genus != "Unclassified") %>%
+      prune_taxa(taxa_sums(x = .) > 0, x = .) %>% 
+      prune_samples(sample_sums(x=.) > 0, x =.)
+    ) %>% 
+  t() %>% 
+  as.matrix() %>% 
+  as.data.frame() 
+
+mlin2_fert_status_gen <- 
+  Maaslin2(
+    cores = 4,
+    output = "demo_output",
+    input_data = otutable_AMF_rare_gen,
+    input_metadata = metadata_AMF_rare_gen %>% dplyr::select(fert_status, site),
+    fixed_effects = "fert_status",
+    random_effects = "site",
+    reference = "fert_status,Control", # no space between variable and level 
+    normalization = "NONE",
+    standardize = FALSE,
+    plot_scatter = FALSE
   )
 
-bar_charts
+mlin2_fert_status_gen$results %>%
+  dplyr::filter(metadata == "fert_status", qval <= 0.05)
+
+mlin2_fert_status_gen$results %>%
+  dplyr::filter(metadata == "site", qval <= 0.05)
+
+physeq_AMF_rare_Gen@tax_table %>% 
+  as.data.frame() %>% 
+  rownames_to_column("otu") %>%
+  filter(otu %in% "Zotu3633")
+
+# What about at family level?
+metadata_AMF_rare_fam <- 
+  sample_data(
+    physeq_AMF_rare_Fam %>% 
+      subset_taxa(Family != "Unclassified") %>%
+      prune_taxa(taxa_sums(x = .) > 0, x = .) %>% 
+      prune_samples(sample_sums(x=.) > 0, x =.) 
+  )%>% 
+  as.matrix() %>% 
+  as.data.frame() %>% 
+  mutate(across(.cols = 1:2, .fns = as.factor)) 
+
+otutable_AMF_rare_fam <- 
+  otu_table(
+    physeq_AMF_rare_Fam %>% 
+      subset_taxa(Family != "Unclassified") %>%
+      prune_taxa(taxa_sums(x = .) > 0, x = .) %>% 
+      prune_samples(sample_sums(x=.) > 0, x =.)
+  ) %>% 
+  t() %>% 
+  as.matrix() %>% 
+  as.data.frame() 
+
+mlin2_fert_status_fam <- 
+  Maaslin2(
+    cores = 4,
+    output = "demo_output",
+    input_data = otutable_AMF_rare_fam,
+    input_metadata = metadata_AMF_rare_fam %>% dplyr::select(fert_status, site),
+    fixed_effects = "fert_status",
+    random_effects = "site",
+    reference = "fert_status,Control", # no space between variable and level 
+    normalization = "NONE",
+    standardize = FALSE,
+    plot_scatter = FALSE
+  )
+
+mlin2_fert_status_fam$results %>%
+  dplyr::filter(metadata == "fert_status", qval <= 0.05)
+
+mlin2_fert_status_fam$results %>%
+  dplyr::filter(metadata == "site", qval <= 0.05)
+
+physeq_AMF_rare_Fam@tax_table %>% 
+  as.data.frame() %>% 
+  rownames_to_column("otu") %>%
+  filter(otu %in% "Zotu3633")
+
+# RESUTLS. No significant differences between fertilized and control samples at 
+# OTU and Family levels but Rhizophagus (Zotu3633) is higher in fertilized plots.
+
+# Now, I can compare with a fixed-effect site model, no random effects! We can report 
+# this if we explain what we did. For direct compariosn I can use the dataset that
+# was agglomerated by Genus.
+
+mlin2_site <- 
+  Maaslin2(
+    cores = 4,
+    output = "demo_output",
+    input_data = otutable_AMF_rare_gen,
+    input_metadata = metadata_AMF_rare_gen %>% dplyr::select(fert_status, site),
+    fixed_effects = c("fert_status", "site"),
+    reference = "site,Escanaba",
+    correction = "BH",
+    normalization = "NONE",
+    standardize = FALSE,
+    plot_scatter = FALSE
+  )
+
+mlin2_site$results %>%
+  dplyr::filter(metadata == "fert_status", qval <= 0.05)
+
+# RESULTS. This confirm the result from above, the mixed effect model.
+
+mlin2_site$results %>%
+  dplyr::filter(metadata == "site", qval <= 0.05)
+
+# RESULTS. This is consistent with the PERMANOVA result, site has a strong effect
+# on community composition. These difference are related to the Escanaba site as 
+# reference level. We should run it pairwise to know which sites differ from each 
+# other and then use a stringent p value correction method.
+
+
+# pairwise maaslin2 ------------------------------------------------------------
+run_maaslin2_all_pairs <- function(physeq, 
+                                   factor_variable, 
+                                   qval_threshold = 0.05, 
+                                   norm_method, 
+                                   trans_method,
+                                   ...) {
+  
+  # extract datasets
+  input_metadata <- as.data.frame(as.matrix(physeq@sam_data)) %>% 
+    dplyr::select(.data[[factor_variable]])
+  
+  input_data <- as.data.frame(t(as.matrix(physeq@otu_table)))
+  
+  # Get unique levels of the factor variable
+  factor_levels <- unique(input_metadata[[factor_variable]])
+  
+  # Store results
+  significant_results <- list()
+  
+  # Loop through each level and set it as the reference
+  for (ref in factor_levels) {
+    cat("\nRunning Maaslin2 with reference:", ref, "\n")
+    
+    result <- Maaslin2(
+      cores = 6,
+      input_data = input_data,
+      input_metadata = input_metadata,
+      output = tempfile(),  # Avoid creating permanent folders
+      reference = c(factor_variable, ref),
+      min_abundance = 0.001,
+      min_prevalence = 0.1,
+      correction = "BH",
+      normalization = norm_method,
+      transform = trans_method,
+      standardize = FALSE,
+      plot_scatter = FALSE,
+      ...
+    )
+    
+    # Extract significant results and add reference group
+    sig_results <- result$results %>%
+      filter(qval <= qval_threshold) %>%
+      mutate(reference_group = ref)
+    
+    # Store results
+    significant_results[[ref]] <- sig_results
+  }
+  
+  # Combine all significant results into a single dataframe
+  final_results <- bind_rows(significant_results)
+  
+  return(final_results)
+}
+
+physeq_AMF_rare_Gen@tax_table
+
+mlin2_site <- 
+  run_maaslin2_all_pairs(
+    physeq = 
+      physeq_AMF_rare_Gen %>% 
+      subset_taxa(Genus != "Unclassified") %>%
+      prune_taxa(taxa_sums(x = .) > 0, x = .) %>% 
+      prune_samples(sample_sums(x=.) > 0, x =.),
+    factor_variable = "site",
+    qval_threshold = 0.05, 
+    norm_method = "NONE", 
+    trans_method = "LOG") 
+
+dim(mlin2_site)
+head(mlin2_site)
+
+# Plotting Maaslin2 ------------------------------------------------------------
+
+PlotMaaslin2 <- function(maaslin_results, 
+                         physeq_object) {
+  
+  # Process the data: Remove duplicate comparisons
+  cleaned_results <- 
+    maaslin_results %>%
+    rowwise() %>%
+    mutate(pair = paste(sort(c(value, reference_group)), collapse = "-")) %>%
+    ungroup() %>%
+    distinct(feature, pair, .keep_all = TRUE) %>%
+    dplyr::mutate(pair = as.factor(pair)) %>% 
+    left_join(as.data.frame(as.matrix(physeq_object@tax_table)) %>%
+                rownames_to_column("feature"), by = "feature") %>%
+    mutate(Genus_makrdown = str_c("*", str_trim(Genus), "*")) %>% 
+    #mutate(Taxonomy = paste(Genus_makrdown, str_c("(", str_trim(feature), ")"))) %>% 
+    mutate(foldChange = exp(coef))
+    #mutate(BestMatch_makrdown = str_c("*", str_trim(BestMatch), "*")) %>%
+    #mutate(Taxonomy = paste(BestMatch_makrdown, str_c("(", str_trim(feature), ")"))) 
+  print(cleaned_results, n=19)
+  
+  print(range(cleaned_results$foldChange))
+  
+  # Generate the heatmap plot
+  p <- 
+    ggplot(cleaned_results, aes(x = pair, y = Genus_makrdown, fill = coef)) + 
+    geom_tile() +
+    geom_text(aes(label = round(coef, 2)), size = 4, show.legend = FALSE) +
+    theme_bw() +
+    theme(
+      strip.text = element_text(size = 10, face = "bold"),
+      strip.background = element_rect(fill = "white", color = "white"),
+      plot.title = element_markdown(size = 12, face = "bold", hjust = 0.5, vjust = 0.5),
+      plot.subtitle = element_markdown(size = 10, hjust = 0.5, vjust = 0.5),
+      axis.text.x = element_text(angle = 33, hjust = 1, vjust = 1, size = 10),
+      axis.text.y = element_markdown(size = 10),
+      axis.title = element_markdown(size = 10), 
+      legend.title = element_text(size = 10, face = "bold"), 
+      legend.text = element_text(size = 9),
+      legend.key.height = unit(0.4, "cm"),  
+      legend.key.width = unit(0.4, "cm"),
+      legend.position = "right"
+    ) +
+    #facet_grid(~pair) +
+    scale_fill_gradient2(name = "lfc",
+                         low = "blue", high = "red", mid = "#FFFFCC", na.value = "white",
+                         limits = c(-8, 8),
+                         breaks = c(-8, -4, 0, 4, 8))
+  
+  return(p)
+}
+
+head(mlin2_site)
+
+
+PlotMaaslin2(maaslin_results = mlin2_site 
+             %>% filter(qval <= 0.05),
+             physeq_object =  physeq_AMF_rare_Gen) +
+  labs(title = "Differential abundance of genera among sites",
+       subtitle = "lfc = log fold change, fold change = exp(lfc)",
+       x = "Pairwise site comparison",
+       y = "Genus")
+
+
+# Plot check
+mlin2_site %>% filter(value == "Escanaba", reference_group == "Hancock") %>% 
+  filter(feature == "Zotu885") %>% pull(coef)
+mlin2_site %>% filter(value == "Escanaba", reference_group == "Hancock") %>% 
+  filter(feature == "Zotu9149") %>% pull(coef)
+
+
+
+mlin2_fert_status_gen$results %>%
+  dplyr::filter(metadata == "fert_status", qval <= 0.05)
+
+
+Differential abundance analysis revealed strong site-specific structuring of AMF genera, with several taxa showing large log fold changes across pairwise site comparisons. Genera such as Septoglomus, Diversispora, and Microkamienskia exhibited pronounced enrichment in specific sites, with log fold changes exceeding 6 in some contrasts, indicating substantial shifts in relative abundance. In contrast, genera such as Paraglomus and Oehlia tended to be consistently depleted in certain sites across multiple comparisons. Overall, the magnitude and consistency of these patterns indicate that site-level environmental factors strongly influence AMF community composition.
+
+Figure X. Differential abundance of AMF genera across sites.
+Heatmap of log fold changes (lfc) from Maaslin2 analysis for pairwise site comparisons. Values represent the natural log-transformed fold change in genus-level abundance between sites (first site relative to second). Positive values (red) indicate higher abundance in the first site, while negative values (blue) indicate higher abundance in the second site. Only significant associations (q ≤ 0.05) are shown. The large magnitude of several log fold changes indicates strong site-specific structuring of AMF communities.
+
+# Testing the use of Maaslin3 instead, which implements a more robust FDR correction
+# method (I think) and also allows for more flexible modeling of random effects.
+
+# Testing for differential abudnance.
+mlin2_fert_status <- 
+  maaslin3(
+    input_data     = otutable_AMF_rare,
+    input_metadata = metadata_AMF_rare %>% dplyr::select(fert_status, site),
+    formula        = ~ fert_status + (1 | site),
+    normalization  = "NONE",
+    standardize    = FALSE,
+    output         = "maaslin3_fert",
+    cores          = 4
+  )
+
+
+# Testing for differential prevalence.
+fit_prev <- maaslin3(
+  input_data     = otutable_binary,
+  input_metadata = metadata_AMF_rare %>% dplyr::select(fert_status, site),
+  formula        = ~ fert_status + (1 | site),
+  normalization  = "NONE",       # already binary
+  standardize    = FALSE,
+  transform      = "NONE",       # do not log-transform
+  output         = "maaslin3_prev",
+  cores          = 4,
+  analysis      = "binomial"     # key: logistic regression for prevalence
+)
+
+
+
+
 
 
 # **********************************************************************--------
@@ -2009,224 +2524,6 @@ adonis_betadisp_90to100 <- rbind(
 )
 
 adonis_betadisp_90to100
-
-# **********************************************************************--------
-# **** 4. DIFFERENTIAL ABUNDANCE **** ------------------------------------------
-
-library(Maaslin2)
-
-# https://huttenhower.sph.harvard.edu/maaslin/
-
-meta_ITS_rare_root <- as.data.frame(as.matrix(physeq_ITS_rare_root@sam_data))
-otu_ITS_rare_root <- as.data.frame(t(as.matrix(physeq_ITS_rare_root@otu_table)))
-
-mlin2_ITS_root_Treat <- 
-  Maaslin2(
-    cores = 1,
-    output = "demo_output", 
-    min_abundance = 0.001,
-    min_prevalence = 0.1,
-    min_variance = 0.001,
-    input_data = otu_ITS_rare_root, 
-    input_metadata = meta_ITS_rare_root %>% 
-      dplyr::select(Treatment), 
-    correction = "BH",
-    normalization = 'NONE',
-    reference = c("Treatment", "NE"),
-    standardize = FALSE, 
-    plot_scatter = TRUE)
-
-mlin2_ITS_root_Treat$results
-
-head(mlin2_ITS_root_Treat$results)
-
-mlin2_ITS_root_Treat$results %>% 
-  filter(qval <= 0.05)
-
-
-# Running Maaslin2 to combination of Treatment, pairwise 
-
-run_maaslin2_all_pairs <- function(physeq, factor_variable, 
-                                   qval_threshold = 0.05, 
-                                   norm_method, trans_method,
-                                   ...) {
-  library(Maaslin2)
-  library(tidyverse)
-  library(phyloseq)
-  
-  # extract datasets
-  input_metadata <- as.data.frame(as.matrix(physeq@sam_data)) %>% 
-    dplyr::select(.data[[factor_variable]])
-  
-  input_data <- as.data.frame(t(as.matrix(physeq@otu_table)))
-  
-  # Get unique levels of the factor variable
-  factor_levels <- unique(input_metadata[[factor_variable]])
-  
-  # Store results
-  significant_results <- list()
-  
-  # Loop through each level and set it as the reference
-  for (ref in factor_levels) {
-    cat("\nRunning Maaslin2 with reference:", ref, "\n")
-    
-    result <- Maaslin2(
-      cores = 6,
-      input_data = input_data,
-      input_metadata = input_metadata,
-      output = tempfile(),  # Avoid creating permanent folders
-      reference = c(factor_variable, ref),
-      min_abundance = 0.001,
-      min_prevalence = 0.1,
-      correction = "BH",
-      normalization = norm_method,
-      transform = trans_method,
-      standardize = FALSE,
-      plot_scatter = TRUE,
-      ...
-    )
-    
-    # Extract significant results and add reference group
-    sig_results <- result$results %>%
-      filter(qval <= qval_threshold) %>%
-      mutate(reference_group = ref)
-    
-    # Store results
-    significant_results[[ref]] <- sig_results
-  }
-  
-  # Combine all significant results into a single dataframe
-  final_results <- bind_rows(significant_results)
-  
-  return(final_results)
-}
-
-
-mlin2_ITS_root_Treat <- 
-  run_maaslin2_all_pairs(
-    physeq_ITS_rare_root, 
-    factor_variable = "Treatment",
-    qval_threshold = 0.05, 
-    norm_method = "TSS", trans_method = "LOG") %>% 
-  mutate(group = "Root")
-
-mlin2_ITS_root_Treat
-
-mlin2_fungi <- 
-  rbind(
-    run_maaslin2_all_pairs(
-      physeq_ITS_root, 
-      factor_variable = "Treatment",
-      qval_threshold = 0.05, norm_method = "TSS", trans_method = "LOG") %>% 
-      mutate(group = "Root"),
-    run_maaslin2_all_pairs(
-      physeq_ITS_rhizo,
-      factor_variable = "Treatment",
-      qval_threshold = 0.05,norm_method = "TSS", trans_method = "LOG") %>% 
-      mutate(group = "Rhizosphere"),
-    run_maaslin2_all_pairs(
-      physeq_ITS_soil,
-      factor_variable = "Treatment",
-      qval_threshold = 0.05,norm_method = "TSS", trans_method = "LOG") %>%  
-      mutate(group = "Soil"),
-    run_maaslin2_all_pairs(
-      physeq_ITS_control,
-      factor_variable = "Treatment",
-      qval_threshold = 0.05,norm_method = "TSS", trans_method = "LOG") %>% 
-      mutate(group = "Control"))
-
-
-mlin2_fungi
-
-
-mlin2_bact <- 
-  rbind(
-    run_maaslin2_all_pairs(
-      physeq_16S_root, 
-      factor_variable = "Treatment",
-      qval_threshold = 0.05, norm_method = "TSS", trans_method = "LOG") %>% 
-      mutate(group = "Root"),
-    run_maaslin2_all_pairs(
-      physeq_16S_rhizo,
-      factor_variable = "Treatment",
-      qval_threshold = 0.05, norm_method = "TSS", trans_method = "LOG") %>%  
-      mutate(group = "Rhizosphere"),
-    run_maaslin2_all_pairs(
-      physeq_16S_soil,
-      factor_variable = "Treatment",
-      qval_threshold = 0.05, norm_method = "TSS", trans_method = "LOG") %>% 
-      mutate(group = "Soil"),
-    run_maaslin2_all_pairs(
-      physeq_16S_control,
-      factor_variable = "Treatment",
-      qval_threshold = 0.05, norm_method = "TSS", trans_method = "LOG") %>% 
-      mutate(group = "Control"))
-
-
-mlin2_bact
-
-
-
-# Plotting Maaslin2 ------------------------------------------------------------
-PlotMaaslin2 <- function(maaslin_results, physeq_object) {
-  require(tidyverse)
-  library(stringr)
-  require(ggtext)
-  
-  # Process the data: Remove duplicate comparisons
-  cleaned_results <- maaslin_results %>%
-    rowwise() %>%
-    mutate(pair = paste(sort(c(value, reference_group)), collapse = "-")) %>%
-    ungroup() %>%
-    distinct(feature, pair, .keep_all = TRUE) %>%
-    mutate(group  = fct_relevel(group,"Root","Rhizosphere","Soil"))  %>% 
-    left_join(as.data.frame(as.matrix(physeq_object@tax_table)) %>%
-                rownames_to_column("feature"), by = "feature") %>%
-    mutate(BestMatch_makrdown = str_c("*", str_trim(BestMatch), "*")) %>%
-    mutate(Taxonomy = paste(BestMatch_makrdown, str_c("(", str_trim(feature), ")"))) 
-  
-  # Generate the heatmap plot
-  p <- 
-    ggplot(cleaned_results, aes(x = pair, y = Taxonomy, fill = coef)) + 
-    geom_tile() +
-    geom_text(aes(label = round(coef, 2)), size = 4, show.legend = FALSE) +
-    theme_bw() +
-    theme(
-      strip.text = element_text(size = 10, face = "bold"),
-      strip.background = element_rect(fill = "white", color = "white"),
-      plot.title = element_markdown(size = 12, face = "bold", hjust = 0.5, vjust = 0.5),
-      plot.subtitle = element_markdown(size = 10, face = "bold", hjust = 0.5, vjust = 0.5),
-      axis.text.x = element_text(angle = 33, hjust = 1, vjust = 1, size = 10),
-      axis.text.y = element_markdown(size = 10),
-      axis.title = element_markdown(size = 10), 
-      legend.title = element_text(size = 10, face = "bold"), 
-      legend.text = element_text(size = 9),
-      legend.key.height = unit(0.4, "cm"),  
-      legend.key.width = unit(0.4, "cm"),
-      legend.position = "right"
-    ) +
-    facet_grid(~group) +
-    scale_fill_gradient2(name = "lfc",
-                         low = "blue", high = "red", mid = "#FFFFCC", na.value = "white",
-                         limits = c(-8, 8),
-                         breaks = c(-8, -4, 0, 4, 8))
-  
-  return(p)
-}
-
-
-
-PlotMaaslin2(mlin2_fungi, physeq_ITS_clean) + 
-  labs(x=NULL, y = NULL, title = "Fungi Microbiome Association with Linear Models")
-
-
-PlotMaaslin2(mlin2_bact, physeq_16S_clean) + 
-  labs(x=NULL, y = NULL, title = "Bacteria Microbiome Association with Linear Models")
-
-
-
-
-
 
 
 # **********************************************************************--------
@@ -3041,8 +3338,8 @@ ggplot() +
 
 
 
-
-
+# ***********************************************************************-------
+# ***********************************************************************-------
 # ***********************************************************************-------
 
 
@@ -3248,6 +3545,103 @@ mean_physeq_AMF_rare@tax_table %>%
   as.matrix() %>% 
   as.data.frame() %>% 
   subset(Genus %in% c("Mortierella", "Jimgerdemannia"))
+
+
+mlin2_fert_status <- 
+  Maaslin2(
+    cores = 4,
+    output = "demo_output", 
+    min_abundance = 0.001,
+    min_prevalence = 0.1,
+    min_variance = 0.001,
+    input_data = otutable_AMF_rare, 
+    input_metadata = metadata_AMF_rare %>% dplyr::select(fert_status, site),  
+    #fixed_effects  = c("fert_status"),  # fert_status as fixed 
+    reference = c("fert_status,Control"),
+    random_effects = c("site"),         # site as random
+    correction = "BH",
+    normalization = "NONE",
+    standardize = FALSE, 
+    plot_scatter = FALSE)
+
+str(mlin2_fert_status)
+
+mlin2_fert_status$results %>% filter(qval <= 0.05)
+
+mlin2_fert_status$results %>% 
+  filter(metadata == "site")%>% 
+  filter(qval <= 0.05)
+
+# INETERPRETATION. When site is included as random effect, its variation is absorbed
+# into the random effect structure. The model accounts for between-site variance 
+# when estimating coefficients. This reduces residual variance, making it harder 
+# to detect site effects as fixed effects. The 16 OTUs that survive are those with
+# very strong site signals that persist even after the random effect soaks up site
+# variance.
+
+mlin2_site <- 
+  Maaslin2(
+    cores = 4,
+    output = "demo_output_site", 
+    min_abundance = 0.001,
+    min_prevalence = 0.1,
+    min_variance = 0.001,
+    input_data = otutable_AMF_rare, 
+    input_metadata = metadata_AMF_rare %>% dplyr::select(site),
+    fixed_effects  = c("site"),   # site as fixed only
+    # no random_effects
+    reference = c("site,Escanaba"),  # no space
+    correction = "BH", # correction = "bonferroni",
+    normalization = 'NONE',
+    standardize = FALSE, 
+    plot_scatter = FALSE)
+
+str(mlin2_site)
+
+mlin2_site$results %>% 
+  filter(metadata == "site") %>% 
+  filter(qval <= 0.05)
+
+
+# Check effect sizes
+mlin2_site$results %>%
+  dplyr::filter(metadata == "site") %>%
+  dplyr::arrange(desc(abs(coef)), qval) %>%
+  head(40)
+
+
+
+
+
+
+# Plotting 
+mlin2_site$results %>%
+  dplyr::filter(metadata == "site", qval <= 0.05) %>%
+  left_join(as.data.frame(as.matrix(physeq_AMF_rare@tax_table)) %>%
+              rownames_to_column("feature"), 
+            by = "feature") %>% 
+  ggplot(aes(x = value, y = BestMatch, fill = coef)) + 
+  geom_tile() +
+  geom_text(aes(label = round(coef, 2)), size = 4, show.legend = FALSE) +
+  theme_bw() +
+  theme(
+    strip.text = element_text(size = 10, face = "bold"),
+    strip.background = element_rect(fill = "white", color = "white"),
+    plot.title = element_markdown(size = 12, face = "bold", hjust = 0.5, vjust = 0.5),
+    plot.subtitle = element_markdown(size = 10, face = "bold", hjust = 0.5, vjust = 0.5),
+    axis.text.x = element_text(angle = 33, hjust = 1, vjust = 1, size = 10),
+    axis.text.y = element_markdown(size = 10),
+    axis.title = element_markdown(size = 10), 
+    legend.title = element_text(size = 10, face = "bold"), 
+    legend.text = element_text(size = 9),
+    legend.key.height = unit(0.4, "cm"),  
+    legend.key.width = unit(0.4, "cm"),
+    legend.position = "right"
+  ) +
+  scale_fill_gradient2(name = "lfc",
+                       low = "blue", high = "red", mid = "#FFFFCC", na.value = "white",
+                       limits = c(-8, 8),
+                       breaks = c(-8, -4, 0, 4, 8)) 
 
 
 
