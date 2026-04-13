@@ -72,6 +72,88 @@ extract_blasTAX(
 
 # Finalize and modify taxonomy table -------------------------------------------
 
+# Check taxonomy table consistency across ranks --------------------------------
+CheckTaxonomyConsistency <- function(tax_table, return_long = FALSE) {
+  
+  # Load safely (no masking issues)
+  requireNamespace("dplyr")
+  requireNamespace("tibble")
+  
+  # Helper: valid classification
+  is_classified <- function(x) {
+    !is.na(x) & x != "" & x != "Unclassified"
+  }
+  
+  # Prepare table
+  tax_df <- tax_table %>%
+    as.data.frame() %>%
+    tibble::rownames_to_column("feature")
+  
+  # Internal function to check conflicts between two ranks
+  check_rank_conflict <- function(df, group_rank, test_rank) {
+    
+    summary_tbl <- df %>%
+      dplyr::group_by(.data[[group_rank]]) %>%
+      dplyr::filter(
+        is_classified(.data[[group_rank]]) &
+          dplyr::n_distinct(.data[[test_rank]][is_classified(.data[[test_rank]])]) > 1
+      ) %>%
+      dplyr::summarise(
+        n_values = dplyr::n_distinct(.data[[test_rank]][is_classified(.data[[test_rank]])]),
+        values = paste(unique(.data[[test_rank]][is_classified(.data[[test_rank]])]), collapse = "; "),
+        OTUs = paste(feature, collapse = "; "),
+        .groups = "drop"
+      )
+    
+    long_tbl <- df %>%
+      dplyr::group_by(.data[[group_rank]]) %>%
+      dplyr::filter(
+        is_classified(.data[[group_rank]]) &
+          dplyr::n_distinct(.data[[test_rank]][is_classified(.data[[test_rank]])]) > 1
+      ) %>%
+      dplyr::ungroup() %>%
+      dplyr::select(feature, dplyr::all_of(group_rank), dplyr::all_of(test_rank))
+    
+    return(list(summary = summary_tbl, long = long_tbl))
+  }
+  
+  # Run checks
+  genus_family   <- check_rank_conflict(tax_df, "Genus", "Family")
+  family_order   <- check_rank_conflict(tax_df, "Family", "Order")
+  order_class    <- check_rank_conflict(tax_df, "Order", "Class")
+  class_phylum   <- check_rank_conflict(tax_df, "Class", "Phylum")
+  
+  # Return
+  if (return_long) {
+    return(list(
+      genus_family_conflicts = genus_family$long,
+      family_order_conflicts = family_order$long,
+      order_class_conflicts  = order_class$long,
+      class_phylum_conflicts = class_phylum$long
+    ))
+  } else {
+    return(list(
+      genus_family_conflicts = genus_family$summary,
+      family_order_conflicts = family_order$summary,
+      order_class_conflicts  = order_class$summary,
+      class_phylum_conflicts = class_phylum$summary
+    ))
+  }
+}
+
+
+
+CheckTaxonomyConsistency(taxonomy_99, 
+                         return_long=FALSE)
+
+CheckTaxonomyConsistency(taxonomy_99, 
+                         return_long=TRUE)
+
+CheckTaxonomyConsistency(taxonomy_99, 
+                         return_long=TRUE)$genus_family_conflicts %>% 
+  filter(Genus == "Ambispora")
+
+
 # Replace blanks ---------------------------------------------------------------
 blank2na = function(x, na.strings=c('','.','NA','na','N/A','n/a','NaN','nan')) {
   if (is.factor(x)) {
@@ -1279,24 +1361,6 @@ physeq_ITS_gen <-
 PlotBar(ExtractBar(physeq_ITS_gen, 50, "Genus"), "Genus")
 
 # **********************************************************************--------
-
-# Extract Glomeomycotina -------------------------------------------------------
-
-extract_Glomero <- function(taxonomy){
-  
-  FinalizeTaxonomy(
-    taxonomy %>%
-      dplyr::select(
-        "Zotu","Query","Kingdom","Phylum","Class","Order","Family","Genus","Species")
-  ) %>%
-    full_join(taxonomy %>% dplyr::select(Query, S_score), by = "Query") %>%
-    mutate(S_score = as.numeric(S_score)) %>%
-    mutate_if(is.character, ~ replace(., is.na(.), "Unclassified")) %>%
-    column_to_rownames("Zotu") %>%
-    filter(Phylum %in% "Mucoromycota")
-}
-
-FinalizeTaxonomy(taxonomy_99) %>% extract_Glomero()
 
 # Diagnostics plots ------------------------------------------------------ 
 diagnostic_plots <- function(fit) {
