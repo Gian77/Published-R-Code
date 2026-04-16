@@ -120,28 +120,36 @@ as.factor(taxonomy_99$Phylum)
 as.factor(taxonomy_99$Class)
 
 # NCBI blasTAX taxonomy --------------------------------------------------------
-
-taxonomy_99 <- extract_blasTAX(
-  tax_path = file.path(data_path, "datasets/taxonomy_blast_99.txt"),
-  namemap_path = file.path(data_path, "datasets/name_mapping_99.txt")
-)
+taxonomy_99 <-
+  extract_blasTAX(
+    tax_path = file.path(data_path, "datasets/taxonomy_blast_99.txt"),
+    namemap_path = file.path(data_path, "datasets/name_mapping_99.txt")
+  ) 
 
 head(taxonomy_99)
 dim(taxonomy_99)
 
-# These below were Unclassified 99% OTUs
-taxonomy_99 %>% filter(Query %in% "Query_998")
-taxonomy_99 %>% filter(Query %in% "Query_1124")
+# Adding columns and finalize taxonomy -----------------------------------------
+taxonomy_99_fix <-
+  taxonomy_99 %>%
+  dplyr::select(
+    "Zotu", "Kingdom" ,"Phylum", "Class","Order","Family","Genus","Species") %>%
+  filter(Class %in% "Glomeromycetes") %>% 
+  FinalizeTaxonomy()
 
-taxonomy_99 %>% subset(Genus %in% c("Mortierella", "Jimgerdemannia"))
-taxonomy_99 %>% subset(Class %in% c("Mortierellomycetes", "Endogonomycetes"))
+# These below were Unclassified 99% OTUs
+taxonomy_99_fix %>% filter(Query %in% "Query_998")
+taxonomy_99_fix %>% filter(Query %in% "Query_1124")
+
+taxonomy_99_fix %>% subset(Genus %in% c("Mortierella", "Jimgerdemannia"))
+taxonomy_99_fix %>% subset(Class %in% c("Mortierellomycetes", "Endogonomycetes"))
 
 # Check taxonomy table consistency across ranks --------------------------------
 
-CheckTaxonomyConsistency(taxonomy_99, 
+CheckTaxonomyConsistency(taxonomy_99_fix, 
                          return_long=TRUE)
 
-taxonomy_99 %>%
+taxonomy_99_fix %>%
   mutate(Family = if_else(Family == "Archaeosporaceae", "Ambisporaceae", Family)) %>% 
   filter(Genus == "Ambispora")
 
@@ -149,14 +157,6 @@ taxonomy_99 %>%
 taxonomy_99 <- 
   taxonomy_99 %>%
   mutate(Family = if_else(Family == "Archaeosporaceae", "Ambisporaceae", Family))
-
-
-# Adding columns and finalize taxonomy -----------------------------------------
-taxonomy_99_fix <-
-    taxonomy_99 %>%
-  dplyr::select(
-    "Kingdom" ,"Phylum","Class","Order","Family","Genus","Species", "BestMatch") %>%
-  filter(Class %in% "Glomeromycetes") 
 
 taxonomy_99_fix %>% subset(Class %in% c("Mortierellomycetes", "Endogonomycetes"))
 taxonomy_99_fix %>%  subset(Genus %in% c("Mortierella", "Jimgerdemannia"))
@@ -1602,8 +1602,18 @@ palette_bestmatch <-
     "#5b5b19","#fcfc00","#ffff9e","#ffb7ef","#fa7efc",
     "#ae09ea","#521899","#1e0047")
 
-# Working with the RAXML tree for now
+# A. Generating a 99% OTUs tree ---------------------------------------------------
+#Working with the RAXML tree for now
 tree_raxml_AMF <- phy_tree(physeq_AMF_rare)
+
+# Generating metadata for plotting ---------------------------------------------
+melted_AMF <- 
+  physeq_AMF_rare %>%
+  psmelt() %>%
+  arrange(Genus)
+
+head(melted_AMF)
+dim(melted_AMF)
 
 dat1 <- melted_AMF %>%
   group_by(OTU, BestMatch, Genus, Phylum, Family) %>%
@@ -1615,27 +1625,33 @@ dat1 <- melted_AMF %>%
 range(dat1$MeanAbundance)
 range(sqrt(dat1$MeanAbundance))
 
-
 dat2 <- melted_AMF %>%
   group_by(OTU, site) %>%
   summarise(Abundance = mean(Abundance, na.rm = TRUE), .groups = "drop") %>%
   rename(ID = OTU, Sites = site)
-
 
 dat3 <- melted_AMF %>%
   group_by(OTU, site) %>%
   summarise(TotalAbundance = sum(Abundance, na.rm = TRUE), .groups = "drop") %>%
   rename(ID = OTU, Sites = site)
 
+# Build original plot ---------------------------------------------------------------
+tree_AMF <- 
+  tree_raxml_AMF %>% 
+  ggtree(layout = "circular", branch.length = "none", size = 0.1, open.angle = 5)
 
-# Build the plot ---------------------------------------------------------------
-tree_AMF <- ggtree(tree_raxml_AMF, branch.length = "none", size = 0.15, open.angle = 5)
+tree_AMF <-
+  tree_raxml_AMF %>% 
+  ggtree(branch.length = "none", size = 0.15, open.angle = 5)
 
-tree_AMF <- ggtree(tree_raxml_AMF, layout = "fan", size = 0.15, open.angle = 5)
-tree_AMF
+tree_AMF <- 
+  tree_raxml_AMF %>% 
+  ggtree(layout = "fan", size = 0.15, open.angle = 5)
+
 
 # Layer 1: tip points — color = Genus, size = mean abundance
-tree_AMF <- tree_AMF %<+% dat1 +
+tree_AMF <- 
+  tree_AMF %<+% dat1 +
   geom_tippoint(
     aes(fill = BestMatch, size = sqrt(MeanAbundance)),
     shape = 21, stroke = 0.1, alpha = 0.85) +
@@ -1649,10 +1665,21 @@ tree_AMF <- tree_AMF %<+% dat1 +
   ) +
   scale_size_continuous(
     range = c(0.1, 4),
-    name  = "log(Abundance + 1)",
+    name  = "sqrt(Abundance)",
     guide = guide_legend(keywidth = 0.5, keyheight = 0.5, order = 2,
                          override.aes = list(shape = 21))
   )
+
+tree_AMF <- 
+  tree_AMF +
+  geom_tiplab2(
+    aes(label = BestMatch),
+    size = 1,
+    align = TRUE,
+    offset = 0.02
+  )
+
+tree_AMF 
 
 # Layer 2: site abundance heatmap ring
 tree_AMF <- 
@@ -1708,9 +1735,9 @@ tree_AMF + layout_circular() +
   theme(legend.position=c(0.05, 0.7)) 
 
 tree_AMF + layout_rectangular() + 
-  theme(legend.position=c(0.05, 0.7)) 
+  theme(legend.position=c(0.7, 0.2)) 
 
-# Try agglomerating the tree by site, fert status, and Best Match  -------------
+# B. Reducing tree complexity my agglomerating taxa ----------------------------
 
 sample_data(physeq_AMF_rare)$fert_status_site <- 
   paste(sample_data(physeq_AMF_rare)$fert_status, 
@@ -1727,39 +1754,342 @@ merged_AMF <-
   prune_taxa(taxa_sums(x = .) > 0, x = .) %>% 
   prune_samples(sample_sums(x=.) > 0, x =.)
 
+# Checks
 merged_AMF@tax_table %>% as.data.frame()
-plot(merged_AMF@phy_tree)
-
-merged_AMF@tax_table %>% 
-  as.data.frame() %>% 
-  subset(Genus == "Diversispora")
-
+merged_AMF@tax_table %>% as.data.frame() %>% subset(Genus == "Diversispora")
 merged_AMF
 
-
-
+# Melting 
 melt_merged_AMF <- 
   psmelt(merged_AMF) %>% 
   separate(col = Sample, into = c("fert_status", "site"), sep = "-") %>% 
-  #dplyr::select(OTU, val=Abundance, fert_status, site) %>% 
-  rename(val = Abundance) %>% 
-  mutate(val = sqrt(val))
+  mutate(val = sqrt(Abundance))
 
 #melt_merged_AMF$Species
 #separate(col = Sample, into = c("fert_status", "site"), sep = "-")
-
 melt_merged_AMF %>% subset(Genus == "Diversispora")
-
-# NOTE. There are different Zotus classified with the same BestMatch name.
-
 head(melt_merged_AMF)
 dim(melt_merged_AMF)
 
-tree_AMF_merged <- ggtree(merged_AMF, layout="fan", open.angle=10) + 
+# NOTE. There are different Zotus classified with the same BestMatch name.
+tree_raxml_AMF_merged <- phy_tree(merged_AMF)
+tree_raxml_AMF_merged
+
+# Generating metadata for plotting ---------------------------------------------
+dat1_merged <- 
+  melt_merged_AMF %>%
+  group_by(OTU, BestMatch, Genus, Phylum, Family) %>%
+  summarise(MeanAbundance = mean(Abundance, na.rm = TRUE), .groups = "drop") %>%
+  mutate(
+    Genus = ifelse(is.na(Genus) | Genus == "", "Unclassified", Genus)) %>% 
+  rename(label = OTU)
+
+range(dat1_merged$MeanAbundance)
+range(sqrt(dat1_merged$MeanAbundance))
+
+dat2_merged <-
+  melt_merged_AMF %>%
+  group_by(OTU, site) %>%
+  summarise(Abundance = mean(Abundance, na.rm = TRUE), .groups = "drop") %>%
+  rename(ID = OTU, Sites = site)
+
+dat2_merged
+
+dat3_merged <- 
+  melt_merged_AMF %>%
+  group_by(OTU, site) %>%
+  summarise(TotalAbundance = sum(Abundance, na.rm = TRUE), .groups = "drop") %>%
+  rename(ID = OTU, Sites = site)
+
+dat3_merged
+
+dat4_merged <- 
+  melt_merged_AMF %>%
+  group_by(OTU, fert_status) %>%
+  summarise(Abundance = mean(Abundance, na.rm = TRUE), .groups = "drop") %>%
+  rename(ID = OTU, N_addition = fert_status)
+
+dat4_merged
+
+
+# 1) Build plot version 1 ---------------------------------------------------------
+tree_AMF_merged <- 
+  tree_raxml_AMF_merged %>% 
+  ggtree(layout = "circular", branch.length = "none", size = 0.15, open.angle = 5)
+
+tree_AMF_merged <- 
+  tree_raxml_AMF_merged %>% 
+  ggtree(layout = "fan", size = 0.15, open.angle = 5)
+
+tree_AMF_merged
+
+# Layer 1: tip points — color = Genus, size = mean abundance
+tree_AMF_merged <- 
+  tree_AMF_merged %<+% dat1_merged +
+  geom_tippoint(
+    aes(fill = BestMatch, size = sqrt(MeanAbundance)),
+    shape = 21, stroke = 0.1, alpha = 0.85) +
+  scale_fill_manual(
+    values = palette_bestmatch,
+    guide  = guide_legend(
+      keywidth = 0.5, keyheight = 0.5, order = 1,
+      override.aes = list(shape = 21, size = 3)
+    ),
+    na.translate = FALSE
+  ) +
+  scale_size_continuous(
+    range = c(0.1, 4),
+    name  = "sqrt(Abundance)",
+    guide = guide_legend(keywidth = 0.5, keyheight = 0.5, order = 2,
+                         override.aes = list(shape = 21))
+  )
+
+tree_AMF_merged <- 
+  tree_AMF_merged +
+  geom_tiplab2(
+    aes(label = BestMatch),
+    size = 3,
+    align = TRUE,
+    offset = 0.2
+  )
+
+tree_AMF_merged
+
+# Layer 2: site abundance heatmap ring
+tree_AMF_merged <- 
+  tree_AMF_merged +
+  new_scale_fill() +
+  geom_fruit(
+    data    = dat2_merged,
+    geom    = geom_tile,
+    mapping = aes(y = ID, x = Sites, alpha = Abundance, fill = Sites),
+    color   = "grey90", offset = 0.04, size = 0.02
+  ) +
+  scale_alpha_continuous(
+    range = c(0, 1),
+    guide = guide_legend(keywidth = 0.3, keyheight = 0.3, order = 4)
+  ) +
+  scale_fill_manual(
+    values = palette_site,
+    guide  = guide_legend(keywidth = 0.3, keyheight = 0.3, order = 3)
+  )
+
+# Layer 3: total abundance for fert_status
+tree_AMF_merged <- 
+  tree_AMF_merged +
+  new_scale_fill() +
+  geom_fruit(
+    data    = dat4_merged,
+    geom    = geom_tile,
+    mapping = aes(y = ID, x = N_addition, alpha = Abundance, fill = N_addition),
+    color   = "grey90", offset = 0.04, size = 0.02
+  ) +
+  scale_alpha_continuous(
+    range = c(0, 1),
+    guide = guide_legend(keywidth = 0.3, keyheight = 0.3, order = 4)
+  ) +
+  scale_fill_manual(
+    values = palette_site,
+    guide  = guide_legend(keywidth = 0.3, keyheight = 0.3, order = 3)
+  )
+
+# Layer 4: total abundance for site
+tree_AMF_merged <- 
+  tree_AMF_merged +
+  new_scale_fill() +
+  geom_fruit(
+    data        = dat3_merged,
+    geom        = geom_bar,
+    mapping     = aes(y = ID, x = TotalAbundance, fill = Sites),
+    pwidth      = 0.38,
+    orientation = "y",
+    stat        = "identity"
+  ) +
+  scale_fill_manual(
+    values = palette_site,
+    guide  = guide_legend(keywidth = 0.3, keyheight = 0.3, order = 3)
+  )
+
+# Theme 
+tree_AMF_merged <- 
+  tree_AMF_merged +
+  geom_treescale(fontsize = 2, linesize = 0.3) +
+  theme(
+    legend.position   = c(0.93, 0.5),
+    legend.background = element_rect(fill = NA),
+    legend.title      = element_text(size = 6.5),
+    legend.text       = element_text(size = 4.5),
+    legend.spacing.y  = unit(0.02, "cm")
+  )
+
+tree_AMF_merged
+
+
+tree_AMF_merged <- tree_AMF_merged + 
+  geom_tiplab(
+    aes(label = BestMatch), 
+    size = 2.5,           # Keep it small for 1,700 tips!
+    offset = 0.5,         # Push it slightly past the tippoint
+    linetype = "dotted",   # "33" or "dotted"
+    linewidth = 0.2,       # Keep it subtle
+    color = "grey50", 
+    geom = "text",        # Use 'text' to avoid the dotted line logic here
+    align = TRUE         # Set to FALSE so it stays next to the point
+  )
+
+
+tree_AMF_merged
+
+tree_AMF_merged + layout_circular() + 
+  theme(legend.position=c(0.05, 0.7)) 
+
+tree_AMF_merged + layout_rectangular() + 
+  theme(legend.position=c(0.05, 0.7)) 
+
+# Imporvements -----------------------------------------------------------------
+# https://www.earlham.ac.uk/articles/plotting-phylogenetic-trees-r-alternating-clade-highlights
+
+tree_AMF <- ggtree(tree_raxml_AMF) %<+% dat1
+
+genera_nodes <- 
+  dat1 %>%
+  group_by(BestMatch) %>%
+  filter(n() > 1) %>% # Only collapse if there's more than one tip
+  summarize(node = ggtree::MRCA(tree_raxml_AMF, label))
+
+genera_nodes
+
+for(n in genera_nodes$node) {
+  tree_AMF <- collapse(tree_AMF, node = n, mode = 'mixed', alpha = 0.4)
+}
+
+tree_AMF + 
+  geom_tippoint(aes(fill = BestMatch, size = sqrt(MeanAbundance)), 
+                shape = 21, stroke = 0.1) +
+  geom_tiplab(aes(subset = !is.na(Genus)), offset = 0.2) + # Adjust as needed
+  scale_fill_manual(values = palette_bestmatch)
+
+tree_AMF + 
+  geom_tippoint(aes(fill = BestMatch, size = sqrt(MeanAbundance)), 
+                shape = 21, stroke = 0.1) +
+  geom_tiplab(aes(subset = !is.na(Genus)), offset = 0.2) + # Adjust as needed
+  scale_fill_manual(values = palette_bestmatch)
+
+# This is Goood! 
+# The Better Approach: geom_strip()
+
+genera_nodes <- 
+  dat1 %>%
+  filter(label %in% tree_raxml_AMF$tip.label) %>%
+  group_by(BestMatch) %>%
+  summarize(
+    t1 = first(label),
+    t2 = last(label),
+    .groups = "drop"
+  ) %>%
+  filter(t1 != t2) # Only draw strips for groups with more than 1 tip
+
+genera_nodes
+
+tree_AMF <- 
+  ggtree(tree_raxml_AMF) %<+% dat1 +
+  geom_tippoint(aes(fill = BestMatch, size = sqrt(MeanAbundance)), 
+                shape = 21, stroke = 0.1, alpha = 0.8) +
+  scale_fill_manual(values = palette_bestmatch)
+
+for(i in 1:nrow(genera_nodes)) {
+  tree_AMF <- 
+    tree_AMF + 
+    geom_strip(
+    taxa1 = genera_nodes$t1[i], 
+    taxa2 = genera_nodes$t2[i], 
+    label = genera_nodes$BestMatch[i],
+    offset = 0.1,       # Adjust this value based on your tree's branch lengths
+    barsize = 1.5, 
+    extend = 0.2, 
+    fontsize = 3,
+    offset.text = 0.1
+  )
+}
+
+tree_AMF
+
+tree_AMF + scale_fill_manual(
+  values = palette_bestmatch,
+  guide = guide_legend(
+    title = "Taxa",
+    ncol = 1,               # Force single column
+    byrow = TRUE,
+    override.aes = list(
+      shape = 22,           # 22 is a square with a border
+      size = 4,             # Smaller square size
+      stroke = 0.2          # Thin border for the square
+    )
+  ),
+  na.translate = FALSE
+) +
+  theme(
+    legend.key.height = unit(0.4, "cm"), # Reduces vertical space between items
+    legend.text = element_text(size = 8), # Smaller font size
+    legend.title = element_text(size = 9, face = "bold")
+  ) +
+  xlim(0, 4) 
+
+# Ttsting another option
+
+tree_AMF <- 
+  ggtree(tree_raxml_AMF, linewidth=0.5) %<+% dat1 +
+  geom_tiplab(aes(label=label), size=2)
+
+tree_AMF
+
+#Make dataframe for clade nodes
+genera_nodes <- data.frame(
+  clade=unique(dat1$BestMatch),
+  node=NA
+)
+
+genera_nodes
+
+#Find the most recent common ancestor for each clade
+for (i in 1:length(genera_nodes$clade)) {
+  
+  genera_nodes$node[i] <- MRCA(
+    tree_raxml_AMF,
+    dat1$label[dat1$BestMatch == genera_nodes$clade[i]]
+  )
+  
+}
+
+tree_raxml_AMF
+
+tree_AMF <- 
+  ggtree(tree_raxml_AMF, linetype=NA) %<+% dat1 +
+  geom_highlight(data=genera_nodes, 
+                 aes(node=node, fill=clade),
+                 alpha=1,
+                 align="right",
+                 extend=0.1,
+                 show.legend=FALSE) +
+  geom_tree(linewidth=0.5) +
+  geom_tiplab(aes(label=BestMatch), size=2)
+
+tree_AMF
+
+
+
+  
+# 2) Build plot version 2 ------------------------------------------------------
+
+tree_AMF_merged <- 
+  merged_AMF %>% 
+  ggtree(layout="fan", open.angle=1) + 
   geom_tippoint(mapping=aes(color = BestMatch, size = Abundance),
                 show.legend=FALSE) +
   scale_color_manual(
     values = palette_bestmatch)
+
+tree_AMF_merged
 
 #tree_AMF_merged <- rotate_tree(tree_AMF_merged, -90)
 
@@ -1807,7 +2137,8 @@ tree_AMF_merged <-
   )
 
 
-tree_AMF_merged <- tree_AMF_merged + 
+tree_AMF_merged <- 
+  tree_AMF_merged + 
   geom_tiplab(
     aes(label = BestMatch), 
     size = 2.5,           # Keep it small for 1,700 tips!
@@ -1819,21 +2150,14 @@ tree_AMF_merged <- tree_AMF_merged +
     align = TRUE         # Set to FALSE so it stays next to the point
   )
 
-
 tree_AMF_merged
 
 # Adding side abudances
-dat4 <- melt_merged_AMF %>%
-  group_by(OTU, site) %>%
-  summarise(val = mean(val, na.rm = TRUE), .groups = "drop") %>%
-  rename(ID = OTU, Sites = site)
-
-
 tree_AMF_merged <- 
   tree_AMF_merged +
   new_scale_fill() +
   geom_fruit(
-    data    = dat4,
+    data    = dat3_merged,
     geom    = geom_tile,
     mapping = aes(y = ID, x = Sites, alpha = val, fill = Sites),
     color   = "grey90", offset = 0.04, size = 0.02
@@ -1850,9 +2174,319 @@ tree_AMF_merged <-
 tree_AMF_merged
 
 
+# B. Generating a 97% OTUs tree ------------------------------------------------
+
+tree_raxml_97 <- 
+  read.tree("phylogeny/otus_97_filtered_mafft_trim_spprt.raxml.support") 
+str(tree_raxml_97)
+ggtree::ggtree(tree_raxml_97)
+
+tree_iqtree2_97 <- read.tree("phylogeny/otus_97_filtered_mafft_trim_iq2.treefile")
+str(tree_iqtree2_97)
+ggtree::ggtree(tree_iqtree2_97)
+
+# Generate the phyloseq object -------------------------------------------------
+# otutable
+otutable_97 <- 
+  read.delim(file.path(data_path, "datasets/otutab_97.txt"), row.names = 1)
+
+# taxonomy
+taxonomy_97 <- 
+  extract_blasTAX(tax_path = file.path(data_path, "datasets/taxonomy_blast_97.txt"),
+                namemap_path = file.path(data_path, "datasets/name_mapping_97.txt")) %>% 
+  dplyr::select(
+    "Zotu", "Kingdom" ,"Phylum", "Class","Order","Family","Genus","Species") %>%
+  filter(Phylum %in% "Mucoromycota") %>% 
+  FinalizeTaxonomy()
+
+# Maybe I can use Mortierellomycetes and Endogonomycetes as outgroup to root the tree?
+taxonomy_97 %>% subset(Class %in% c("Mortierellomycetes", "Endogonomycetes"))
+
+# Fixing classificaiton inconsistencies
+CheckTaxonomyConsistency(taxonomy_97, 
+                         return_long=TRUE)
+
+CheckTaxonomyConsistency(taxonomy_97, 
+                         return_long=FALSE)
+
+taxonomy_97
+
+taxonomy_97 <- 
+  taxonomy_97 %>%
+  mutate(Family = if_else(Family == "Archaeosporaceae", "Ambisporaceae", Family))
+
+# OTUs
+zotu_97 <- readDNAStringSet(file.path(data_path,"datasets/otus_97.fasta"), 
+                            format="fasta", seek.first.rec=TRUE, use.names=TRUE)
+
+zotu_97_filtered <- zotu_97[ !names(zotu_97) %in% zotus_to_remove ]
 
 
+# Removing only Jimgerdemannia
+zotu_97_filtered <- zotu_97[ !names(zotu_97) %in% "Zotu11542" ]
 
+# Phyloseq
+physeq_97 <- generate_phyloseq(otu=otutable_97,
+                               metadata=metadata_99,
+                               taxonomy=taxonomy_97 %>% column_to_rownames("Zotu"),
+                               sequences=zotu_97_filtered) # I want to keep the outgroups
+physeq_97
+physeq_97@sam_data
+
+# Adding phylotree
+physeq_97 <-
+  phyloseq(
+    physeq_97@otu_table,
+    physeq_97@sam_data,
+    physeq_97@tax_table,
+    physeq_97@refseq,
+    phy_tree(tree_raxml_97)
+  ) %>% 
+  phyloseq::prune_taxa(taxa_sums(x = .) > 0, x = .) %>% 
+  phyloseq::prune_samples(sample_sums(x=.) > 0, x =.)
+
+physeq_97
+print(sample_data(physeq_97), n=113)
+sort(sample_sums(physeq_97))
+
+# Remove control samples and Rarefaction (single round in this case) 
+physeq_97_rare <-
+  physeq_97 %>%
+  subset_samples(!site %in% "Control") %>% 
+  rarefy_even_depth(rngseed = 260414, sample.size = 6434) %>% 
+  prune_taxa(taxa_sums(x = .) > 0, x = .) %>% 
+  prune_samples(sample_sums(x=.) > 0, x =.) 
+
+physeq_97_rare
+print(physeq_97_rare@sam_data, n=109)
+
+# Working with the RAXML tree for now
+tree_raxml_AMF_97 <- phy_tree(physeq_97_rare)
+
+plot(tree_raxml_AMF_97)
+
+plot_tree(physeq_97_rare, "treeonly", label.tips = "taxa_names", text.size=2) + 
+  coord_polar(theta = "y") 
+
+# Want to try using the original tree
+tree_raxml_AMF_97 <- phy_tree(physeq_97_rare)
+tree_raxml_97_rooted <- root(tree_raxml_AMF_97, outgroup = "Zotu6503", resolve.root = TRUE)
+
+plot(tree_raxml_97_rooted)
+
+# Generating metadata for plotting ---------------------------------------------
+melted_AMF_97 <- 
+  physeq_97_rare %>%
+  psmelt() %>%
+  arrange(Genus)
+
+head(melted_AMF_97)
+dim(melted_AMF_97)
+
+tree_raxml_97
+
+dat1_97 <- 
+  melted_AMF_97 %>%
+  group_by(OTU, BestMatch, Genus, Phylum, Family) %>%
+  summarise(MeanAbundance = mean(Abundance, na.rm = TRUE), .groups = "drop") %>%
+  mutate(
+    Genus = ifelse(is.na(Genus) | Genus == "", "Unclassified", Genus)) %>% 
+  rename(label = OTU)
+
+range(dat1_97$MeanAbundance)
+range(sqrt(dat1_97$MeanAbundance))
+
+dat2_97 <- 
+  melted_AMF_97 %>% 
+  group_by(OTU, site) %>%
+  summarise(Abundance = mean(Abundance, na.rm = TRUE), .groups = "drop") %>%
+  rename(ID = OTU, Sites = site)
+
+dat3_97 <- 
+  melted_AMF_97 %>%
+  group_by(OTU, site) %>%
+  summarise(TotalAbundance = sum(Abundance, na.rm = TRUE), .groups = "drop") %>%
+  rename(ID = OTU, Sites = site)
+
+# Build original plot ---------------------------------------------------------------
+palette_bestmatch <- c(
+  # --- GLOMERALES (Deep Purples to Sky Blues) ---
+  # Core Glomus & Rhizophagus (Purples)
+  "Glomus"                = "#781156",
+  "Glomus macrocarpum"     = "#A51876",
+  "Glomus tetrastratosum"  = "#D21E96",
+  "Rhizophagus"           = "#E43FAD",
+  "Funneliformis"         = "#EA6CC0",
+  "Septoglomus"           = "#F098D3",
+  "uncultured Glomus"     = "#C2629E", # Moved to Glomerales
+  "Glomeraceae"           = "#4D1136", # Darker version for higher rank
+  
+  # Dominikia & Silvaspora Clade (Deep Blues)
+  "Dominikia"             = "#114578",
+  "Microkamienskia"       = "#185EA5",
+  "Microdominikia litorea"= "#1E78D2",
+  "Silvaspora"            = "#3F91E4",
+  "Oehlia"                = "#6CABEA",
+  
+  # --- DIVERSISPORALES (Teals and Seafoams) ---
+  "Diversispora"            = "#117878",
+  "Diversispora versiformis"= "#18A5A5",
+  "Diversisporaceae"        = "#083B3B", # Higher rank
+  "Acaulospora"             = "#3FE4E4",
+  "Acaulospora brasiliensis" = "#6CEAEA",
+  "Dentiscutata heterogama" = "#98F0F0",
+  "Gigaspora"               = "#117845", # Branching into green-teals
+  "Gigaspora margarita"     = "#18A55E",
+  "Gigaspora rosea"         = "#1ED278",
+  "Scutellospora"           = "#3FE491",
+  "Cetraspora gilmorei"     = "#6CEAAB",
+  
+  # --- ARCHAEOSPORALES (Earth Greens) ---
+  "Archaeospora"            = "#4B5D16",
+  "Archaeospora trappei"    = "#787811",
+  "Ambispora"               = "#A5A518",
+  "Archaeosporaceae"        = "#2E330D", # Higher rank
+  "Archaeosporales"         = "#D2D21E", # Higher rank
+  "uncultured Archaeosporales" = "#E4E43F", # Moved here
+  
+  # --- PARAGLOMERALES (Warm Oranges & Browns) ---
+  "Paraglomus"              = "#A55E18",
+  "Paraglomus laccatum"     = "#D2781E",
+  "Paraglomus brasilianum"  = "#E4913F",
+  "Paraglomerales"          = "#784511", # Higher rank
+  "uncultured Paraglomus"   = "#EAAB6C", # Moved here
+  
+  # --- ENTROPHOSPORALES & OTHERS (Reds and Pinks) ---
+  "Entrophospora"           = "#781122",
+  "Entrophospora claroidea" = "#A5182F",
+  "Entrophospora drummondii" = "#D21E2C",
+  "Complexispora"           = "#E43F5B",
+  "Glomeromycetes"          = "#EA6C81", # Broadest group in Red
+  "uncultured Glomeromycotina" = "#F0C498"  # Pale beige for the unknown
+)
+
+# "#000000","#242424","#484848","#6D6D6D","#919191","#B6B6B6"
+
+tree_AMF_97 <- 
+  tree_raxml_97_rooted %>% 
+  ggtree(layout = "circular", branch.length = "none", size = 0.1, open.angle = 5)
+
+tree_AMF_97
+
+tree_AMF_97 <- 
+  tree_AMF_97 %<+% dat1_97 +
+  geom_tippoint(
+    aes(fill = BestMatch, size = sqrt(MeanAbundance)),
+    shape = 21, stroke = 0.1, alpha = 0.85) +
+  scale_fill_manual(
+    values = bestmatch_colors_97,
+    guide  = guide_legend(
+      keywidth = 0.5, keyheight = 0.5, order = 1,
+      override.aes = list(shape = 21, size = 3)
+    ),
+    na.translate = FALSE
+  ) +
+  scale_size_continuous(
+    range = c(0.1, 4),
+    name  = "log(Abundance + 1)",
+    guide = guide_legend(keywidth = 0.5, keyheight = 0.5, order = 2,
+                         override.aes = list(shape = 21))
+  )
+
+tree_AMF_97 <- 
+  tree_AMF_97 +
+geom_tiplab2(
+  aes(label = BestMatch),
+  size = 2,
+  align = TRUE,
+  offset = 0.02
+)
+
+tree_AMF_97 +theme(legend.position="none")
+
+
+# Imporvements -----------------------------------------------------------------
+
+tree_AMF_97 <- 
+  ggtree(tree_raxml_97_rooted, linewidth=0.5) %<+% dat1_97 +
+  geom_tiplab(aes(label=label), size=2)
+
+tree_AMF_97
+
+#Make dataframe for clade nodes
+genera_nodes <- data.frame(
+  clade=unique(dat1_97$BestMatch),
+  node=NA
+)
+
+genera_nodes
+
+#Find the most recent common ancestor for each clade
+for (i in 1:length(genera_nodes$clade)) {
+  
+  genera_nodes$node[i] <- MRCA(
+    tree_raxml_97_rooted,
+    dat1_97$label[dat1_97$BestMatch == genera_nodes$clade[i]]
+  )
+  
+}
+
+tree_raxml_97_rooted
+
+tree_AMF_97 <- 
+  ggtree(tree_raxml_97_rooted, linetype=NA) %<+% dat1_97 +
+  geom_highlight(data=genera_nodes, 
+                 aes(node=node, fill=clade),
+                 alpha=1,
+                 align="right",
+                 extend=0.1,
+                 show.legend=FALSE) +
+  geom_tree(linewidth=0.5) +
+  geom_tiplab(aes(label=BestMatch), size=2)
+
+tree_AMF_97 + xlim(0, 3) 
+
+
+tree_AMF_97 + layout_circular() + 
+  theme(legend.position=c(0.05, 0.7)) 
+
+# Alternating highlight colours
+
+genera_nodes <- genera_nodes[match(tree_AMF_97$data %>%
+                               filter(isTip == "TRUE") %>%
+                               arrange(y) %>%
+                               pull(BestMatch) %>%
+                               unique(),
+                               genera_nodes$clade),]
+#Add column with alternating binary value
+genera_nodes$highlight <- rep(c(0,1),
+                           length.out=length(genera_nodes$clade))
+genera_nodes
+
+
+#Add highlights
+tree_AMF_97 <- 
+  ggtree(tree_raxml_97_rooted, linetype=NA) %<+% dat1_97 +
+  geom_highlight(data=genera_nodes, 
+                 aes(node=node, fill=as.factor(highlight)),
+                 alpha=1,
+                 align="right",
+                 extend=0.1,
+                 show.legend=FALSE) +
+  geom_tree(linewidth=0.5) +
+  geom_tiplab(aes(label=BestMatch), size=2) +
+  scale_fill_manual(values=c("#F5F5F5", "#ECECEC"))
+
+tree_AMF_97
+
+#Add clade labels
+tree_AMF_97 +
+  geom_cladelab(data=genera_nodes,
+                mapping=aes(node=node, label=clade),
+                fontsize=2,
+                align=TRUE,
+                offset=0.1,
+                offset.text=0.02)
 
 
 
@@ -1902,23 +2536,6 @@ genus_nodes %>% dplyr::select(Taxa, ntips, node) %>%
 # adjust threshold after inspecting the diagnostic above
 genus_nodes_plot <- genus_nodes %>% filter(node > root_node + 10)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   geom_cladelab(
   data       = genus_nodes_plot,
   mapping    = aes(node = node, label = Taxa),
@@ -1926,9 +2543,6 @@ genus_nodes_plot <- genus_nodes %>% filter(node > root_node + 10)
   barsize    = NA,    horizontal = FALSE,
   fontsize   = 1.4,   fontface   = "italic"
 ) +
-
-
-
 
 
 
@@ -1963,7 +2577,7 @@ physeq_AMF_rare_Gen
 tree_raxml_AMF <- phy_tree(physeq_AMF_rare)
 str(tree_raxml_AMF)
 
-# Generating metadata for tree -------------------------------------------------
+# Generating metadata for tree 
 # Generating abundance, taxonomy, metadata table for the tree plot 
 
 melted_AMF <- 
@@ -2051,7 +2665,7 @@ dim(abund_4_tree)
 any(is.na(abund_4_tree))
 levels(as.factor(abund_4_tree$Family))
 
-# Tree to tibble ---------------------------------------------------------------
+# Tree to tibble 
 tree_data <- as_tibble(tree_raxml_AMF)
 tree_data
 
@@ -2084,8 +2698,7 @@ tree_grouped
 
 tree_grouped@data$group[tree_grouped@data$group == "0"] <- NA
 
-# Plotting the tree ------------------------------------------------------------
-
+# 2) Build plot version 2 -
 ggtree(tree_raxml_AMF) %<+% tree_metadata +
   geom_tippoint(aes(color = Genus, size = abundance), alpha = 0.8)  +
   #geom_tiplab(aes(color = Genus), size = 2) +
@@ -2215,7 +2828,7 @@ str(taxonomy_4_tree)
 
 
 
-# Start over -----------------------------------------------------------
+# Start over 
 # https://yulab-smu.top/treedata-book/chapter10.html
 
 library(ggtree)
