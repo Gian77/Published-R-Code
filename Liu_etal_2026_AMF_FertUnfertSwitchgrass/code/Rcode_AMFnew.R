@@ -1659,7 +1659,7 @@ tree_AMF <-
     values = palette_bestmatch,
     guide  = guide_legend(
       keywidth = 0.5, keyheight = 0.5, order = 1,
-      override.aes = list(shape = 21, size = 3)
+      override.aes = list(shape = 22, size = 3)
     ),
     na.translate = FALSE
   ) +
@@ -2173,13 +2173,18 @@ tree_AMF_merged <-
 
 tree_AMF_merged
 
-
+# **********************************************************************--------
 # B. Generating a 97% OTUs tree ------------------------------------------------
 
 tree_raxml_97 <- 
   read.tree("phylogeny/otus_97_filtered_mafft_trim_spprt.raxml.support") 
 str(tree_raxml_97)
 ggtree::ggtree(tree_raxml_97)
+
+# Rooting the tree to the outgroup ---------------------------------------------
+tree_raxml_97_rooted <- root(tree_raxml_97, outgroup = "Zotu6503", resolve.root = TRUE)
+ggtree::ggtree(tree_raxml_97_rooted)
+
 
 tree_iqtree2_97 <- read.tree("phylogeny/otus_97_filtered_mafft_trim_iq2.treefile")
 str(tree_iqtree2_97)
@@ -2190,7 +2195,7 @@ ggtree::ggtree(tree_iqtree2_97)
 otutable_97 <- 
   read.delim(file.path(data_path, "datasets/otutab_97.txt"), row.names = 1)
 
-# taxonomy
+# Taxonomy
 taxonomy_97 <- 
   extract_blasTAX(tax_path = file.path(data_path, "datasets/taxonomy_blast_97.txt"),
                 namemap_path = file.path(data_path, "datasets/name_mapping_97.txt")) %>% 
@@ -2199,7 +2204,7 @@ taxonomy_97 <-
   filter(Phylum %in% "Mucoromycota") %>% 
   FinalizeTaxonomy()
 
-# Maybe I can use Mortierellomycetes and Endogonomycetes as outgroup to root the tree?
+# I will use Mortierellomycetes as outgroup to root the tree?
 taxonomy_97 %>% subset(Class %in% c("Mortierellomycetes", "Endogonomycetes"))
 
 # Fixing classificaiton inconsistencies
@@ -2240,7 +2245,7 @@ physeq_97 <-
     physeq_97@sam_data,
     physeq_97@tax_table,
     physeq_97@refseq,
-    phy_tree(tree_raxml_97)
+    phy_tree(tree_raxml_97_rooted)
   ) %>% 
   phyloseq::prune_taxa(taxa_sums(x = .) > 0, x = .) %>% 
   phyloseq::prune_samples(sample_sums(x=.) > 0, x =.)
@@ -2262,19 +2267,12 @@ print(physeq_97_rare@sam_data, n=109)
 
 # Working with the RAXML tree for now
 tree_raxml_AMF_97 <- phy_tree(physeq_97_rare)
+ggtree::ggtree(tree_raxml_AMF_97)
 
-plot(tree_raxml_AMF_97)
-
-plot_tree(physeq_97_rare, "treeonly", label.tips = "taxa_names", text.size=2) + 
+phyloseq::plot_tree(physeq_97_rare, "treeonly", label.tips = "taxa_names", text.size=2) + 
   coord_polar(theta = "y") 
 
-# Want to try using the original tree
-tree_raxml_AMF_97 <- phy_tree(physeq_97_rare)
-tree_raxml_97_rooted <- root(tree_raxml_AMF_97, outgroup = "Zotu6503", resolve.root = TRUE)
-
-plot(tree_raxml_97_rooted)
-
-# Generating metadata for plotting ---------------------------------------------
+# Generating metadata for the phyloegentic tree --------------------------------
 melted_AMF_97 <- 
   physeq_97_rare %>%
   psmelt() %>%
@@ -2282,8 +2280,6 @@ melted_AMF_97 <-
 
 head(melted_AMF_97)
 dim(melted_AMF_97)
-
-tree_raxml_97
 
 dat1_97 <- 
   melted_AMF_97 %>%
@@ -2295,6 +2291,9 @@ dat1_97 <-
 
 range(dat1_97$MeanAbundance)
 range(sqrt(dat1_97$MeanAbundance))
+
+write.csv(x= dat1_97, file= file.path(data_path, "datasets/tree_metadata_97.csv"))
+dat1_97_mod <- read.csv(file=file.path(data_path, "datasets/tree_metadata_97_mod.csv"))
 
 dat2_97 <- 
   melted_AMF_97 %>% 
@@ -2308,7 +2307,40 @@ dat3_97 <-
   summarise(TotalAbundance = sum(Abundance, na.rm = TRUE), .groups = "drop") %>%
   rename(ID = OTU, Sites = site)
 
-# Build original plot ---------------------------------------------------------------
+# Grouping to clades -----------------------------------------------------------
+
+# Make dataframe for clade nodes
+genera_nodes <- data.frame(
+  clade=unique(dat1_97$BestMatch),
+  node=NA
+)
+
+# Find the most recent common ancestor for each clade
+for (i in 1:length(genera_nodes$clade)) {
+  
+  genera_nodes$node[i] <- MRCA(
+    tree_raxml_AMF_97,
+    dat1_97$label[dat1_97$BestMatch == genera_nodes$clade[i]]
+  )
+  
+}
+
+# Add column with alternating binary value. This is based on the ggtree data
+genera_nodes <-
+  genera_nodes[match(
+    tree_AMF_97$data %>%
+      filter(isTip == "TRUE") %>%
+      arrange(y) %>%
+      pull(BestMatch) %>%
+      unique(),
+    genera_nodes$clade
+  ), ] %>% 
+  mutate(highlight = rep(c(0,1),
+                         length.out=length(genera_nodes$clade)))
+
+genera_nodes
+
+# Color palette for BestMatch --------------------------------------------------
 palette_bestmatch <- c(
   # --- GLOMERALES (Deep Purples to Sky Blues) ---
   # Core Glomus & Rhizophagus (Purples)
@@ -2367,11 +2399,106 @@ palette_bestmatch <- c(
 
 # "#000000","#242424","#484848","#6D6D6D","#919191","#B6B6B6"
 
+# Build tree plot ---------------------------------------------------------------
+
 tree_AMF_97 <- 
-  tree_raxml_97_rooted %>% 
-  ggtree(layout = "circular", branch.length = "none", size = 0.1, open.angle = 5)
+  tree_raxml_AMF_97 %>% 
+  ggtree(layout = "circular", branch.length = "none", size = 0.1, open.angle = 5) %<+% dat1_97 
+
+tree_AMF_97 <- 
+  tree_AMF_97 +
+  geom_tippoint(
+    aes(fill = BestMatch, size = sqrt(MeanAbundance)),
+    shape = 21, stroke = 0.1, alpha = 0.85) +
+  scale_fill_manual(values = bestmatch_colors_97, na.translate = FALSE) +
+  scale_size_continuous(range = c(0.331801/5, 22.456278/5),
+                        name = "sqrt(Read Abundance)") +
+  geom_highlight(data=genera_nodes, 
+                 aes(node=node, fill=clade),
+                 alpha=0.2,
+                 align="right",
+                 extend=0.1,
+                 show.legend = FALSE) + # try with TRUE as well
+  geom_tree(linewidth=0.3) +
+  geom_text2(aes(subset = !isTip, label = node), size = 2, color = "black") +
+  geom_tiplab(aes(label=BestMatch), size=2) +
+  geom_cladelab(data=genera_nodes,
+                mapping=aes(node=node, label=clade, color=clade),
+                parse = TRUE,
+                fontsize=2,
+                align="TRUE",
+                angle="auto",
+                offset=6,
+                offset.text=0.05, 
+                show.legend = FALSE) +
+    guides(fill = guide_legend(ncol=1, keywidth = 0.2, keyheight = 0.2, order = 1,
+                             override.aes = list(shape = 22, size = 3)),
+         shape = guide_legend(ncol=1, keywidth = 0.1, keyheight = 0.1, order = 2,
+                             override.aes = list(shape = 21, size = 3))) 
 
 tree_AMF_97
+
+
+# Plotting all together
+ggtree(tree_raxml_97_rooted, layout="circular", linetype=NA) %<+% dat1_97 +
+  geom_highlight(data=genera_nodes, 
+                 aes(node=node, fill=as.factor(highlight)),
+                 alpha=1,
+                 align="right",
+                 extend=0.04,
+                 show.legend=FALSE) +
+  geom_cladelab(data=genera_nodes,
+                mapping=aes(node=node, label=clade),
+                fontsize=2,
+                align="TRUE",
+                angle="auto",
+                offset=0.04,
+                offset.text=0.01) +
+  geom_tree(linewidth=0.3) +
+  #geom_tippoint() +
+  geom_tippoint(aes(size = sqrt(MeanAbundance)), 
+                shape = 16, color = "darkred", stroke = 0.2, alpha = 0.85, 
+                show.legend=FALSE) +
+  #xlim(0, 0.35) +
+  scale_fill_manual(values=c("#F5F5F5", "#ECECEC")) +
+  scale_size_continuous(range = c(0.331801/5, 22.456278/5),
+                        name = "sqrt(Read Abundance)") 
+
+
+# Plotting all together
+ggtree(tree_raxml_97_rooted, layout="circular", linetype=NA) %<+% dat1_97 +
+  geom_highlight(data=genera_nodes, 
+                 aes(node=node, fill=clade),
+                 alpha=1,
+                 align="right",
+                 extend=0.04,
+                 show.legend=FALSE) +
+  geom_cladelab(data=genera_nodes,
+                mapping=aes(node=node, label=clade),
+                fontsize=2,
+                align="TRUE",
+                angle="auto",
+                offset=0.04,
+                offset.text=0.01) +
+  geom_tree(linewidth=0.3) +
+  #geom_tippoint() +
+  geom_tiplab(aes(fill=BestMatch), size=2, show.legend = FALSE) 
+
+
+
+
+
+
+
+
+tree_AMF_97 <- 
+  tree_raxml_AMF_97 %>% 
+  ggtree(layout = "circular", branch.length = "none", size = 0.1, open.angle = 5) 
+
+tree_AMF_97
+
+tree_AMF_97 +
+  geom_text2(aes(subset = !isTip, label = node), size = 2, color = "black")
 
 tree_AMF_97 <- 
   tree_AMF_97 %<+% dat1_97 +
@@ -2388,24 +2515,39 @@ tree_AMF_97 <-
   ) +
   scale_size_continuous(
     range = c(0.1, 4),
-    name  = "log(Abundance + 1)",
+    name  = "sqrt(Read Abundance)",
     guide = guide_legend(keywidth = 0.5, keyheight = 0.5, order = 2,
                          override.aes = list(shape = 21))
   )
 
 tree_AMF_97 <- 
   tree_AMF_97 +
-geom_tiplab2(
-  aes(label = BestMatch),
-  size = 2,
-  align = TRUE,
-  offset = 0.02
-)
+  geom_tiplab2(
+    aes(label = BestMatch),
+    size = 2,
+    align = TRUE,
+    offset = 0.02
+  )
 
-tree_AMF_97 +theme(legend.position="none")
+tree_AMF_97 + theme(legend.position="none")
 
 
-# Imporvements -----------------------------------------------------------------
+# Test tree 1 (warnings aren't harmful)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Improvements -----------------------------------------------------------------
 
 tree_AMF_97 <- 
   ggtree(tree_raxml_97_rooted, linewidth=0.5) %<+% dat1_97 +
@@ -2440,7 +2582,7 @@ tree_AMF_97 <-
                  alpha=1,
                  align="right",
                  extend=0.1,
-                 show.legend=FALSE) +
+                 show.legend=FALSE) + # try with TRUE as well
   geom_tree(linewidth=0.5) +
   geom_tiplab(aes(label=BestMatch), size=2)
 
@@ -2450,7 +2592,7 @@ tree_AMF_97 + xlim(0, 3)
 tree_AMF_97 + layout_circular() + 
   theme(legend.position=c(0.05, 0.7)) 
 
-# Alternating highlight colours
+# Alternating highlight colors
 
 genera_nodes <- genera_nodes[match(tree_AMF_97$data %>%
                                filter(isTip == "TRUE") %>%
@@ -2487,6 +2629,29 @@ tree_AMF_97 +
                 align=TRUE,
                 offset=0.1,
                 offset.text=0.02)
+
+
+tree_raxml_97_rooted %>% 
+  ggtree(layout = "circular", branch.length = "none", size = 0.1, open.angle = 5)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
