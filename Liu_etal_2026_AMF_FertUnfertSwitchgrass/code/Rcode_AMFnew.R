@@ -10,8 +10,79 @@
 # PMID:             ...
 # **********************************************************************--------
 
-# Positron options to restore Rstudio projects
-# load(".Rdata")
+# Load R packages. Define your package list as a character vector
+pkgs <- c(
+  # --- Project & Package Management ---
+  "renv",            # Reproducible environments (lockfile management)
+  "pak",             # Fast, modern package installation dependency engine
+  "cli",             # Attractive and informative command-line interfaces  
+  "styler",          # Automated R code formatting
+  "janitor",         # Data cleaning
+  "magrittr",        # Pipe operators (%>%)
+  
+  # --- Sequence Analysis & Phylogenetics ---
+  "Biostrings",      # DNA/RNA/AA sequence containers
+  "ape",             # Core tree handling
+  "msa",             # Multiple Sequence Alignment
+  "DECIPHER",        # Sequence alignment & chimera detection
+  "phangorn",        # Phylogenetic analysis (MP, ML)
+  "tidysq",          # Tidy processing of sequences
+  "tidytree",        # Tidy manipulation of trees
+  "ggtree",          # Visualization of trees
+  
+  # --- Microbial Ecology & Diversity ---
+  "decontam",        # Contaminant OTU removal
+  "phyloseq",        # Integration of OTU tables & taxonomy
+  "speedyseq",       # High-performance phyloseq
+  "vegan",           # Community ecology (Ordination)
+  "AICcPermanova",   # Model selection for PERMANOVA
+  
+  # --- Data Science & Visualization ---
+  "tidyverse",       # Core suite (ggplot2, dplyr, etc.)
+  "ggtext",          # Markdown labels
+  "ggpubr",          # Publication-ready themes
+  "cowplot",         # Plot arrangement
+  "gridExtra",       # Miscellaneous graphics
+  "ggrepel",         # Non-overlapping labels
+  "scales",          # Axis transformations
+  "ggh4x",           # Extended facets
+  "ggstar",          # Geometric shapes
+  "ggtreeExtra",     # Annotation visualization
+  "ggnewscale",      # Multiple scales
+  
+  # --- Statistics & Modeling ---
+  "agricolae",       # Agricultural stats
+  "BRCore",          # Internal core functions
+  "lme4",            # Mixed-Effects Models (GLMM)
+  "glmmTMB",         # Fast GLMMs
+  "robustlmm",       # Outlier resistance
+  "DHARMa",          # Residual diagnostics
+  "parallel",        # Multi-core support
+  "ggeffects",       # Marginal effects
+  "sjPlot",          # Visualizing models
+  "broom.mixed",     # Tidy summaries
+  "merTools",        # Analyzing lme4 objects
+  "multcompView",    # Significance letters
+  "gllvm",           # Latent Variable Models
+  "Maaslin2",        # Microbiome stats
+  
+  # --- Networks & Hierarchical Viz ---
+  "ggdendro",        # Dendrogram data
+  "igraph"            # Network visualization
+)
+
+# Load them all silently
+invisible(lapply(pkgs, library, character.only = TRUE))
+
+# Tracking package versions with renv ------------------------------------------
+# renv::init()      # initializes renv in your project
+# renv::restore()   # installs all packages from the lockfile
+renv::snapshot()   # updates the lockfile
+renv::install("")
+
+# Then commit and push the updated renv.lock file!
+
+# NOTE. Positron options to restore Rstudio projects load(".Rdata")
 
 # R options --------------------------------------------------------------------
 options(scipen = 9999, pillar.sigfig = 6, digits = 6, max.print = 10000000)
@@ -19,80 +90,6 @@ options(scipen = 9999, pillar.sigfig = 6, digits = 6, max.print = 10000000)
 
 # Check the lib paths ----------------------------------------------------------
 .libPaths()
-
-# Load R packages --------------------------------------------------------------
-if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")
-
-pacman::p_load(
-  # --- Project & Package Management ---
-  renv,           # Reproducible environments (lockfile management)
-  pak,            # Fast, modern package installation dependency engine
-  cli,            # Attractive and informative command-line interfaces  
-  styler,         # Automated R code formatting to tidyverse standards
-  janitor,        # Data cleaning (heavily used for cleaning column names)
-  magrittr,       # Pipe operators (%>%) and functional sequence aliases
-  
-  # --- Sequence Analysis & Phylogenetics ---
-  Biostrings,     # Memory-efficient containers for DNA/RNA/AA sequences
-  ape,            # Analysis of Phylogenetics and Evolution (core tree handling)
-  msa,            # Multiple Sequence Alignment (Interface to Clustal, Muscle)
-  DECIPHER,       # Tools for sequence alignment, chimera detection, and probes
-  phangorn,       # Phylogenetic analysis (MP, ML, and distance-based methods)
-  tidysq,         # Tidy processing of biological sequences
-  tidytree,       # Tidyverse-style manipulation of phylogenetic tree objects
-  ggtree,         # Visualization and annotation of phylogenetic trees
-  
-  # --- Microbial Ecology & Diversity ---
-  decontam,       # Statistical identification/removal of contaminant OTUs
-  phyloseq,       # Integration of OTU tables, taxonomy, and metadata
-  speedyseq,      # High-performance optimizations for phyloseq functions
-  vegan,          # Community ecology (Ordination, Alpha/Beta diversity)
-  AICcPermanova,  # Model selection for PERMANOVA using AICc
-  
-  # --- Data Science & Visualization ---
-  tidyverse,      # Core suite (ggplot2, dplyr, tidyr, purrr, etc.)
-  ggtext,         # Markdown/HTML rendering for ggplot2 labels
-  ggpubr,         # Publication-ready ggplot2 themes and figure arrangements
-  cowplot,        # Powerful plot arrangement and theme adjustments
-  gridExtra,      # Miscellaneous functions for "grid" graphics (tables/plots)
-  ggrepel,        # Non-overlapping text labels for ggplot2
-  scales,         # Internal scaling and axis transformations for plots
-  ggh4x,          # Extensions for ggplot2 facets and axes (nested facets, etc.) 
-  ggstar,         # Adding geometric shapes to ggplot
-  ggtreeExtra,    # Annotation Phylogenetics Software Visualization
-  ggnewscale,
-  
-  # --- Statistics & Modeling ---
-  agricolae,      # Agricultural research stats (Tukey's, LSD, experimental design)
-  BRCore,         # Custom/Internal core functions for standardized workflows
-  lme4,           # Linear and Generalized Linear Mixed-Effects Models (GLMM)
-  glmmTMB,        # Fast GLMMs with support for Zero-Inflation/Overdispersion
-  robustlmm,      # Robust Linear Mixed-Effects Models (outlier resistance)
-  DHARMa,         # Residual diagnostics for hierarchical (multi-level) models
-  parallel,       # Parallel computing support for multi-core processing
-  ggeffects,      # Estimated Marginal Means and marginal effects for models
-  sjPlot,         # Visualizing Mixed-Effects models and diagnostic tables
-  broom.mixed,    # Tidy summary outputs (tidiers) for mixed-effect models
-  merTools,       # Tools for analyzing lme4/merMod objects (uncertainty/prediction)
-  multcompView,   # Visualizing multiple comparison significance (compact letter display)
-  gllvm,          # Generalized Linear Latent Variable Models (multivariate stats)
-  maaslin3,       # Multivariate Association with Linear Models (microbiome stats) 
-  Maaslin2,       # Multivariate Association with Linear Models (microbiome stats)  
-  
-  # --- Networks & Hierarchical Viz ---
-  ggdendro,       # Extract/Plot dendrogram data using ggplot2
-  ggraph,         # Visualization of networks, graphs, and complex trees
-  
-  install = FALSE
-)
-
-
-# Tracking package versions with renv ------------------------------------------
-renv::init()      # initializes renv in your project
-renv::restore()   # installs all packages from the lockfile
-renv::snapshot()  # updates the lockfile
-
-# Then commit and push the updated renv.lock file!
 
 # Session Info -----------------------------------------------------------------
 sessionInfo()
@@ -814,6 +811,11 @@ palette_taxa <-c("#D21E2C","#058ED9","#ae09ea","#dba4a4","#117744",
                  "#F7F7C5","#283dff","#521899","#82807f","#014443",
                  "#FDDB8E","#bfc5ff","#111b77","#d8d6d4","#b7ffdb",
                  "#fcb067","#ffb7ef","#560d0d","#60ffaf", "#A5A518", "#000000") 
+
+palette_taxa <-c("#D21E2C","#058ED9","#ae09ea","#dba4a4","#117744",
+                 "#F7F7C5","#283dff","#521899","#82807f","#014443",
+                 "#FDDB8E","#bfc5ff","#111b77","#d8d6d4","#b7ffdb",
+                 "#fcb067","#ffb7ef","#560d0d","#60ffaf", "#A5A518", "white") 
                  
 c("#ea7f17","#fa7efc","#a35151","#825121",)
 
@@ -1346,21 +1348,22 @@ ggarrange(
   ) +
     labs(title = "Within-site variance",
          y = NULL),
-  plot_betadisper(
-    dist_matrix = dist_avg_AMF,
-    grouping = meta_AMF_rare$site_plot,
-    signif_label = "Plot, F=4.777, p=0.001"
-  ) +
-    labs(title = "Within-plot variance",
-         y = NULL),
+  #plot_betadisper(
+  #  dist_matrix = dist_avg_AMF,
+  #  grouping = meta_AMF_rare$site_plot,
+  #  signif_label = "Plot, F=4.777, p=0.001"
+  #) +
+  #  labs(title = "Within-plot variance",
+  #       y = NULL),
   ncol = 1,
-  nrow = 4,
+  nrow = 3,
   align = "hv",
-  heights =  c(1.4, 0.6, 0.6, 1.2),
-  labels = c("A", "B", "C", "D")
+  heights =  c(1.4, 0.6, 0.8),
+  labels = c("A", "B", "C")
 )
 
-# ***** FIGURE 2 - Beta-diversity ***** -----------------------------------------
+# Using ggpubr -----------------------------------------------------------------
+# ***** FIGURE 2 - Beta-diversity ***** ----------------------------------------
 Figure_2_beta_long
 
 ggsave(
@@ -1371,6 +1374,23 @@ ggsave(
   ),
   device = "pdf"
 )
+
+
+ggsave(
+  file.path(data_path, "results/Fig_S3_betadiv.pdf"),
+  plot = ggpubr::annotate_figure(
+    plot_betadisper(
+        dist_matrix = dist_avg_AMF,
+        grouping = meta_AMF_rare$site_plot,
+        signif_label = "Plot, F=4.777, p=0.001"
+      ) +
+        labs(title = "Within- and between-plot variance",
+             y = NULL),
+    top = text_grob("BETA DIVERSITY", size = 12, face = "bold")
+  ),
+  device = "pdf"
+)
+
 
 
 # INTERPREATTION. NMDS space is different than PCoA space, that is why the spread
@@ -1435,7 +1455,7 @@ Figure_2_beta
 
 # ***** FIGURE 2 - Beta-diversity ***** -----------------------------------------
 
-# Need to modufy this if want to add the title!
+# Need to modify this if want to add the title!
 ggsave(
   file.path(data_path, "results/Fig_2_betadiv_wide.pdf"),
   plot = grid.arrange(
@@ -1444,6 +1464,7 @@ ggsave(
   ),
   device = "pdf"
 )
+
 
 
 # **********************************************************************--------
@@ -1483,7 +1504,7 @@ bar_charts_gen <-
   psmelt() %>%
   mutate(Genus = fct_relevel(Genus, "Unclassified", after = Inf)) %>%
   ggplot(aes(x = Sample, y = Abundance, fill = Genus)) +
-  geom_bar(stat = "identity", width = 1) + # width=1 removes gaps between bars
+  geom_col(color = "black", linewidth = 0.05) + # width=1 removes gaps between bars
   ggh4x::facet_nested(. ~ site + fert_status, 
                scales = "free_x", 
                space = "free_x", 
@@ -1501,16 +1522,16 @@ bar_charts_gen <-
     strip.background = element_blank(),
     strip.text = element_text(size = 9, face = "bold"),
     panel.spacing = unit(0.3, "lines"), 
-    legend.key.height = unit(0.4, "cm"),
-    legend.key.width  = unit(0.4, "cm"),
+    legend.key.height = unit(0.3, "cm"),
+    legend.key.width  = unit(0.3, "cm"),
     legend.title = element_blank(),
     legend.text = element_text(face = "italic", size = 8)
   ) +
   scale_fill_manual(values = palette_taxa) +
-  labs(y = "DNA reads (%)") +
+  labs(title = "Genera relative abundance across sites",
+    y = "DNA sequences (%)") +
   guides(
-    fill = guide_legend(ncol = 1, 
-                         override.aes = list(shape = 15)))
+    fill = guide_legend(ncol = 1, override.aes = list(shape = 15)))
 
 
 bar_charts_gen
@@ -1564,8 +1585,8 @@ bar_charts_fam <-
     strip.background = element_blank(),
     strip.text = element_text(size = 9, face = "bold"),
     panel.spacing = unit(0.3, "lines"), 
-    legend.key.height = unit(0.4, "cm"),
-    legend.key.width  = unit(0.4, "cm"),
+    legend.key.height = unit(0.3, "cm"),
+    legend.key.width  = unit(0.3, "cm"),
     legend.title = element_blank(),
     legend.text = element_text(face = "italic", size = 8)
   ) +
@@ -1588,6 +1609,426 @@ ggsave(
   ),
   device = "pdf"
 )
+
+
+# **********************************************************************--------
+# **** 5. DIFFERENTIAL ABUNDANCE **** ------------------------------------------
+
+str(physeq_AMF_rare)
+
+metadata_AMF_rare <- 
+  as.data.frame(as.matrix(physeq_AMF_rare@sam_data)) %>% 
+  mutate(across(.cols = 1:2, .fns = as.factor))
+
+str(metadata_AMF_rare)
+
+otutable_AMF_rare <- 
+  as.data.frame(t(as.matrix(physeq_AMF_rare@otu_table)))
+
+str(otutable_AMF_rare)
+
+# Identify differentially abundant taxa  ---------------------------------------
+
+# OTU level --------------------------------------------------------------------
+
+table(metadata_AMF_rare$site, metadata_AMF_rare$fert_status)
+
+# Test differential abundance between Fertilized vs Control, controlling for site
+
+mlin2_fert_status <- 
+  Maaslin2(
+    cores = 4,
+    output = "demo_output",
+    input_data = otutable_AMF_rare,
+    input_metadata = metadata_AMF_rare %>% dplyr::select(fert_status, site),
+    fixed_effects = "fert_status",
+    random_effects = "site",
+    reference = "fert_status,Control", # no space between variable and level 
+    normalization = "NONE",
+    standardize = FALSE,
+    plot_scatter = FALSE
+  )
+
+mlin2_fert_status$results %>%
+  dplyr::filter(metadata == "fert_status", qval <= 0.05)
+
+mlin2_fert_status$results %>%
+  dplyr::filter(metadata == "site", qval <= 0.05)
+
+# INTERPRETATION. Multiple testing penalty is brutal here. When testing ~2870 
+# features BH correction inflates q-values. You need very strong, consistent 
+# effects to pass q ≤ 0.05
+
+# Look at raw p-values (not q-values)
+mlin2_fert_status$results %>%
+  dplyr::filter(metadata == "fert_status") %>%
+  dplyr::arrange(pval) %>%
+  head(20)
+
+# Check effect sizes
+mlin2_fert_status$results %>%
+  dplyr::filter(metadata == "fert_status") %>%
+  dplyr::arrange(desc(abs(coef))) %>%
+  head(20)
+
+# Genus level ------------------------------------------------------------------
+
+# NOTE! I remove all Unclassified OTUs clusters at genus as they will inflate the 
+# p-value correction and they are not informative. 
+
+metadata_AMF_rare_gen <- 
+  sample_data(
+    physeq_AMF_rare_Gen %>% 
+      subset_taxa(Genus != "Unclassified") %>%
+      prune_taxa(taxa_sums(x = .) > 0, x = .) %>% 
+      prune_samples(sample_sums(x=.) > 0, x =.) 
+  )%>% 
+  as.matrix() %>% 
+  as.data.frame() %>% 
+  mutate(across(.cols = 1:2, .fns = as.factor)) 
+
+otutable_AMF_rare_gen <- 
+  otu_table(
+    physeq_AMF_rare_Gen %>% 
+      subset_taxa(Genus != "Unclassified") %>%
+      prune_taxa(taxa_sums(x = .) > 0, x = .) %>% 
+      prune_samples(sample_sums(x=.) > 0, x =.)
+  ) %>% 
+  t() %>% 
+  as.matrix() %>% 
+  as.data.frame() 
+
+mlin2_fert_status_gen <- 
+  Maaslin2(
+    cores = 4,
+    output = "demo_output",
+    input_data = otutable_AMF_rare_gen,
+    input_metadata = metadata_AMF_rare_gen %>% dplyr::select(fert_status, site),
+    fixed_effects = "fert_status",
+    random_effects = "site",
+    reference = "fert_status,Control", # no space between variable and level 
+    normalization = "NONE",
+    standardize = FALSE,
+    plot_scatter = FALSE
+  )
+
+mlin2_fert_status_gen$results %>%
+  dplyr::filter(metadata == "fert_status", qval <= 0.05)
+
+mlin2_fert_status_gen$results %>%
+  dplyr::filter(metadata == "site", qval <= 0.05)
+
+physeq_AMF_rare_Gen@tax_table %>% 
+  as.data.frame() %>% 
+  rownames_to_column("otu") %>%
+  filter(otu %in% "Zotu3633")
+
+# What about at family level?
+metadata_AMF_rare_fam <- 
+  sample_data(
+    physeq_AMF_rare_Fam %>% 
+      subset_taxa(Family != "Unclassified") %>%
+      prune_taxa(taxa_sums(x = .) > 0, x = .) %>% 
+      prune_samples(sample_sums(x=.) > 0, x =.) 
+  )%>% 
+  as.matrix() %>% 
+  as.data.frame() %>% 
+  mutate(across(.cols = 1:2, .fns = as.factor)) 
+
+otutable_AMF_rare_fam <- 
+  otu_table(
+    physeq_AMF_rare_Fam %>% 
+      subset_taxa(Family != "Unclassified") %>%
+      prune_taxa(taxa_sums(x = .) > 0, x = .) %>% 
+      prune_samples(sample_sums(x=.) > 0, x =.)
+  ) %>% 
+  t() %>% 
+  as.matrix() %>% 
+  as.data.frame() 
+
+mlin2_fert_status_fam <- 
+  Maaslin2(
+    cores = 4,
+    output = "demo_output",
+    input_data = otutable_AMF_rare_fam,
+    input_metadata = metadata_AMF_rare_fam %>% dplyr::select(fert_status, site),
+    fixed_effects = "fert_status",
+    random_effects = "site",
+    reference = "fert_status,Control", # no space between variable and level 
+    normalization = "NONE",
+    standardize = FALSE,
+    plot_scatter = FALSE
+  )
+
+mlin2_fert_status_fam$results %>%
+  dplyr::filter(metadata == "fert_status", qval <= 0.05)
+
+mlin2_fert_status_fam$results %>%
+  dplyr::filter(metadata == "site", qval <= 0.05)
+
+physeq_AMF_rare_Fam@tax_table %>% 
+  as.data.frame() %>% 
+  rownames_to_column("otu") %>%
+  filter(otu %in% "Zotu3633")
+
+# RESUTLS. No significant differences between fertilized and control samples at 
+# OTU and Family levels but Rhizophagus (Zotu3633) is higher in fertilized plots.
+
+# Now, I can compare with a fixed-effect site model, no random effects! We can report 
+# this if we explain what we did. For direct compariosn I can use the dataset that
+# was agglomerated by Genus.
+
+mlin2_site <- 
+  Maaslin2(
+    cores = 4,
+    output = "demo_output",
+    input_data = otutable_AMF_rare_gen,
+    input_metadata = metadata_AMF_rare_gen %>% dplyr::select(fert_status, site),
+    fixed_effects = c("fert_status", "site"),
+    reference = "site,Escanaba",
+    correction = "BH",
+    normalization = "NONE",
+    standardize = FALSE,
+    plot_scatter = FALSE
+  )
+
+mlin2_site$results %>%
+  dplyr::filter(metadata == "fert_status", qval <= 0.05)
+
+# RESULTS. This confirm the result from above, the mixed effect model.
+
+mlin2_site$results %>%
+  dplyr::filter(metadata == "site", qval <= 0.05)
+
+# RESULTS. This is consistent with the PERMANOVA result, site has a strong effect
+# on community composition. These difference are related to the Escanaba site as 
+# reference level. We should run it pairwise to know which sites differ from each 
+# other and then use a stringent p value correction method.
+
+
+# pairwise maaslin2 ------------------------------------------------------------
+run_maaslin2_all_pairs <- function(physeq, 
+                                   factor_variable, 
+                                   qval_threshold = 0.05, 
+                                   norm_method, 
+                                   trans_method,
+                                   ...) {
+  
+  # extract datasets
+  input_metadata <- as.data.frame(as.matrix(physeq@sam_data)) %>% 
+    dplyr::select(.data[[factor_variable]])
+  
+  input_data <- as.data.frame(t(as.matrix(physeq@otu_table)))
+  
+  # Get unique levels of the factor variable
+  factor_levels <- unique(input_metadata[[factor_variable]])
+  
+  # Store results
+  significant_results <- list()
+  
+  # Loop through each level and set it as the reference
+  for (ref in factor_levels) {
+    cat("\nRunning Maaslin2 with reference:", ref, "\n")
+    
+    result <- Maaslin2(
+      cores = 6,
+      input_data = input_data,
+      input_metadata = input_metadata,
+      output = tempfile(),  # Avoid creating permanent folders
+      reference = c(factor_variable, ref),
+      min_abundance = 0.001,
+      min_prevalence = 0.1,
+      correction = "BH",
+      normalization = norm_method,
+      transform = trans_method,
+      standardize = FALSE,
+      plot_scatter = FALSE,
+      ...
+    )
+    
+    # Extract significant results and add reference group
+    sig_results <- result$results %>%
+      filter(qval <= qval_threshold) %>%
+      mutate(reference_group = ref)
+    
+    # Store results
+    significant_results[[ref]] <- sig_results
+  }
+  
+  # Combine all significant results into a single dataframe
+  final_results <- bind_rows(significant_results)
+  
+  return(final_results)
+}
+
+physeq_AMF_rare_Gen@tax_table
+
+mlin2_site <- 
+  run_maaslin2_all_pairs(
+    physeq = 
+      physeq_AMF_rare_Gen %>% 
+      subset_taxa(Genus != "Unclassified") %>%
+      prune_taxa(taxa_sums(x = .) > 0, x = .) %>% 
+      prune_samples(sample_sums(x=.) > 0, x =.),
+    factor_variable = "site",
+    qval_threshold = 0.05, 
+    norm_method = "NONE", 
+    trans_method = "LOG") 
+
+dim(mlin2_site)
+head(mlin2_site)
+
+
+mlin2_fert_status <- 
+  run_maaslin2_all_pairs(
+    physeq = 
+      physeq_AMF_rare_Gen %>% 
+      subset_taxa(Genus != "Unclassified") %>%
+      prune_taxa(taxa_sums(x = .) > 0, x = .) %>% 
+      prune_samples(sample_sums(x=.) > 0, x =.),
+    factor_variable = "fert_status",
+    qval_threshold = 0.05, 
+    norm_method = "NONE", 
+    trans_method = "LOG") 
+
+dim(mlin2_fert_status)
+head(mlin2_fert_status)
+
+
+
+# Plotting Maaslin2 ------------------------------------------------------------
+
+# INTERPRETATION. The issue is the sign interpretation. Since MaAsLin2 coefficient
+# s are always coef = value - reference = Escanaba - Lux Arbor
+
+PlotMaaslin2 <- function(maaslin_results, 
+                         physeq_object,
+                         value_type = c("ln", "log2")) {
+  
+  value_type <- match.arg(value_type)
+  
+  # Process the data
+  cleaned_results <- 
+    maaslin_results %>%
+    rowwise() %>%
+    mutate(pair_raw = paste(value, reference_group, sep = " vs "),
+           pair = paste(sort(c(value, reference_group)), collapse = "-")) %>%
+    ungroup() %>%
+    distinct(feature, pair, .keep_all = TRUE) %>%
+    # Direction-aware label
+    mutate(pair_label = paste0(value, " vs ", reference_group)) %>%
+    left_join(as.data.frame(as.matrix(physeq_object@tax_table)) %>%
+                rownames_to_column("feature"), by = "feature") %>%
+    mutate(Genus_makrdown = str_c("*", str_trim(Genus), "*"),
+           coef_log2   = coef / log(2),
+           stderr_log2 = stderr / log(2))
+  
+  # Choose what to plot
+  if (value_type == "ln") {
+    cleaned_results <- cleaned_results %>%
+      mutate(plot_value = coef,
+             label_value = round(coef, 2)) %>% 
+      na.omit()
+    
+    fill_label <- "ln fold change"
+    
+    print(range(cleaned_results$coef))
+    
+    fill_scale <- scale_fill_gradient2(
+      name = "lFC",
+      low = "blue", high = "red", mid = "#FFFFCC",
+      na.value = "white",
+      limits = c(-8, 8),
+      breaks = c(-8, -4, 0, 4, 8)
+    )
+    
+  } else if (value_type == "log2") {
+    
+    cleaned_results <- cleaned_results %>%
+      mutate(plot_value = coef_log2,
+             label_value = round(coef_log2, 2)) %>% 
+      na.omit()
+    
+    fill_label <- "log2 fold change"
+    
+    print(range(cleaned_results$coef_log2))
+    
+    fill_scale <- scale_fill_gradient2(
+      name = "l2FC",
+      low = "blue", high = "red", mid = "#FFFFCC",
+      na.value = "white",
+      limits = c(-12.5, 12.5),
+      breaks = c(-12.5, -6.25, 0, 6.25, 12.5)
+    )
+  }
+  
+  # Plot
+  p <- 
+    ggplot(cleaned_results, aes(x = pair_label, y = Genus_makrdown, fill = plot_value)) + 
+    geom_tile() +
+    geom_text(aes(label = label_value), size = 4, show.legend = FALSE) +
+    theme_bw() +
+    theme(
+      strip.text = element_text(size = 10, face = "bold"),
+      strip.background = element_rect(fill = "white", color = "white"),
+      plot.title = element_markdown(size = 12, face = "bold", hjust = 0.5),
+      plot.subtitle = element_markdown(size = 10, hjust = 0.5),
+      axis.text.x = element_text(angle = 33, hjust = 1, vjust = 1, size = 10),
+      axis.text.y = element_markdown(size = 10),
+      axis.title = element_markdown(size = 10), 
+      legend.title = element_text(size = 10, face = "bold"), 
+      legend.text = element_text(size = 9),
+      legend.key.height = unit(0.4, "cm"),  
+      legend.key.width = unit(0.4, "cm"),
+      legend.position = "right"
+    ) +
+    fill_scale
+  
+  return(p)
+}
+
+
+Fig_4_diff_abund_heat <-
+  PlotMaaslin2(maaslin_results = mlin2_site %>% filter(qval <= 0.05),
+               physeq_object = physeq_AMF_rare_Gen,
+               value_type = "log2") +
+  labs(
+    title = "Differentially abundant genera",
+    x = "Pairwise site comparison (test site vs reference site)",
+    y = "Genus"
+  ) +
+  theme(
+    plot.subtitle = ggtext::element_markdown(lineheight = 1.2)
+  )
+
+ggarrange(
+  bar_charts_gen,
+  Fig_4_diff_abund_heat,
+  ncol = 1, 
+  nrow = 2,
+  heights = c(0.5, 1), 
+  labels = c("A", "B")
+  )
+
+
+ggsave(
+  file.path(data_path, "results/Fig_3_Compos_DiffAbund.pdf"),
+  plot = grid.arrange(
+    ggarrange(
+      bar_charts_gen,
+      Fig_4_diff_abund_heat,
+      ncol = 1, 
+      nrow = 2,
+      heights = c(0.5, 1), 
+      labels = c("A", "B")
+    ),
+    top = text_grob("ARBUSCULAR MYCORRHIZAL FUNGI COMMUNITY COMPOSITION", 
+                    size = 12, face = "bold")
+  ),
+  device = "pdf"
+)
+
+
 
 # **********************************************************************--------
 # **** 4. PHYLOGENETIC TREE **** ------------------------------------------
@@ -2185,7 +2626,6 @@ ggtree::ggtree(tree_raxml_97)
 tree_raxml_97_rooted <- root(tree_raxml_97, outgroup = "Zotu6503", resolve.root = TRUE)
 ggtree::ggtree(tree_raxml_97_rooted)
 
-
 tree_iqtree2_97 <- read.tree("phylogeny/otus_97_filtered_mafft_trim_iq2.treefile")
 str(tree_iqtree2_97)
 ggtree::ggtree(tree_iqtree2_97)
@@ -2287,13 +2727,14 @@ dat1_97 <-
   summarise(MeanAbundance = mean(Abundance, na.rm = TRUE), .groups = "drop") %>%
   mutate(
     Genus = ifelse(is.na(Genus) | Genus == "", "Unclassified", Genus)) %>% 
-  rename(label = OTU)
+  rename(label = OTU) %>% 
+  mutate(OTU = paste(label, BestMatch, sep="-"))
 
 range(dat1_97$MeanAbundance)
 range(sqrt(dat1_97$MeanAbundance))
 
 write.csv(x= dat1_97, file= file.path(data_path, "datasets/tree_metadata_97.csv"))
-dat1_97_mod <- read.csv(file=file.path(data_path, "datasets/tree_metadata_97_mod.csv"))
+dat1_97_mod <- read.csv(file=file.path(data_path, "datasets/tree_metadata_97_mod_SL.csv"))
 
 dat2_97 <- 
   melted_AMF_97 %>% 
@@ -2335,7 +2776,7 @@ genera_nodes <-
       unique(),
     genera_nodes$clade
   ), ] %>% 
-  mutate(highlight = rep(c(0,1),
+  dplyr::mutate(highlight = rep(c(0,1),
                          length.out=length(genera_nodes$clade)))
 
 genera_nodes
@@ -2402,8 +2843,17 @@ palette_bestmatch <- c(
 # Build tree plot ---------------------------------------------------------------
 
 tree_AMF_97 <- 
-  tree_raxml_AMF_97 %>% 
+  tree_raxml_97_rooted %>% 
   ggtree(layout = "circular", branch.length = "none", size = 0.1, open.angle = 5) %<+% dat1_97 
+
+tree_AMF_97 +
+  geom_tippoint(
+    aes(fill = BestMatch, size = sqrt(MeanAbundance)),
+    shape = 21, stroke = 0.1, alpha = 0.85) +
+  geom_tiplab(aes(label=OTU), size=2) +
+  scale_fill_manual(values = bestmatch_colors_97, na.translate = FALSE) +
+  geom_text2(aes(subset = !isTip, label = node), size = 2, color = "black") +
+  theme(legend.position = "none")
 
 tree_AMF_97 <- 
   tree_AMF_97 +
@@ -2421,7 +2871,7 @@ tree_AMF_97 <-
                  show.legend = FALSE) + # try with TRUE as well
   geom_tree(linewidth=0.3) +
   geom_text2(aes(subset = !isTip, label = node), size = 2, color = "black") +
-  geom_tiplab(aes(label=BestMatch), size=2) +
+  geom_tiplab(aes(label=OTU), size=2) +
   geom_cladelab(data=genera_nodes,
                 mapping=aes(node=node, label=clade, color=clade),
                 parse = TRUE,
@@ -2486,7 +2936,15 @@ ggtree(tree_raxml_97_rooted, layout="circular", linetype=NA) %<+% dat1_97 +
 
 
 
-
+# Need to modufy this if want to add the title!
+ggsave(
+  file.path(data_path, "results/Fig_2_betadiv_wide.pdf"),
+  plot = grid.arrange(
+    Figure_2_beta,
+    top = text_grob("BETA DIVERSITY", size = 12, face = "bold")
+  ),
+  device = "pdf"
+)
 
 
 
@@ -3217,538 +3675,6 @@ p
 
 
 
-# **********************************************************************--------
-# **** 5. DIFFERENTIAL ABUNDANCE **** ------------------------------------------
-
-str(physeq_AMF_rare)
-
-metadata_AMF_rare <- 
-  as.data.frame(as.matrix(physeq_AMF_rare@sam_data)) %>% 
-  mutate(across(.cols = 1:2, .fns = as.factor))
-
-str(metadata_AMF_rare)
-
-otutable_AMF_rare <- 
-  as.data.frame(t(as.matrix(physeq_AMF_rare@otu_table)))
-
-str(otutable_AMF_rare)
-
-# Identify differentially abundant taxa  ---------------------------------------
-
-table(metadata_AMF_rare$site, metadata_AMF_rare$fert_status)
-
-# Test differential abundance between Fertilized vs Control, controlling for site
-
-mlin2_fert_status <- 
-  Maaslin2(
-  cores = 4,
-  output = "demo_output",
-  input_data = otutable_AMF_rare,
-  input_metadata = metadata_AMF_rare %>% dplyr::select(fert_status),
-  fixed_effects = "fert_status",
-  random_effects = "site",
-  reference = "fert_status,Control", # no space between variable and level 
-  normalization = "NONE",
-  standardize = FALSE,
-  plot_scatter = FALSE
-)
-
-mlin2_fert_status$results %>%
-  dplyr::filter(metadata == "fert_status", qval <= 0.05)
-
-mlin2_fert_status$results %>%
-  dplyr::filter(metadata == "site", qval <= 0.05)
-
-# INTERPRETATION. Multiple testing penalty is brutal here. When testing ~2870 
-# features BH correction inflates q-values. You need very strong, consistent 
-# effects to pass q ≤ 0.05
-
-# Look at raw p-values (not q-values)
-mlin2_fert_status$results %>%
-  dplyr::filter(metadata == "fert_status") %>%
-  dplyr::arrange(pval) %>%
-  head(20)
-
-# Check effect sizes
-mlin2_fert_status$results %>%
-  dplyr::filter(metadata == "fert_status") %>%
-  dplyr::arrange(desc(abs(coef))) %>%
-  head(20)
-
-# Testing at Genus level
-
-# NOTE! I remove all Unclassified OTUs clusters at genus as they will inflate the 
-# p-value correction and they are not informative. 
-
-metadata_AMF_rare_gen <- 
-  sample_data(
-    physeq_AMF_rare_Gen %>% 
-      subset_taxa(Genus != "Unclassified") %>%
-      prune_taxa(taxa_sums(x = .) > 0, x = .) %>% 
-      prune_samples(sample_sums(x=.) > 0, x =.) 
-    )%>% 
-  as.matrix() %>% 
-  as.data.frame() %>% 
-  mutate(across(.cols = 1:2, .fns = as.factor)) 
-
-otutable_AMF_rare_gen <- 
-  otu_table(
-    physeq_AMF_rare_Gen %>% 
-      subset_taxa(Genus != "Unclassified") %>%
-      prune_taxa(taxa_sums(x = .) > 0, x = .) %>% 
-      prune_samples(sample_sums(x=.) > 0, x =.)
-    ) %>% 
-  t() %>% 
-  as.matrix() %>% 
-  as.data.frame() 
-
-mlin2_fert_status_gen <- 
-  Maaslin2(
-    cores = 4,
-    output = "demo_output",
-    input_data = otutable_AMF_rare_gen,
-    input_metadata = metadata_AMF_rare_gen %>% dplyr::select(fert_status, site),
-    fixed_effects = "fert_status",
-    random_effects = "site",
-    reference = "fert_status,Control", # no space between variable and level 
-    normalization = "NONE",
-    standardize = FALSE,
-    plot_scatter = FALSE
-  )
-
-mlin2_fert_status_gen$results %>%
-  dplyr::filter(metadata == "fert_status", qval <= 0.05)
-
-mlin2_fert_status_gen$results %>%
-  dplyr::filter(metadata == "site", qval <= 0.05)
-
-physeq_AMF_rare_Gen@tax_table %>% 
-  as.data.frame() %>% 
-  rownames_to_column("otu") %>%
-  filter(otu %in% "Zotu3633")
-
-# What about at family level?
-metadata_AMF_rare_fam <- 
-  sample_data(
-    physeq_AMF_rare_Fam %>% 
-      subset_taxa(Family != "Unclassified") %>%
-      prune_taxa(taxa_sums(x = .) > 0, x = .) %>% 
-      prune_samples(sample_sums(x=.) > 0, x =.) 
-  )%>% 
-  as.matrix() %>% 
-  as.data.frame() %>% 
-  mutate(across(.cols = 1:2, .fns = as.factor)) 
-
-otutable_AMF_rare_fam <- 
-  otu_table(
-    physeq_AMF_rare_Fam %>% 
-      subset_taxa(Family != "Unclassified") %>%
-      prune_taxa(taxa_sums(x = .) > 0, x = .) %>% 
-      prune_samples(sample_sums(x=.) > 0, x =.)
-  ) %>% 
-  t() %>% 
-  as.matrix() %>% 
-  as.data.frame() 
-
-mlin2_fert_status_fam <- 
-  Maaslin2(
-    cores = 4,
-    output = "demo_output",
-    input_data = otutable_AMF_rare_fam,
-    input_metadata = metadata_AMF_rare_fam %>% dplyr::select(fert_status, site),
-    fixed_effects = "fert_status",
-    random_effects = "site",
-    reference = "fert_status,Control", # no space between variable and level 
-    normalization = "NONE",
-    standardize = FALSE,
-    plot_scatter = FALSE
-  )
-
-mlin2_fert_status_fam$results %>%
-  dplyr::filter(metadata == "fert_status", qval <= 0.05)
-
-mlin2_fert_status_fam$results %>%
-  dplyr::filter(metadata == "site", qval <= 0.05)
-
-physeq_AMF_rare_Fam@tax_table %>% 
-  as.data.frame() %>% 
-  rownames_to_column("otu") %>%
-  filter(otu %in% "Zotu3633")
-
-# RESUTLS. No significant differences between fertilized and control samples at 
-# OTU and Family levels but Rhizophagus (Zotu3633) is higher in fertilized plots.
-
-# Now, I can compare with a fixed-effect site model, no random effects! We can report 
-# this if we explain what we did. For direct compariosn I can use the dataset that
-# was agglomerated by Genus.
-
-mlin2_site <- 
-  Maaslin2(
-    cores = 4,
-    output = "demo_output",
-    input_data = otutable_AMF_rare_gen,
-    input_metadata = metadata_AMF_rare_gen %>% dplyr::select(fert_status, site),
-    fixed_effects = c("fert_status", "site"),
-    reference = "site,Escanaba",
-    correction = "BH",
-    normalization = "NONE",
-    standardize = FALSE,
-    plot_scatter = FALSE
-  )
-
-mlin2_site$results %>%
-  dplyr::filter(metadata == "fert_status", qval <= 0.05)
-
-# RESULTS. This confirm the result from above, the mixed effect model.
-
-mlin2_site$results %>%
-  dplyr::filter(metadata == "site", qval <= 0.05)
-
-# RESULTS. This is consistent with the PERMANOVA result, site has a strong effect
-# on community composition. These difference are related to the Escanaba site as 
-# reference level. We should run it pairwise to know which sites differ from each 
-# other and then use a stringent p value correction method.
-
-
-# pairwise maaslin2 ------------------------------------------------------------
-run_maaslin2_all_pairs <- function(physeq, 
-                                   factor_variable, 
-                                   qval_threshold = 0.05, 
-                                   norm_method, 
-                                   trans_method,
-                                   ...) {
-  
-  # extract datasets
-  input_metadata <- as.data.frame(as.matrix(physeq@sam_data)) %>% 
-    dplyr::select(.data[[factor_variable]])
-  
-  input_data <- as.data.frame(t(as.matrix(physeq@otu_table)))
-  
-  # Get unique levels of the factor variable
-  factor_levels <- unique(input_metadata[[factor_variable]])
-  
-  # Store results
-  significant_results <- list()
-  
-  # Loop through each level and set it as the reference
-  for (ref in factor_levels) {
-    cat("\nRunning Maaslin2 with reference:", ref, "\n")
-    
-    result <- Maaslin2(
-      cores = 6,
-      input_data = input_data,
-      input_metadata = input_metadata,
-      output = tempfile(),  # Avoid creating permanent folders
-      reference = c(factor_variable, ref),
-      min_abundance = 0.001,
-      min_prevalence = 0.1,
-      correction = "BH",
-      normalization = norm_method,
-      transform = trans_method,
-      standardize = FALSE,
-      plot_scatter = FALSE,
-      ...
-    )
-    
-    # Extract significant results and add reference group
-    sig_results <- result$results %>%
-      filter(qval <= qval_threshold) %>%
-      mutate(reference_group = ref)
-    
-    # Store results
-    significant_results[[ref]] <- sig_results
-  }
-  
-  # Combine all significant results into a single dataframe
-  final_results <- bind_rows(significant_results)
-  
-  return(final_results)
-}
-
-physeq_AMF_rare_Gen@tax_table
-
-mlin2_site <- 
-  run_maaslin2_all_pairs(
-    physeq = 
-      physeq_AMF_rare_Gen %>% 
-      subset_taxa(Genus != "Unclassified") %>%
-      prune_taxa(taxa_sums(x = .) > 0, x = .) %>% 
-      prune_samples(sample_sums(x=.) > 0, x =.),
-    factor_variable = "site",
-    qval_threshold = 0.05, 
-    norm_method = "NONE", 
-    trans_method = "LOG") 
-
-dim(mlin2_site)
-head(mlin2_site)
-
-
-physeq_AMF_rare_Gen %>% 
-  subset_taxa(Genus != "Unclassified") %>%
-  prune_taxa(taxa_sums(x = .) > 0, x = .) %>% 
-  prune_samples(sample_sums(x=.) > 0, x =.) %>% 
-  tax_table() %>% 
-  as.data.frame()
-
-
-
-# Plotting Maaslin2 ------------------------------------------------------------
-
-PlotMaaslin2 <- function(maaslin_results, 
-                         physeq_object) {
-  
-  # Process the data: Remove duplicate comparisons
-  cleaned_results <- 
-    maaslin_results %>%
-    rowwise() %>%
-    mutate(pair = paste(sort(c(value, reference_group)), collapse = "-")) %>%
-    ungroup() %>%
-    distinct(feature, pair, .keep_all = TRUE) %>%
-    dplyr::mutate(pair = as.factor(pair)) %>% 
-    left_join(as.data.frame(as.matrix(physeq_object@tax_table)) %>%
-                rownames_to_column("feature"), by = "feature") %>%
-    mutate(Genus_makrdown = str_c("*", str_trim(Genus), "*")) %>% 
-    mutate(coef_log2   = coef / log(2),
-           stderr_log2 = stderr / log(2))
-    #mutate(Taxonomy = paste(Genus_makrdown, str_c("(", str_trim(feature), ")"))) %>% 
-    #mutate(foldChange = exp(coef))
-    #mutate(BestMatch_makrdown = str_c("*", str_trim(BestMatch), "*")) %>%
-    #mutate(Taxonomy = paste(BestMatch_makrdown, str_c("(", str_trim(feature), ")"))) 
-    #print(cleaned_results, n=19)
-    print(range(cleaned_results$coef_log2))
-  
-  # Generate the heatmap plot
-  p <- 
-    ggplot(cleaned_results, aes(x = pair, y = Genus_makrdown, fill = coef)) + 
-    geom_tile() +
-    geom_text(aes(label = round(coef, 2)), size = 4, show.legend = FALSE) +
-    theme_bw() +
-    theme(
-      strip.text = element_text(size = 10, face = "bold"),
-      strip.background = element_rect(fill = "white", color = "white"),
-      plot.title = element_markdown(size = 12, face = "bold", hjust = 0.5, vjust = 0.5),
-      plot.subtitle = element_markdown(size = 10, hjust = 0.5, vjust = 0.5),
-      axis.text.x = element_text(angle = 33, hjust = 1, vjust = 1, size = 10),
-      axis.text.y = element_markdown(size = 10),
-      axis.title = element_markdown(size = 10), 
-      legend.title = element_text(size = 10, face = "bold"), 
-      legend.text = element_text(size = 9),
-      legend.key.height = unit(0.4, "cm"),  
-      legend.key.width = unit(0.4, "cm"),
-      legend.position = "right"
-    ) +
-    #facet_grid(~pair) +
-    scale_fill_gradient2(name = "lfc",
-                         low = "blue", high = "red", mid = "#FFFFCC", na.value = "white",
-                         limits = c(-12.5, 12.5),
-                         breaks = c(-12.5, -6.5, 0, 6.5, 12.5))
-  
-  return(p)
-}
-
-head(mlin2_site)
-
-# Are there NAs introduced by the conversion?
-mlin2_site %>%
-  mutate(coef_log2 = coef / log(2)) %>%
-  summarise(
-    n_total    = n(),
-    n_na_coef  = sum(is.na(coef)),
-    n_na_log2  = sum(is.na(coef / log(2)))
-  )
-
-# Check if missing comparisons were present before filtering
-mlin2_site %>%
-  filter(qval <= 0.05) %>%
-  distinct(value) %>%
-  pull(value)
-
-# Plotting
-PlotMaaslin2(maaslin_results = mlin2_site 
-             %>% filter(qval <= 0.05),
-             physeq_object =  physeq_AMF_rare_Gen) +
-  labs(title = "Differential abundance of genera among sites",
-       subtitle = "lfc = log fold change, fold change = exp(lfc)<br>
-       Negative lfc = more abundant in the reference site<br>
-       Positive lfc = more abundant in the value site",
-       x = "Pairwise site comparison (site vs reference site)",
-       y = "Genus")
-
-
-# INTERPRETATION. The issue is the sign interpretation. Since MaAsLin2 coefficient
-# s are always coef = value - reference = Escanaba - Lux Arbor
-
-
-
-PlotMaaslin2 <- function(maaslin_results, 
-                         physeq_object,
-                         value_type = c("ln", "log2")) {
-  
-  value_type <- match.arg(value_type)
-  
-  # Process the data
-  cleaned_results <- 
-    maaslin_results %>%
-    rowwise() %>%
-    mutate(pair_raw = paste(value, reference_group, sep = " vs "),
-           pair = paste(sort(c(value, reference_group)), collapse = "-")) %>%
-    ungroup() %>%
-    distinct(feature, pair, .keep_all = TRUE) %>%
-    # Direction-aware label
-    mutate(pair_label = paste0(value, " vs ", reference_group)) %>%
-    left_join(as.data.frame(as.matrix(physeq_object@tax_table)) %>%
-                rownames_to_column("feature"), by = "feature") %>%
-    mutate(Genus_makrdown = str_c("*", str_trim(Genus), "*"),
-           coef_log2   = coef / log(2),
-           stderr_log2 = stderr / log(2))
-  
-  # Choose what to plot
-  if (value_type == "ln") {
-    cleaned_results <- cleaned_results %>%
-      mutate(plot_value = coef,
-             label_value = round(coef, 2))
-    
-    fill_label <- "ln fold change"
-    
-    print(range(cleaned_results$coef))
-    
-    fill_scale <- scale_fill_gradient2(
-      name = "lFC",
-      low = "blue", high = "red", mid = "#FFFFCC",
-      na.value = "white",
-      limits = c(-8, 8),
-      breaks = c(-8, -4, 0, 4, 8)
-    )
-    
-  } else if (value_type == "log2") {
-    
-    cleaned_results <- cleaned_results %>%
-      mutate(plot_value = coef_log2,
-             label_value = round(coef_log2, 2))
-    
-    fill_label <- "log2 fold change"
-    
-    print(range(cleaned_results$coef_log2))
-    
-    fill_scale <- scale_fill_gradient2(
-      name = "l2FC",
-      low = "blue", high = "red", mid = "#FFFFCC",
-      na.value = "white",
-      limits = c(-12.5, 12.5),
-      breaks = c(-12.5, -6.25, 0, 6.25, 12.5)
-    )
-  }
-  
-  # Plot
-  p <- 
-    ggplot(cleaned_results, aes(x = pair_label, y = Genus_makrdown, fill = plot_value)) + 
-    geom_tile() +
-    geom_text(aes(label = label_value), size = 4, show.legend = FALSE) +
-    theme_bw() +
-    theme(
-      strip.text = element_text(size = 10, face = "bold"),
-      strip.background = element_rect(fill = "white", color = "white"),
-      plot.title = element_markdown(size = 12, face = "bold", hjust = 0.5),
-      plot.subtitle = element_markdown(size = 10, hjust = 0.5),
-      axis.text.x = element_text(angle = 33, hjust = 1, vjust = 1, size = 10),
-      axis.text.y = element_markdown(size = 10),
-      axis.title = element_markdown(size = 10), 
-      legend.title = element_text(size = 10, face = "bold"), 
-      legend.text = element_text(size = 9),
-      legend.key.height = unit(0.4, "cm"),  
-      legend.key.width = unit(0.4, "cm"),
-      legend.position = "right"
-    ) +
-    fill_scale
-  
-  return(p)
-}
-
-
-
-PlotMaaslin2(maaslin_results = mlin2_site %>% filter(qval <= 0.05),
-             physeq_object =  physeq_AMF_rare_Gen,
-             value_type= "log2") +
-  labs(title = "Differential abundance of genera among sites",
-       subtitle = "lfc = log fold change, fold change = exp(lfc)",
-       x = "Pairwise site comparison",
-       y = "Genus")
-
-PlotMaaslin2(maaslin_results = mlin2_site 
-             %>% filter(qval <= 0.05),
-             physeq_object =  physeq_AMF_rare_Gen,
-             value_type= "ln") +
-  labs(title = "Differential abundance of genera among sites",
-       subtitle = "lfc = log fold change, fold change = exp(lfc)",
-       x = "Pairwise site comparison",
-       y = "Genus")
-
-
-labs(
-  title = "Differential abundance of genera among sites",
-  subtitle = "Values represent log fold change (ln scale). Direction: first site relative to second (A/B)",
-  x = "Pairwise site comparison",
-  y = "Genus"
-) 
-
-
-# Plot check
-mlin2_site %>% filter(value == "Escanaba", reference_group == "Hancock") %>% 
-  filter(feature == "Zotu885") %>% pull(coef)
-mlin2_site %>% filter(value == "Escanaba", reference_group == "Hancock") %>% 
-  filter(feature == "Zotu9149") %>% pull(coef)
-
-
-
-mlin2_fert_status_gen$results %>%
-  dplyr::filter(metadata == "fert_status", qval <= 0.05)
-
-
-# INTERPRETATION. Differential abundance analysis revealed strong site-specific 
-# structuring of AMF genera, with several taxa showing large log fold changes 
-# across pairwise site comparisons. Genera such as Septoglomus, Diversispora, 
-# and Microkamienskia exhibited pronounced enrichment in specific sites, with 
-# log fold changes exceeding 6 in some contrasts, indicating substantial shifts 
-# in relative abundance. In contrast, genera such as Paraglomus and Oehlia tended
-# to be consistently depleted in certain sites across multiple comparisons. 
-# Overall, the magnitude and consistency of these patterns indicate that site-level
-# environmental factors strongly influence AMF community composition.
-
-# Figure X. Differential abundance of AMF genera across sites.
-# Heatmap of log fold changes (lfc) from Maaslin2 analysis for pairwise site 
-# comparisons. Values represent the natural log-transformed fold change in 
-# genus-level abundance between sites (first site relative to second). Positive 
-# values (red) indicate higher abundance in the first site, while negative values
-# (blue) indicate higher abundance in the second site. Only significant 
-# associations (q ≤ 0.05) are shown. The large magnitude of several log fold 
-# changes indicates strong site-specific structuring of AMF communities.
-
-# What if I want to use log2foldchange instead 
-
-
-mlin2_site <- 
-  run_maaslin2_all_pairs(
-    physeq = 
-      physeq_AMF_rare_Gen %>% 
-      subset_taxa(Genus != "Unclassified") %>%
-      prune_taxa(taxa_sums(.) > 0, .) %>% 
-      prune_samples(sample_sums(.) > 0, .) %>% 
-      # Add a pseudocount (e.g., 1) so log2(0+1) = 0
-      transform_sample_counts(fun = function(x) log2(x + 1)),
-    factor_variable = "site",
-    qval_threshold = 0.05, 
-    norm_method = "NONE", 
-    trans_method = "NONE"
-  )
-
-
-PlotMaaslin2(maaslin_results = mlin2_site 
-             %>% filter(qval <= 0.05),
-             physeq_object =  physeq_AMF_rare_Gen) +
-  labs(title = "Differential abundance of genera among sites",
-       subtitle = "lfc = log fold change, fold change = exp(lfc)",
-       x = "Pairwise site comparison",
-       y = "Genus")
 
 
 # ***********************************************************************-------
@@ -3841,7 +3767,6 @@ adonis2(
 )
 
 
-
 # Testing effect of N and P on biomass and hill 0 ------------------------------
 lmer_otu_chem_data <-
   otu_chem_data %>% 
@@ -3899,6 +3824,7 @@ fit_hill_q0_fixslope <- lmer(
 )
 
 summary(fit_hill_q0_fixslope)
+anova(fit_hill_q0_fixslope)
 plot(fit_hill_q0_fixslope)
 
 diagnostics_dharma(
@@ -3907,7 +3833,10 @@ diagnostics_dharma(
   group_var2 = NULL
 )
 
-plot(ggpredict(fit_hill_q0_fixslope, terms = c("p_ppm", "fert_status")))
+# If I try running glmmTMB still not significant
+glmmTMB(hill_q0 ~ fert_status + p_ppm + fert_status:p_ppm + (1 | site),
+        dispformula = ~site, data = lmer_otu_chem_data, 
+        REML = FALSE) %>% summary()
 
 # Model for diversity
 fit_hill_q2_fixslope <- lmer(
@@ -3987,38 +3916,27 @@ anova(fit_yield_fixslope, fit_yield_randslope)
 #   _ Accept it and note it as a limitation — the overall fit is excellent (KS p = 0.996,
 #     dispersion fine, no outliers), and the site-level issue may be unavoidable.
 #   _ Use a site-stratified analysis as a sensitivity check.
-#   _ Switch to glmmTMB which allows more flexible variance structures.
+#   _ Switch to glmmTMB (Fit a generalized linear mixed model (GLMM) using Template
+#     Model Builder (TMB).) which allows more flexible variance structures.
 
 # glm model for dry_matter
+
 fitGLM_yield_fixslope <- 
-  glmmTMB(dry_matter ~ fert_status + p_ppm + fert_status:p_ppm + (1 | site),
-          dispformula = ~site,   # allows variance to differ by site
-          data = lmer_otu_chem_data)
+  glmmTMB(dry_matter ~ fert_status * p_ppm + (1|site),
+                    dispformula = ~site, data = lmer_otu_chem_data, 
+          REML = FALSE)
 
-summary(fitGLM_yield_fixslope)
+fitGLM_yield_fixslope_no_p  <- 
+  glmmTMB(dry_matter ~ fert_status + p_ppm + (1|site),
+                    dispformula = ~site, data = lmer_otu_chem_data, 
+          REML = FALSE)
 
-diagnostics_dharma(
-  model      = fitGLM_yield_fixslope,
-  group_var1 = lmer_otu_chem_data$site,
-  group_var2 = NULL
-)
+anova(fitGLM_yield_fixslope_no_p, fitGLM_yield_fixslope)
 
-# Trying gamma function
-fitGLM_yield_fixslope_gamma <- 
-  glmmTMB(dry_matter ~ fert_status + p_ppm + fert_status:p_ppm + (1 | site),
-          dispformula = ~site,   # allows variance to differ by site
-          family = Gamma(link = "log"),
-          data = lmer_otu_chem_data)
+# Adding the interaction doe snot imporve the model fit!
 
-summary(fitGLM_yield_fixslope)
-
-diagnostics_dharma(
-  model      = fitGLM_yield_fixslope,
-  group_var1 = lmer_otu_chem_data$site,
-  group_var2 = NULL
-)
-
-anova(fitGLM_yield_fixslope, fitGLM_yield_fixslope_gamma)
+# NOTE. Use ML (REML = FALSE) for comparing fixed-effect structures. If LRT confirms
+# no interaction, refit the additive model with REML for reporting.
 
 # INTERPRETATION. Think of “family” as the distribution of Y and of “link” as 
 # the transformation of the mean of Y that makes the relationship with 
@@ -4031,115 +3949,121 @@ anova(fitGLM_yield_fixslope, fitGLM_yield_fixslope_gamma)
 #   makes sense, and it determines how you interpret coefficients (differences, 
 #   ratios, odds ratios).
 
+# What about p_ppm? It is not significant, but it is not causing the model to fail.
+# Stepwise removal based on p-values inflates Type I error on the remaining terms, 
+# biases their estimates away from zero, and produces overconfident standard errors. 
 
-# NOTE. I will refit with no interaction as it is not significant!
+# Is p_ppm there for a scientific reason? If your hypothesis or experimental design
+# involves soil P as a relevant covariate — which seems likely given you're 
+# studying fertilization effects — then it belongs in the model regardless of 
+# p-value. You're controlling for baseline soil P differences across plots and 
+# sites, which is exactly what a covariate should do.
+
+# Does it confound the fertilization effect? Compare the fert_status coefficient
+# with and without p_ppm:
+
+fitGLM_yield_fixslope_with_p <- glmmTMB(dry_matter ~ fert_status + p_ppm + (1|site),
+                      dispformula = ~site, data = lmer_otu_chem_data)
+fitGLM_yield_fixslope_no_p   <- glmmTMB(dry_matter ~ fert_status + (1|site),
+                      dispformula = ~site, data = lmer_otu_chem_data)
+
+summary(fitGLM_yield_fixslope_with_p)$coefficients$cond
+summary(fitGLM_yield_fixslope_no_p)$coefficients$cond
+
+# If the fertilization estimate changes meaningfully when you remove p_ppm, 
+# then p_ppm is doing real adjustment work even though its own coefficient 
+# isn't significant. Keep it.
+
+# The fertilization effect changes by 0.028 — roughly 1% of its magnitude, and 
+# well within a fraction of one SE. p_ppm is doing essentially no confounding 
+# adjustment work. The fertilization effect stands on its own.
+
+AIC(fitGLM_yield_fixslope_with_p, fitGLM_yield_fixslope_no_p)
+183.802-182.145
+
+# ΔAIC = 1.66 confirms the two additive models are essentially equivalent in fit,
+# so parsimony favors the simpler one.
+
+# NOTE. Final model. I will refit with no interaction and no p_ppm!
 fitGLM_yield_fixslope <- 
-  glmmTMB(dry_matter ~ fert_status + p_ppm + (1 | site),
+  glmmTMB(dry_matter ~ fert_status + (1 | site),
           dispformula = ~site,   # allows variance to differ by site
-          data = lmer_otu_chem_data)
+          data = lmer_otu_chem_data, 
+          REML = TRUE)
 
 summary(fitGLM_yield_fixslope)
 
-fitGLM_yield_fixslope_no_p <- 
-  glmmTMB(dry_matter ~ fert_status + (1 | site),
-          dispformula = ~site,   # allows variance to differ by site
-          data = lmer_otu_chem_data)
-
-summary(fitGLM_yield_fixslope_no_p)
-
-anova( fitGLM_yield_fixslope, fitGLM_yield_fixslope_no_p)
 
 # FIGURE S3 glmmTMB diagnostics ------------------------------------------------
-diagnostics_dharma(
+set.seed(3241)
+plot_dharma_glm_dia <- 
+  diagnostics_dharma(
   model      = fitGLM_yield_fixslope,
   group_var1 = lmer_otu_chem_data$site,
   group_var2 = NULL
 )
 
-# INTERPRETATION. A Gaussian mixed-effects model was used to analyze dry matter 
-# yield, including fertilization status and soil phosphorus as fixed effects, 
-# and a random intercept for site to account for baseline differences among 
-# locations. Additionally, the model allowed residual variance to differ by site 
-# to accommodate heteroskedasticity. Fertilization had a strong positive effect 
-# on yield, increasing dry matter by approximately 2.77 units (SE = 0.53, p < 0.001), 
-# whereas soil phosphorus concentration was not significantly associated with 
-# yield (p = 0.52). The random intercept for site indicated substantial between-site 
-# variation (SD = 1.46). Site-specific residual variance was significantly different
-# among some locations, reflecting variation in within-site variability. 
-# DHARMa diagnostics showed no evidence of over- or under-dispersion, outliers, 
-# or severe deviations from model assumptions, indicating that the model provides
-# a reliable description of the data.
+plot_dharma_glm_dia
 
-# glm model for hill_q0
-fitGLM_hill_q0_fixslope <- 
-  glmmTMB(hill_q0 ~ fert_status + p_ppm + fert_status:p_ppm + (1 | site),
-          dispformula = ~site,   # allows variance to differ by site
-          data = lmer_otu_chem_data)
-
-summary(fitGLM_hill_q0_fixslope)
-
-diagnostics_dharma(
-  model      = fitGLM_hill_q0_fixslope,
-  group_var1 = lmer_otu_chem_data$site)
-
-
-# Impact of richness on yield --------------------------------------------------
-
-# Model for diversity
-fit_yield_hill_fixslope <- lmer(
-  dry_matter ~ hill_q0 + p_ppm + hill_q0:p_ppm + (1 | site),
-  data = lmer_otu_chem_data,
-  REML = FALSE
-)
-
-summary(fit_yield_hill_fixslope)
-anova(fit_yield_hill_fixslope)
-
-lmer_otu_chem_data$hill_q0_sc <- scale(lmer_otu_chem_data$hill_q0)
-lmer_otu_chem_data$p_ppm_sc  <- scale(lmer_otu_chem_data$p_ppm)
-
-fit_yield_hill_fixslope <- lmer(
-  dry_matter ~ hill_q0_sc + p_ppm_sc + hill_q0_sc:p_ppm_sc + (1 | site),
-  data = lmer_otu_chem_data,
-  REML = FALSE
+ggsave(
+  file.path(data_path, "results/Fig_XX_dharma_glm_dia.pdf"),
+    plot_dharma_glm_dia,
+  device = "pdf"
 )
 
 
-diagnostics_dharma(
-  model      = fit_yield_hill_fixslope,
-  group_var1 = lmer_otu_chem_data$site)
+# Visualize --------------------------------------------------------------------
 
+fitGLM_yield_fixslope_pred_fixed <- 
+  ggpredict(fitGLM_yield_fixslope, terms = "fert_status")
 
-# VISUALIZING THE MODELS -------------------------------------------------------
+fitGLM_yield_fixslope_pred_site  <- 
+  ggpredict(fitGLM_yield_fixslope, terms = c("fert_status", "site"), type = "random")
 
-predict_response(fitGLM_yield_fixslope, terms = "fert_status")
-
-predict_response(fitGLM_yield_fixslope, terms = "fert_status") %>% 
-  plot() + 
-  labs(title = "Effect of Fertilization on Dry Matter",
-       y = "Predicted Dry Matter", 
-       x = "Fertilization Status") +
-  theme_minimal()
-
-ggpredict(fitGLM_yield_fixslope, terms = "fert_status") %>% 
-  ggplot(aes(x = x, y = predicted)) +
-  geom_point(size = 3) +
-  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.1) +
+# glmmTMB model ----------------------------------------------------------------
+glm_model_plot <- 
+  ggplot() +
+  # Raw data, jittered
   geom_jitter(data = lmer_otu_chem_data,
-              aes(x = fert_status, y = dry_matter),
-              width = 0.1, alpha = 0.5) +
-  labs(x = "Fertilization", y = "Dry matter") +
-  theme_bw()
+              aes(x = fert_status, y = dry_matter, color = site),
+              width = 0.15, alpha = 0.8, size = 2, shape = 16) +
+  # Site-level means connected by lines (shows random intercepts)
+  geom_line(data = fitGLM_yield_fixslope_pred_site,
+            aes(x = x, y = predicted, group = group, color = group),
+            alpha = 0.5, linewidth = 0.6, show.legend = FALSE) +
+  #geom_point(data = fitGLM_yield_fixslope_pred_site,
+  #           aes(x = x, y = predicted, color = group),
+  #           size = 2.5) +
+  # Population-level mean with CI
+  #geom_errorbar(data = fitGLM_yield_fixslope_pred_fixed,
+  #              aes(x = x, ymin = conf.low, ymax = conf.high),
+  #              width = 0.1, linewidth = 0.8) +
+  geom_point(data = fitGLM_yield_fixslope_pred_fixed,
+             aes(x = x, y = predicted),
+             size = 4, shape = 18) +
+  geom_line(data = fitGLM_yield_fixslope_pred_fixed,
+            aes(x = x, y = predicted, group = 1),
+            linewidth = 1.5) +
+  labs(title = "Switchgrass yield ",
+       x = "Treatment",
+       y = "Dry matter yield (mg/ha)") +
+  scale_color_manual(values = palette_site)+
+  theme_classic()+ 
+  theme(
+    plot.title = element_markdown(size =12, face = "bold",hjust = 0.5, vjust = 0.5),
+    plot.subtitle = element_markdown(size = 10, hjust = 0.5, vjust = 0.5),
+    axis.text.x = element_markdown(size = 8),
+    axis.text.y = element_markdown(size = 8),
+    legend.key.height = unit(0.5, "cm"), legend.key.width = unit(0.5, "cm"),
+    legend.title = element_blank(), legend.text = element_text(size = 8)
+    #legend.margin=ggplot2::margin(0,5,0,0),
+    #legend.box.margin=ggplot2::margin(0,5,0,0)
+  ) +
+  scale_y_continuous(n.breaks = 10)
 
-plot_model(fitGLM_yield_fixslope, type = "re")
+glm_model_plot
 
-ggplot(lmer_otu_chem_data,
-       aes(x = site, y = dry_matter)) +
-  geom_boxplot() +
-  geom_jitter(width = 0.1, alpha = 0.5) +
-  theme_bw()
-
-# Trying same plotting strategy
+# Raw data and dispersion ------------------------------------------------------
 
 x_limits_yield <- 
   lmer_otu_chem_data %>%
@@ -4156,74 +4080,150 @@ x_limits_yield
 intercept_yield <- fixef(fitGLM_yield_fixslope)[[1]]["fert_statusFertilized"]
 intercept_yield
 
+plot_raw_chem_data <- 
+  ggplot(lmer_otu_chem_data, 
+       aes(x = fert_status, y =dry_matter  , color = site)) +
+  geom_point(position = position_jitterdodge(jitter.width = 0.2, dodge.width = 0.5),
+             alpha = 0.8, size = 2, shape = 16) +
+  stat_summary(aes(group = site), fun = mean, geom = "line", 
+               position = position_dodge(0.5)) +
+  stat_summary(aes(group = 1), fun = mean, geom = "point", 
+               color = "black", size = 4, shape = 18) +
+  stat_summary(aes(group = 1), fun = mean, geom = "line", 
+               color = "black", size = 1) +
+  labs(title = "Switchgrass yield ",
+       #subtitle = "Black line connects fixed effect means",
+       x = "Treatment",
+       y = "Dry matter yield (mg/ha)") +
+  scale_color_manual(values = palette_site) +
+  theme_classic() +
+  theme(
+    plot.title = element_markdown(size =12, face = "bold",hjust = 0.5, vjust = 0.5),
+    plot.subtitle = element_markdown(size = 10,hjust = 0.5, vjust = 0.5),
+    axis.text.x = element_markdown(size = 8),
+    axis.text.y = element_markdown(size = 8),
+    legend.key.height = unit(0.5, "cm"), legend.key.width = unit(0.5, "cm"),
+    legend.title = element_blank(), legend.text = element_text(size = 8)
+    #legend.margin=ggplot2::margin(0,5,0,0),
+    #legend.box.margin=ggplot2::margin(0,5,0,0)
+  )+
+  guides(color = guide_legend(ncol=1))
+
+plot_raw_chem_data
+
+lmer_otu_chem_data %>% dplyr::select(dry_matter, site) %>% 
+  mutate(biomass = dry_matter) %>% 
+  ggplot(aes(x = site, y = biomass)) + 
+  geom_boxplot() +
+  coord_flip()
+
+lmer_otu_chem_data %>% 
+  group_by(site, fert_status) %>% 
+  summarise(sd_within = sd(dry_matter), n = n(), .groups = "drop")
+
+
+plot_deviation_from_fix <- 
+  broom.mixed::tidy(fitGLM_yield_fixslope, effects = "ran_vals") %>% 
+  as.data.frame() %>%
+  dplyr::rename( site = "level") %>%  
+  arrange(site) %>% 
+  ggplot(aes(x = estimate, y = site, color = site)) +
+  geom_point(size = 4, shape = 18) +
+  geom_errorbar(aes(xmin = estimate - 1.96*std.error, 
+                    xmax = estimate + 1.96*std.error),
+                height = 0, 
+                orientation = "y") +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "black") +
+  labs(title = "Deviation from Fixed Effect",
+       x = "Deviation from fixed-effect means",
+       y = NULL) +
+  scale_color_manual(values = palette_site)+
+  theme_classic()+ 
+  theme(
+    plot.title = element_markdown(size =12, face = "bold",hjust = 0.5, vjust = 0.5),
+    plot.subtitle = element_markdown(size = 10, hjust = 0.5, vjust = 0.5),
+    axis.text.x = element_markdown(size = 8),
+    axis.text.y = element_markdown(size = 8),
+    legend.key.height = unit(0.5, "cm"), legend.key.width = unit(0.5, "cm"),
+    legend.title = element_blank(), legend.text = element_text(size = 8)
+    #legend.margin=ggplot2::margin(0,5,0,0),
+    #legend.box.margin=ggplot2::margin(0,5,0,0)
+  ) +
+  guides(color = guide_legend(ncol = 1)) +
+  scale_x_continuous(
+    limits = c(x_limits_yield$min, x_limits_yield$max),
+    sec.axis = sec_axis(
+      transform = ~ . + intercept_yield,
+      name = "Dry matter yield (mg/ha)")
+  )
+
+plot_deviation_from_fix
+
+# If you top show disperions then mayeb consider the code below.
+
+# To get a truly linear mg/ha axis, transform the data itself before plotting 
+# and let the asymmetric CIs show as asymmetric error bars. Symmetric Wald CIs 
+# live naturally on the log scale, and showing them on a log-spaced axis preserves
+# that symmetry.
+
+# Pull dispersion coefs
+# and SEs straight from the model
+disp_est <- fixef(fitGLM_yield_fixslope)$disp
+disp_se  <- sqrt(diag(vcov(fitGLM_yield_fixslope)$disp))
+log_intercept <- disp_est[1]
+
+plot_deviation_from_fix <- 
+  data.frame(
+    term      = names(disp_est),
+    estimate  = as.numeric(disp_est),
+    std.error = as.numeric(disp_se)
+  ) %>% 
+  mutate(
+    site = ifelse(term == "(Intercept)", 
+                  "Escanaba", 
+                  gsub("^site", "", term)),
+    log_sd    = ifelse(term == "(Intercept)", 
+                       estimate, 
+                       estimate + log_intercept),
+    # Back-transform point estimate and CI bounds to mg/ha
+    sd_mg_ha  = exp(log_sd),
+    sd_lo     = exp(log_sd - 1.96 * std.error),
+    sd_hi     = exp(log_sd + 1.96 * std.error)
+  ) %>% 
+  arrange(site) %>% 
+  ggplot(aes(x = sd_mg_ha, y = site, color = site)) +
+  geom_point(size = 4, shape = 18) +
+  geom_errorbar(aes(xmin = sd_lo, xmax = sd_hi),
+                height = 0, 
+                orientation = "y") +
+  geom_vline(xintercept = exp(log_intercept), 
+             linetype = "dashed", color = "black") +
+  labs(title = "Within-site residual variability",
+       x = "Residual SD of dry matter yield (mg/ha)",
+       y = NULL) +
+  scale_color_manual(values = palette_site) +
+  theme_classic() +
+  theme(
+    plot.title = element_markdown(size = 12, face = "bold", hjust = 0.5),
+    axis.text  = element_markdown(size = 8),
+    legend.key.height = unit(0.5, "cm"), 
+    legend.key.width  = unit(0.5, "cm"),
+    legend.title = element_blank(), 
+    legend.text  = element_text(size = 8)
+  ) +
+  guides(color = guide_legend(ncol = 1))
+
+plot_deviation_from_fix
+
+# **** FIGURE 4 - glmmTMB ------------------------------------------------------
+
 Figure_X_yield <-
   ggarrange(
-    # hill_q0: Raw data with fixed effect means  
-    ggplot(lmer_otu_chem_data, 
-           aes(x = fert_status, y =dry_matter  , color = site)) +
-      geom_point(position = position_jitterdodge(jitter.width = 0.2, dodge.width = 0.5),
-                 alpha = 0.8, size = 2) +
-      stat_summary(aes(group = site), fun = mean, geom = "line", 
-                   position = position_dodge(0.5)) +
-      stat_summary(aes(group = 1), fun = mean, geom = "point", 
-                   color = "black", size = 4, shape = 18) +
-      stat_summary(aes(group = 1), fun = mean, geom = "line", 
-                   color = "black", size = 1) +
-      labs(title = "Switchgrass yield ",
-           #subtitle = "Black line connects fixed effect means",
-           x = "Treatment",
-           y = "Dry matter yield (mg/ha)") +
-      scale_color_manual(values = palette_site) +
-      theme_classic() +
-      theme(
-        plot.title = element_markdown(size =12, face = "bold",hjust = 0.5, vjust = 0.5),
-        plot.subtitle = element_markdown(size = 10,hjust = 0.5, vjust = 0.5),
-        axis.text.x = element_markdown(size = 8),
-        axis.text.y = element_markdown(size = 8),
-        legend.key.height = unit(0.5, "cm"), legend.key.width = unit(0.5, "cm"),
-        legend.title = element_blank(), legend.text = element_text(size = 8)
-        #legend.margin=ggplot2::margin(0,5,0,0),
-        #legend.box.margin=ggplot2::margin(0,5,0,0)
-      )+
-      guides(color = guide_legend(ncol=1)),
-    
-    # hill_q2: Random effect deviations
-    broom.mixed::tidy(fitGLM_yield_fixslope, effects = "ran_vals") %>% 
-      as.data.frame() %>%
-      dplyr::rename( site = "level") %>%  
-      arrange(site) %>% 
-      ggplot(aes(x = estimate, y = site, color = site)) +
-      geom_point(size = 4, shape = 18) +
-      geom_errorbar(aes(xmin = estimate - 1.96*std.error, 
-                        xmax = estimate + 1.96*std.error),
-                    height = 0, 
-                    orientation = "y") +
-      geom_vline(xintercept = 0, linetype = "dashed", color = "black") +
-      labs(title = "Deviation from Fixed Effect",
-           x = "Deviation from fixed-effect means",
-           y = NULL) +
-      scale_color_manual(values = palette_site)+
-      theme_classic()+ 
-      theme(
-        plot.title = element_markdown(size =12, face = "bold",hjust = 0.5, vjust = 0.5),
-        plot.subtitle = element_markdown(size = 10, hjust = 0.5, vjust = 0.5),
-        axis.text.x = element_markdown(size = 8),
-        axis.text.y = element_markdown(size = 8),
-        legend.key.height = unit(0.5, "cm"), legend.key.width = unit(0.5, "cm"),
-        legend.title = element_blank(), legend.text = element_text(size = 8)
-        #legend.margin=ggplot2::margin(0,5,0,0),
-        #legend.box.margin=ggplot2::margin(0,5,0,0)
-      ) +
-      guides(color = guide_legend(ncol = 1)) +
-      scale_x_continuous(
-        limits = c(x_limits_yield$min, x_limits_yield$max),
-        sec.axis = sec_axis(
-          transform = ~ . + intercept_yield,
-          name = "Dry matter yield (mg/ha)")
-      ),
-    
-    ncol = 2, nrow = 1,
-    labels = c("A","B"),
+    plot_raw_chem_data,
+    glm_model_plot,
+    plot_deviation_from_fix,
+    ncol = 3, nrow = 1,
+    labels = c("A","B", "C"),
     #align = "hv",
     legend = "right", 
     common.legend = TRUE)
@@ -4239,243 +4239,115 @@ ggsave(
   device = "pdf"
 )
 
+# Envfit analysis --------------------------------------------------------------
 
-ggplot(lmer_otu_chem_data,
-       aes(x = p_ppm, y = dry_matter)) +
-  geom_point(size = 3, aes(color = site)) +
-  geom_smooth(method = "lm", se = TRUE) +
-  theme_bw()
+otumat_mean_AMF_rare <- as(otu_table(mean_physeq_AMF_rare), "matrix")
+head(otumat_mean_AMF_rare)
+
+metadata_mean_AMF_rare <- data.frame(sample_data(mean_physeq_AMF_rare))
+metadata_mean_AMF_rare
+
+# Extract dataset
+env_fit_chem_data <- 
+  chem_data %>% 
+  column_to_rownames("sample_id") %>% 
+  mutate(
+    treatment = as.numeric(factor(treatment)) - 1
+  ) %>% 
+  mutate(across(where(is.numeric) & !treatment, 
+                ~ (. - min(.)) / (max(.) - min(.))))
+
+env_fit_chem_data
+dim(env_fit_chem_data)
+
+# Reorder env_fit_chem_data to match the order of otumat_mean_AMF_rare
+env_fit_chem_data <- 
+  env_fit_chem_data[match(rownames(otumat_mean_AMF_rare), rownames(env_fit_chem_data)), ]
+
+# Verify again
+identical(rownames(otumat_mean_AMF_rare), rownames(env_fit_chem_data))
+
+dist_mean_AMF <- vegdist(otumat_mean_AMF_rare, method = "bray")
+dist_mean_AMF
+
+pcoa_mean_AMF <- cmdscale(dist_mean_AMF, k = 2, eig = TRUE)
+pcoa_mean_AMF
+
+# Fit the data
+env_fit_AMF <- envfit(pcoa_mean_AMF, env_fit_chem_data[, 2:11], 
+                      permutations = how(blocks = env_fit_chem_data$site, nperm = 999),
+                      na.rm = FALSE)
+
+env_fit_AMF
 
 
-
-ggplot(lmer_otu_chem_data,
-       aes(x = p_ppm, y = dry_matter)) +
-  geom_point(alpha = 0.8, size = 2, aes(color = site)) +
-  #geom_smooth(method = "lm", se = TRUE) +
-  labs(title = "Switchgrass yield ",
-       #subtitle = "Black line connects fixed effect means",
-       x = "Phosporus (mg/ha)",
-       y =  "Dry matter yield (mg/ha)") +
+env_fit_AMF_plot <-
+plot_ordination_envft(ord = pcoa_mean_AMF, 
+                      meta = env_fit_chem_data, 
+                      col_var = "site", 
+                      shape_var = "treatment", 
+                      env = env_fit_AMF, 
+                      arrow_mul = 0.2,
+                      p_threshold = 0.05) +
+  labs(title = "Principal Coordinate Analysis") +
   scale_color_manual(values = palette_site) +
-  theme_classic() +
+  scale_shape_manual(values = c(16, 17),
+                     labels = c("0" = "Control", "1" = "Fertilized")) +
+  theme_classic() + 
   theme(
     plot.title = element_markdown(size =12, face = "bold",hjust = 0.5, vjust = 0.5),
-    plot.subtitle = element_markdown(size = 10,hjust = 0.5, vjust = 0.5),
+    plot.subtitle = element_markdown(size = 10, hjust = 0.5, vjust = 0.5),
     axis.text.x = element_markdown(size = 8),
     axis.text.y = element_markdown(size = 8),
-    legend.key.height = unit(0.5, "cm"), legend.key.width = unit(0.5, "cm"),
-    legend.title = element_blank(), legend.text = element_text(size = 8)
-  )+
-  guides(color = guide_legend(ncol=1))
-
-
-
-pred_df <- expand.grid(
-  p_ppm = seq(min(lmer_otu_chem_data$p_ppm),
-              max(lmer_otu_chem_data$p_ppm),
-              length.out = 100),
-  site = unique(lmer_otu_chem_data$site),
-  fert_status = unique(lmer_otu_chem_data$fert_status)
-)
-
-# INTERPRETATION. expand.grid() builds all combinations of: 
-# 100 phosphorus values spanning your observed range
-# every site
-# every fertilization status
-# This grid represents locations in predictor space where we want model 
-# predictions. Using 100 points simply creates a smooth visual representation of 
-# the model equation. It is essentially evaluating the fitted model equation over
-# a smooth predictor range, not simulating new observations.
-
-pred_df$dry_matter <- predict(
-  fitGLM_yield_fixslope,
-  newdata = pred_df,
-  type = "response"
-)
-
-
-ggplot(lmer_otu_chem_data,
-       aes(x = p_ppm, y = dry_matter, color = site)) +
-  geom_point(alpha = 0.8, size = 2) +
-  geom_line(data = pred_df,
-            aes(x = p_ppm, y = dry_matter, color = site,
-                linetype = fert_status),
-            linewidth = 1) +
-  labs(title = "Switchgrass yield",
-       x = "Phosphorus (ppm)",
-       y = "Dry matter yield (mg/ha)") +
-  scale_color_manual(values = palette_site) +
-  theme_classic() +
-  theme(
-    plot.title = element_markdown(size =12, face = "bold",hjust = 0.5),
-    axis.text.x = element_markdown(size = 8),
-    axis.text.y = element_markdown(size = 8),
-    legend.title = element_blank(),
+    legend.key.height = unit(0.6, "cm"), 
+    legend.key.width = unit(0.6, "cm"),
+    legend.title = element_blank(), 
     legend.text = element_text(size = 8)
-  )
+    #legend.margin=ggplot2::margin(0,5,0,0),
+    #legend.box.margin=ggplot2::margin(0,5,0,0)
+  ) +
+  guides(
+    color = guide_legend(ncol = 1, override.aes = list(shape = 15)))
 
 
-# Create prediction data
-pred_df <- data.frame(
-  p_ppm = seq(min(lmer_otu_chem_data$p_ppm),
-              max(lmer_otu_chem_data$p_ppm),
-              length.out = 100),
-  fert_status = "Control"   # choose a reference level
+
+env_fit_AMF_plot
+
+
+# Create a text string of the significant results
+sig_results <- env_fit_AMF$vectors$r[env_fit_AMF$vectors$pvals <= 0.05]
+r2_text <- paste(paste0(names(sig_results), ": R²=", 
+                        round(sig_results, 2)), collapse = "\n")
+
+# Add to your ggplot
+env_fit_AMF_plot + annotate("text", x = Inf, y = -Inf, label = r2_text, 
+             hjust = 1.1, vjust = -0.5, size = 3, fontface = "italic")
+
+
+Figure_X_yield <-
+  ggarrange(
+    glm_model_plot,
+    plot_deviation_from_fix,
+    env_fit_AMF_plot +
+      annotate("text", x = Inf, y = -Inf, label = r2_text, 
+               hjust = 1.1, vjust = -0.5, size = 3, fontface = "italic"),
+    ncol = 3, nrow = 1,
+    labels = c("A","B", "C"),
+    widths = c(0.5, 0.6, 0.7),
+    align = "h",
+    legend = "bottom", 
+    common.legend = TRUE)
+
+Figure_X_yield
+
+ggsave(
+  file.path(data_path, "results/Fig_5_yield.pdf"),
+  plot = ggpubr::annotate_figure(
+    Figure_X_yield,
+    top = text_grob("EFFECT OF NITROGEN ON SWITCHGRASS YEILD", size = 12, face = "bold")
+  ),
+  device = "pdf"
 )
-
-# 2. Predict fixed-effect values
-pred_df$dry_matter <- predict(
-  fitGLM_yield_fixslope,
-  newdata = pred_df,
-  re.form = NA,
-  type = "response"
-)
-
-ggplot(lmer_otu_chem_data,
-       aes(x = p_ppm, y = dry_matter, color = site)) +
-  geom_point(alpha = 0.8, size = 2) +
-  geom_line(data = pred_df,
-            aes(x = p_ppm, y = dry_matter),
-            inherit.aes = FALSE,
-            color = "black",
-            linewidth = 1.2) +
-  labs(title = "Switchgrass yield ",
-       #subtitle = "Black line connects fixed effect means",
-       x = "Dry matter yield (mg/ha)",
-       y = "Phosporus (mg/ha)") +
-  scale_color_manual(values = palette_site) +
-  theme_classic() +
-  theme(
-    plot.title = element_markdown(size =12, face = "bold",hjust = 0.5, vjust = 0.5),
-    plot.subtitle = element_markdown(size = 10,hjust = 0.5, vjust = 0.5),
-    axis.text.x = element_markdown(size = 8),
-    axis.text.y = element_markdown(size = 8),
-    legend.key.height = unit(0.5, "cm"), legend.key.width = unit(0.5, "cm"),
-    legend.title = element_blank(), legend.text = element_text(size = 8)
-  )+
-  guides(color = guide_legend(ncol=1))
-
-
-# We can specify which prediction we want with the random effect formula argument re.form:
-lmer_otu_chem_data %>% 
-  mutate(fit.m = predict(fitGLM_yield_fixslope, re.form = NA),
-         fit.c = predict(fitGLM_yield_fixslope, re.form = NULL),
-         resid = resid(fitGLM_yield_fixslope)) %>% 
-  as.data.frame() %>% 
-  ggplot(aes(x = p_ppm, y = fit.m + resid)) +
-  geom_smooth(aes(y = fit.c, col = site), size = 1, se = F, method = "lm") +
-  geom_point(pch = 16, col = "grey") +
-  geom_smooth(aes(y = fit.m), col = 1, size = 2, se = F, method = "lm") 
-
-
-lmer_otu_chem_data %>% 
-  mutate(fit.m = predict(fitGLM_yield_fixslope, re.form = NA),
-         fit.c = predict(fitGLM_yield_fixslope, re.form = NULL),
-         resid = resid(fitGLM_yield_fixslope))  %>%
-  ggplot(aes(x = p_ppm, y = dry_matter, col = site)) +
-  geom_point() +
-  geom_smooth(method = 'lm', se = F)  +
-  geom_smooth(aes(y = fit.m), method = 'lm', col = 1, size = 2) 
-
-
-
-# This below is probably the bets way to plot it 
-
-
-# Create prediction grid
-pred_df <- expand.grid(
-  p_ppm = seq(min(lmer_otu_chem_data$p_ppm), 
-              max(lmer_otu_chem_data$p_ppm), length.out = 100),
-  site = unique(lmer_otu_chem_data$site),
-  fert_status = levels(lmer_otu_chem_data$fert_status)[1]  # fix one level
-)
-
-# Predict with random intercepts (conditional)
-pred_df$fit.c <- predict(fitGLM_yield_fixslope, 
-                         newdata = pred_df, 
-                         re.form = NULL)
-
-# Predict population level (marginal)
-pred_df$fit.m <- predict(fitGLM_yield_fixslope, 
-                         newdata = pred_df, 
-                         re.form = NA)
-
-# Partial residuals for observed points
-lmer_otu_chem_data$resid <- resid(fitGLM_yield_fixslope)
-lmer_otu_chem_data$fit.m <- predict(fitGLM_yield_fixslope, re.form = NA)
-
-# Plot
-ggplot() +
-  # Site-specific lines (parallel, same slope, different intercepts)
-  geom_line(data = pred_df, 
-            aes(x = p_ppm, y = fit.c, col = site), 
-            linewidth = 1) +
-  # Population-level line
-  geom_line(data = pred_df %>% distinct(p_ppm, fit.m),
-            aes(x = p_ppm, y = fit.m), 
-            col = "black", linewidth = 2) +
-  # Partial residual points
-  geom_point(data = lmer_otu_chem_data,
-             aes(x = p_ppm, y = fit.m + resid, col = site), 
-             pch = 16, size = 3) +
-  labs(x = "P (ppm)", y = "Dry matter", col = "Site") +
-  scale_color_manual(values = palette_site) +
-  theme_classic() +
-  theme(
-    plot.title = element_markdown(size =12, face = "bold",hjust = 0.5, vjust = 0.5),
-    plot.subtitle = element_markdown(size = 10,hjust = 0.5, vjust = 0.5),
-    axis.text.x = element_markdown(size = 8),
-    axis.text.y = element_markdown(size = 8),
-    legend.key.height = unit(0.5, "cm"), legend.key.width = unit(0.5, "cm"),
-    legend.title = element_blank(), legend.text = element_text(size = 8)
-  )+
-  guides(color = guide_legend(ncol=1))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Testing the use of Maaslin3 instead, which implements a more robust FDR correction
-# method (I think) and also allows for more flexible modeling of random effects.
-
-# Testing for differential abudnance.
-mlin2_fert_status <- 
-  maaslin3(
-    input_data     = otutable_AMF_rare,
-    input_metadata = metadata_AMF_rare %>% dplyr::select(fert_status, site),
-    formula        = ~ fert_status + (1 | site),
-    normalization  = "NONE",
-    standardize    = FALSE,
-    output         = "maaslin3_fert",
-    cores          = 4
-  )
-
-
-# Testing for differential prevalence.
-fit_prev <- maaslin3(
-  input_data     = otutable_binary,
-  input_metadata = metadata_AMF_rare %>% dplyr::select(fert_status, site),
-  formula        = ~ fert_status + (1 | site),
-  normalization  = "NONE",       # already binary
-  standardize    = FALSE,
-  transform      = "NONE",       # do not log-transform
-  output         = "maaslin3_prev",
-  cores          = 4,
-  analysis      = "binomial"     # key: logistic regression for prevalence
-)
-
-
 
 
 # **** END OF ANALYSIS **************************************************-------
@@ -5500,6 +5372,398 @@ mlin2_site$results %>%
                        low = "blue", high = "red", mid = "#FFFFCC", na.value = "white",
                        limits = c(-8, 8),
                        breaks = c(-8, -4, 0, 4, 8)) 
+
+
+
+fitGLM_yield_fixslope <- 
+  glmmTMB(dry_matter ~ fert_status + p_ppm + fert_status:p_ppm + (1 | site),
+          dispformula = ~site,   # allows variance to differ by site
+          data = lmer_otu_chem_data)
+
+summary(fitGLM_yield_fixslope)
+
+diagnostics_dharma(
+  model      = fitGLM_yield_fixslope,
+  group_var1 = lmer_otu_chem_data$site,
+  group_var2 = NULL
+)
+
+# Trying gamma function
+fitGLM_yield_fixslope_gamma <- 
+  glmmTMB(dry_matter ~ fert_status + p_ppm + fert_status:p_ppm + (1 | site),
+          dispformula = ~site,   # allows variance to differ by site
+          family = Gamma(link = "log"),
+          data = lmer_otu_chem_data, 
+          REML = TRUE)
+
+summary(fitGLM_yield_fixslope)
+
+diagnostics_dharma(
+  model      = fitGLM_yield_fixslope,
+  group_var1 = lmer_otu_chem_data$site,
+  group_var2 = NULL
+)
+
+anova(fitGLM_yield_fixslope, fitGLM_yield_fixslope_gamma)
+
+# INTERPRETATION. Think of “family” as the distribution of Y and of “link” as 
+# the transformation of the mean of Y that makes the relationship with 
+# predictors linear.
+
+# _ Family: which probability distribution you assume for the response (Gaussian, 
+#   Binomial, Poisson, Gamma, etc.). It controls the mean–variance relationship 
+#   and the likelihood.
+# _ Link: the function that maps the mean onto the real line so a linear predictor
+#   makes sense, and it determines how you interpret coefficients (differences, 
+#   ratios, odds ratios).
+
+
+
+
+
+# INTERPRETATION. A Gaussian mixed-effects model was used to analyze dry matter 
+# yield, including fertilization status and soil phosphorus as fixed effects, 
+# and a random intercept for site to account for baseline differences among 
+# locations. Additionally, the model allowed residual variance to differ by site 
+# to accommodate heteroskedasticity. Fertilization had a strong positive effect 
+# on yield, increasing dry matter by approximately 2.77 units (SE = 0.53, p < 0.001), 
+# whereas soil phosphorus concentration was not significantly associated with 
+# yield (p = 0.52). The random intercept for site indicated substantial between-site 
+# variation (SD = 1.46). Site-specific residual variance was significantly different
+# among some locations, reflecting variation in within-site variability. 
+# DHARMa diagnostics showed no evidence of over- or under-dispersion, outliers, 
+# or severe deviations from model assumptions, indicating that the model provides
+# a reliable description of the data.
+
+# glm model for hill_q0
+fitGLM_hill_q0_fixslope <- 
+  glmmTMB(hill_q0 ~ fert_status + p_ppm + fert_status:p_ppm + (1 | site),
+          dispformula = ~site,   # allows variance to differ by site
+          data = lmer_otu_chem_data)
+
+summary(fitGLM_hill_q0_fixslope)
+
+diagnostics_dharma(
+  model      = fitGLM_hill_q0_fixslope,
+  group_var1 = lmer_otu_chem_data$site)
+
+
+# Impact of richness on yield --------------------------------------------------
+
+# Model for diversity
+fit_yield_hill_fixslope <- lmer(
+  dry_matter ~ hill_q0 + p_ppm + hill_q0:p_ppm + (1 | site),
+  data = lmer_otu_chem_data,
+  REML = FALSE
+)
+
+summary(fit_yield_hill_fixslope)
+anova(fit_yield_hill_fixslope)
+
+lmer_otu_chem_data$hill_q0_sc <- scale(lmer_otu_chem_data$hill_q0)
+lmer_otu_chem_data$p_ppm_sc  <- scale(lmer_otu_chem_data$p_ppm)
+
+fit_yield_hill_fixslope <- lmer(
+  dry_matter ~ hill_q0_sc + p_ppm_sc + hill_q0_sc:p_ppm_sc + (1 | site),
+  data = lmer_otu_chem_data,
+  REML = FALSE
+)
+
+
+diagnostics_dharma(
+  model      = fit_yield_hill_fixslope,
+  group_var1 = lmer_otu_chem_data$site)
+
+# VISUALIZING THE MODELS -------------------------------------------------------
+
+predict_response(fitGLM_yield_fixslope, terms = "fert_status")
+
+predict_response(fitGLM_yield_fixslope, terms = "fert_status") %>% 
+  plot() + 
+  labs(title = "Effect of Fertilization on Dry Matter",
+       y = "Predicted Dry Matter", 
+       x = "Fertilization Status") +
+  theme_minimal()
+
+ggpredict(fitGLM_yield_fixslope, terms = "fert_status") %>% 
+  ggplot(aes(x = x, y = predicted)) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.1) +
+  geom_jitter(data = lmer_otu_chem_data,
+              aes(x = fert_status, y = dry_matter),
+              width = 0.1, alpha = 0.5) +
+  labs(x = "Fertilization", y = "Dry matter") +
+  theme_bw()
+
+plot_model(fitGLM_yield_fixslope, type = "re")
+
+ggplot(lmer_otu_chem_data,
+       aes(x = site, y = dry_matter)) +
+  geom_boxplot() +
+  geom_jitter(width = 0.1, alpha = 0.5) +
+  theme_bw()
+
+
+
+
+# Load R packages --------------------------------------------------------------
+if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")
+
+pacman::p_load(
+  # --- Project & Package Management ---
+  renv,           # Reproducible environments (lockfile management)
+  pak,            # Fast, modern package installation dependency engine
+  cli,            # Attractive and informative command-line interfaces  
+  styler,         # Automated R code formatting to tidyverse standards
+  janitor,        # Data cleaning (heavily used for cleaning column names)
+  magrittr,       # Pipe operators (%>%) and functional sequence aliases
+  
+  # --- Sequence Analysis & Phylogenetics ---
+  Biostrings,     # Memory-efficient containers for DNA/RNA/AA sequences
+  ape,            # Analysis of Phylogenetics and Evolution (core tree handling)
+  msa,            # Multiple Sequence Alignment (Interface to Clustal, Muscle)
+  DECIPHER,       # Tools for sequence alignment, chimera detection, and probes
+  phangorn,       # Phylogenetic analysis (MP, ML, and distance-based methods)
+  tidysq,         # Tidy processing of biological sequences
+  tidytree,       # Tidyverse-style manipulation of phylogenetic tree objects
+  ggtree,         # Visualization and annotation of phylogenetic trees
+  
+  # --- Microbial Ecology & Diversity ---
+  decontam,       # Statistical identification/removal of contaminant OTUs
+  phyloseq,       # Integration of OTU tables, taxonomy, and metadata
+  speedyseq,      # High-performance optimizations for phyloseq functions
+  vegan,          # Community ecology (Ordination, Alpha/Beta diversity)
+  AICcPermanova,  # Model selection for PERMANOVA using AICc
+  
+  # --- Data Science & Visualization ---
+  tidyverse,      # Core suite (ggplot2, dplyr, tidyr, purrr, etc.)
+  ggtext,         # Markdown/HTML rendering for ggplot2 labels
+  ggpubr,         # Publication-ready ggplot2 themes and figure arrangements
+  cowplot,        # Powerful plot arrangement and theme adjustments
+  gridExtra,      # Miscellaneous functions for "grid" graphics (tables/plots)
+  ggrepel,        # Non-overlapping text labels for ggplot2
+  scales,         # Internal scaling and axis transformations for plots
+  ggh4x,          # Extensions for ggplot2 facets and axes (nested facets, etc.) 
+  ggstar,         # Adding geometric shapes to ggplot
+  ggtreeExtra,    # Annotation Phylogenetics Software Visualization
+  ggnewscale,
+  
+  # --- Statistics & Modeling ---
+  agricolae,      # Agricultural research stats (Tukey's, LSD, experimental design)
+  BRCore,         # Custom/Internal core functions for standardized workflows
+  lme4,           # Linear and Generalized Linear Mixed-Effects Models (GLMM)
+  glmmTMB,        # Fast GLMMs with support for Zero-Inflation/Overdispersion
+  robustlmm,      # Robust Linear Mixed-Effects Models (outlier resistance)
+  DHARMa,         # Residual diagnostics for hierarchical (multi-level) models
+  parallel,       # Parallel computing support for multi-core processing
+  ggeffects,      # Estimated Marginal Means and marginal effects for models
+  sjPlot,         # Visualizing Mixed-Effects models and diagnostic tables
+  broom.mixed,    # Tidy summary outputs (tidiers) for mixed-effect models
+  merTools,       # Tools for analyzing lme4/merMod objects (uncertainty/prediction)
+  multcompView,   # Visualizing multiple comparison significance (compact letter display)
+  gllvm,          # Generalized Linear Latent Variable Models (multivariate stats)
+  Maaslin2,       # Multivariate Association with Linear Models (microbiome stats) 
+  maaslin3,       # Multivariate Association with Linear Models (microbiome stats)  
+  
+  # --- Networks & Hierarchical Viz ---
+  ggdendro,       # Extract/Plot dendrogram data using ggplot2
+  ggraph,         # Visualization of networks, graphs, and complex trees
+  
+  install = FALSE
+)
+
+PlotMaaslin2 <- function(maaslin_results, 
+                         physeq_object) {
+  
+  as.data.frame(as.matrix(physeq_object@tax_table)) %>%
+    rownames_to_column("feature") %>% print()
+  
+  # Process the data: Remove duplicate comparisons
+  cleaned_results <- 
+    maaslin_results %>%
+    rowwise() %>%
+    mutate(pair = paste(sort(c(value, reference_group)), collapse = "-")) %>%
+    ungroup() %>%
+    distinct(feature, pair, .keep_all = TRUE) %>%
+    dplyr::mutate(pair = as.factor(pair)) %>% 
+    left_join(as.data.frame(as.matrix(physeq_object@tax_table)) %>%
+                rownames_to_column("feature"), by = "feature") %>%
+    mutate(Genus_makrdown = str_c("*", str_trim(Genus), "*")) %>% 
+    mutate(coef_log2   = coef / log(2),
+           stderr_log2 = stderr / log(2))
+  #mutate(Taxonomy = paste(Genus_makrdown, str_c("(", str_trim(feature), ")"))) %>% 
+  #mutate(foldChange = exp(coef))
+  #mutate(BestMatch_makrdown = str_c("*", str_trim(BestMatch), "*")) %>%
+  #mutate(Taxonomy = paste(BestMatch_makrdown, str_c("(", str_trim(feature), ")"))) 
+  #print(cleaned_results, n=19)
+  print(range(cleaned_results$coef_log2))
+  print(cleaned_results$Genus_makrdown)
+  print(cleaned_results$Genus)
+  
+  # Generate the heatmap plot
+  p <- 
+    ggplot(cleaned_results, aes(x = pair, y = Genus_makrdown, fill = coef)) + 
+    geom_tile() +
+    geom_text(aes(label = round(coef, 2)), size = 4, show.legend = FALSE) +
+    theme_bw() +
+    theme(
+      strip.text = element_text(size = 10, face = "bold"),
+      strip.background = element_rect(fill = "white", color = "white"),
+      plot.title = element_markdown(size = 12, face = "bold", hjust = 0.5, vjust = 0.5),
+      plot.subtitle = element_markdown(size = 10, hjust = 0.5, vjust = 0.5),
+      axis.text.x = element_text(angle = 33, hjust = 1, vjust = 1, size = 10),
+      axis.text.y = element_markdown(size = 10),
+      axis.title = element_markdown(size = 10), 
+      legend.title = element_text(size = 10, face = "bold"), 
+      legend.text = element_text(size = 9),
+      legend.key.height = unit(0.4, "cm"),  
+      legend.key.width = unit(0.4, "cm"),
+      legend.position = "right"
+    ) +
+    #facet_grid(~pair) +
+    scale_fill_gradient2(name = "lfc",
+                         low = "blue", high = "red", mid = "#FFFFCC", na.value = "white",
+                         limits = c(-12.5, 12.5),
+                         breaks = c(-12.5, -6.5, 0, 6.5, 12.5))
+  
+  return(p)
+}
+
+head(mlin2_site)
+
+# Are there NAs introduced by the conversion?
+mlin2_site %>%
+  mutate(coef_log2 = coef / log(2)) %>%
+  summarise(
+    n_total    = n(),
+    n_na_coef  = sum(is.na(coef)),
+    n_na_log2  = sum(is.na(coef / log(2)))
+  )
+
+# Check if missing comparisons were present before filtering
+mlin2_site %>%
+  filter(qval <= 0.05) %>%
+  distinct(value) %>%
+  pull(value)
+
+# Plotting
+PlotMaaslin2(maaslin_results = mlin2_site %>% dplyr::filter(qval <= 0.05),
+             physeq_object =  physeq_AMF_rare_Gen) +
+  labs(title = "Differential abundance of genera among sites",
+       subtitle = "lfc = log fold change, fold change = exp(lfc)<br>
+       Negative lfc = more abundant in the reference site<br>
+       Positive lfc = more abundant in the value site",
+       x = "Pairwise site comparison (site vs reference site)",
+       y = "Genus")
+
+
+
+
+PlotMaaslin2(maaslin_results = mlin2_fert_status_gen$results,
+             physeq_object = physeq_AMF_rare_Gen,
+             value_type = "log2")
+
+
+
+PlotMaaslin2(maaslin_results = mlin2_site %>% filter(qval <= 0.05),
+             physeq_object =  physeq_AMF_rare_Gen,
+             value_type= "log2") +
+  labs(title = "Differential abundance of genera among sites",
+       subtitle = "l2FC = log2 fold change, fold change = 2<sup>l2FC</sup><br>
+                Positive l2FC = More abundant in the test site<br>
+                Negative l2FC = More abundant in the reference site (i.e., reference)",
+       x = "Pairwise site comparison",
+       y = "Genus")
+
+
+PlotMaaslin2(maaslin_results = mlin2_site 
+             %>% filter(qval <= 0.05),
+             physeq_object =  physeq_AMF_rare_Gen,
+             value_type= "log2") +
+  labs(title = "Differential abundance of genera among sites",
+       subtitle = "l2FC = log2 fold change, fold change = 2 exp(l2FC)<br>
+                   Positive l2FC = More abundant in the fist site<br>
+                   Negative l2FC = more abundant in the second site (i.e. reference)",
+       x = "Pairwise site comparison (site vs reference site)",
+       y = "Genus")
+
+PlotMaaslin2(maaslin_results = mlin2_site 
+             %>% filter(qval <= 0.05),
+             physeq_object =  physeq_AMF_rare_Gen,
+             value_type= "ln") +
+  labs(title = "Differential abundance of genera among sites",
+       subtitle = "l2FC = log2 fold change, fold change = 2 exp(l2FC)<br>
+       Negative lfc = more abundant in the reference site<br>
+       Positive lfc = more abundant in the value site",
+       x = "Pairwise site comparison (site vs reference site)",
+       y = "Genus")
+
+
+labs(
+  title = "Differential abundance of genera among sites",
+  subtitle = "Values represent log fold change (ln scale). Direction: first site relative to second (A/B)",
+  x = "Pairwise site comparison",
+  y = "Genus"
+) 
+
+
+# Plot check
+mlin2_site %>% filter(value == "Escanaba", reference_group == "Hancock") %>% 
+  filter(feature == "Zotu885") %>% pull(coef)
+mlin2_site %>% filter(value == "Escanaba", reference_group == "Hancock") %>% 
+  filter(feature == "Zotu9149") %>% pull(coef)
+
+
+
+mlin2_fert_status_gen$results %>%
+  dplyr::filter(metadata == "fert_status", qval <= 0.05)
+
+
+# INTERPRETATION. Differential abundance analysis revealed strong site-specific 
+# structuring of AMF genera, with several taxa showing large log fold changes 
+# across pairwise site comparisons. Genera such as Septoglomus, Diversispora, 
+# and Microkamienskia exhibited pronounced enrichment in specific sites, with 
+# log fold changes exceeding 6 in some contrasts, indicating substantial shifts 
+# in relative abundance. In contrast, genera such as Paraglomus and Oehlia tended
+# to be consistently depleted in certain sites across multiple comparisons. 
+# Overall, the magnitude and consistency of these patterns indicate that site-level
+# environmental factors strongly influence AMF community composition.
+
+# Figure X. Differential abundance of AMF genera across sites.
+# Heatmap of log fold changes (lfc) from Maaslin2 analysis for pairwise site 
+# comparisons. Values represent the natural log-transformed fold change in 
+# genus-level abundance between sites (first site relative to second). Positive 
+# values (red) indicate higher abundance in the first site, while negative values
+# (blue) indicate higher abundance in the second site. Only significant 
+# associations (q ≤ 0.05) are shown. The large magnitude of several log fold 
+# changes indicates strong site-specific structuring of AMF communities.
+
+# What if I want to use log2foldchange instead 
+
+
+mlin2_site <- 
+  run_maaslin2_all_pairs(
+    physeq = 
+      physeq_AMF_rare_Gen %>% 
+      subset_taxa(Genus != "Unclassified") %>%
+      prune_taxa(taxa_sums(.) > 0, .) %>% 
+      prune_samples(sample_sums(.) > 0, .) %>% 
+      # Add a pseudocount (e.g., 1) so log2(0+1) = 0
+      transform_sample_counts(fun = function(x) log2(x + 1)),
+    factor_variable = "site",
+    qval_threshold = 0.05, 
+    norm_method = "NONE", 
+    trans_method = "NONE"
+  )
+
+
+PlotMaaslin2(maaslin_results = mlin2_site 
+             %>% filter(qval <= 0.05),
+             physeq_object =  physeq_AMF_rare_Gen) +
+  labs(title = "Differential abundance of genera among sites",
+       subtitle = "lfc = log fold change, fold change = exp(lfc)",
+       x = "Pairwise site comparison",
+       y = "Genus")
 
 
 

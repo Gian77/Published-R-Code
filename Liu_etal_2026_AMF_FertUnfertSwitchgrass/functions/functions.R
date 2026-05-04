@@ -604,6 +604,120 @@ plot_ordination(
 )
 
 
+# plot_ordination with env fit fitter vectors ----------------------------------
+
+plot_ordination_envft <- function(ord,
+                                  meta,
+                                  col_var,
+                                  shape_var,
+                                  env = NULL,
+                                  p_threshold = 0.05,
+                                  arrow_mul = 1,
+                                  ellipse = FALSE,
+                                  ellipse_level = 0.95,
+                                  point_size = 3,
+                                  point_alpha = 0.8,
+                                  ellipse_type = "t", 
+                                  legend_inside = FALSE) {
+  
+  # 1. Extract Scores from Ordination Object
+  if (inherits(ord, "metaMDS")) {
+    scores_df <- as.data.frame(vegan::scores(ord, display = "sites"))
+    x_lab <- "NMDS1"
+    y_lab <- "NMDS2"
+    stress_label <- paste("Stress =", round(ord$stress, 3))
+  } else if (is.list(ord) && !is.null(ord$points)) {
+    # Handles cmdscale/PCoA
+    scores_df <- as.data.frame(ord$points)
+    colnames(scores_df)[1:2] <- c("Axis.1", "Axis.2")
+    
+    if (!is.null(ord$eig)) {
+      eig_pos <- ord$eig[ord$eig > 0]
+      eig_pct <- round(eig_pos / sum(eig_pos) * 100, 1)
+      x_lab <- paste0("PCoA1 (", eig_pct[1], "%)")
+      y_lab <- paste0("PCoA2 (", eig_pct[2], "%)")
+    } else {
+      x_lab <- "Axis.1"
+      y_lab <- "Axis.2"
+    }
+    stress_label <- NULL
+  } else {
+    stop("`ord` must be metaMDS or a cmdscale-like object with $points.")
+  }
+  
+  # 2. Attach Metadata and ensure factors
+  scores_df <- cbind(scores_df, meta)
+  scores_df[[col_var]]   <- as.factor(scores_df[[col_var]])
+  scores_df[[shape_var]] <- as.factor(scores_df[[shape_var]])
+  
+  # Set column names for mapping
+  x_col <- colnames(scores_df)[1]
+  y_col <- colnames(scores_df)[2]
+  
+  # 3. Build Base Plot
+  p <- ggplot(scores_df, aes(x = .data[[x_col]], y = .data[[y_col]], 
+                             color = .data[[col_var]], shape = .data[[shape_var]])) +
+    geom_point(size = point_size, alpha = point_alpha) +
+    labs(x = x_lab, y = y_lab, color = col_var, shape = shape_var) +
+    theme_classic() +
+    theme(legend.text = element_markdown(),
+          axis.text = element_markdown())
+  
+  # 4. Add Envfit Vectors if provided
+  if (!is.null(env)) {
+    # Calculate appropriate scaling
+    multiplier <- vegan::ordiArrowMul(env) * arrow_mul
+    vec_df <- as.data.frame(vegan::scores(env, display = "vectors")) * multiplier
+    
+    # Add p-values and filter
+    vec_df$p_val <- env$vectors$pvals
+    vec_df$var   <- rownames(vec_df)
+    vec_df <- vec_df[vec_df$p_val <= p_threshold, ]
+    
+    if (nrow(vec_df) > 0) {
+      p <- p +
+        geom_segment(data = vec_df,
+                     aes(x = 0, y = 0, xend = Dim1, yend = Dim2),
+                     arrow = arrow(length = unit(0.2, "cm")),
+                     color = "black", linewidth = 0.7, inherit.aes = FALSE) +
+        geom_text(data = vec_df,
+                  aes(x = Dim1, y = Dim2, label = var),
+                  size = 3.5, vjust = -0.7, color = "black", 
+                  fontface = "bold", inherit.aes = FALSE)
+    }
+  }
+  
+  # 5. Add Ellipses
+  if (ellipse) {
+    p <- p + stat_ellipse(aes(group = .data[[col_var]]), 
+                          type = ellipse_type, level = ellipse_level, 
+                          linewidth = 0.6, show.legend = FALSE)
+  }
+  
+  # 6. Formatting and Legend
+  if (legend_inside) {
+    p <- p + theme(legend.position = c(0.98, 0.02), 
+                   legend.justification = c(1, 0),
+                   legend.background = element_blank())
+  }
+  
+  if (!is.null(stress_label)) {
+    p <- p + annotate("text", x = -Inf, y = -Inf, label = stress_label, 
+                      hjust = -0.1, vjust = -1, size = 3.5)
+  }
+  
+  return(p)
+}
+
+plot_ordination_envft(ord = pcoa_mean_AMF, 
+                     meta = env_fit_chem_data, 
+                     col_var = "treatment", 
+                     shape_var = "site", 
+                     env = env_fit_AMF, 
+                     arrow_mul = 4,
+                     p_threshold = 0.05)
+
+
 # plot ordination using phyloseq -----------------------------------------------
 
 plot_ordination_from_phyloseq <- function(ps, 
@@ -697,6 +811,7 @@ plot_betadisper <- function(dist_matrix,
   # Run betadisper and Tukey HSD
   bd <- betadisper(dist_matrix, grouping, type = "median")
   tukey <- TukeyHSD(bd)
+  print(tukey)
   
   # Extract distances
   disp_df <- data.frame(
