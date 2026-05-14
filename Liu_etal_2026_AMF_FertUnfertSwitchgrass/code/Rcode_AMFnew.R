@@ -78,6 +78,7 @@ invisible(lapply(pkgs, library, character.only = TRUE))
 # renv::init()      # initializes renv in your project
 # renv::restore()   # installs all packages from the lockfile
 renv::snapshot()   # updates the lockfile
+renv::status()
 renv::install("")
 
 # Then commit and push the updated renv.lock file!
@@ -2709,7 +2710,7 @@ print(physeq_97_rare@sam_data, n=109)
 tree_raxml_AMF_97 <- phy_tree(physeq_97_rare)
 ggtree::ggtree(tree_raxml_AMF_97)
 
-phyloseq::plot_tree(physeq_97_rare, "treeonly", label.tips = "taxa_names", text.size=2) + 
+phyloseq::plot_tree(physeq_97_rare, "treeonly", label.tips = "Taxonomy", text.size=2) + 
   coord_polar(theta = "y") 
 
 # Generating metadata for the phyloegentic tree --------------------------------
@@ -2733,8 +2734,13 @@ dat1_97 <-
 range(dat1_97$MeanAbundance)
 range(sqrt(dat1_97$MeanAbundance))
 
+# Modifying the taxonomy adding clades
 write.csv(x= dat1_97, file= file.path(data_path, "datasets/tree_metadata_97.csv"))
-dat1_97_mod <- read.csv(file=file.path(data_path, "datasets/tree_metadata_97_mod_SL.csv"))
+dat1_97_mod <- read.csv(file=file.path(data_path, "datasets/tree_metadata_97_final.csv"), 
+                        row.names = 1, header = TRUE)
+
+head(dat1_97_mod)
+levels(as.factor(dat1_97_mod$Taxonomy))
 
 dat2_97 <- 
   melted_AMF_97 %>% 
@@ -2752,7 +2758,7 @@ dat3_97 <-
 
 # Make dataframe for clade nodes
 genera_nodes <- data.frame(
-  clade=unique(dat1_97$BestMatch),
+  clade=unique(dat1_97_mod$Taxonomy),
   node=NA
 )
 
@@ -2761,10 +2767,15 @@ for (i in 1:length(genera_nodes$clade)) {
   
   genera_nodes$node[i] <- MRCA(
     tree_raxml_AMF_97,
-    dat1_97$label[dat1_97$BestMatch == genera_nodes$clade[i]]
+    dat1_97_mod$label[dat1_97_mod$Taxonomy == genera_nodes$clade[i]]
   )
   
 }
+
+tree_AMF_97 <- 
+  tree_raxml_AMF_97 %>% 
+  ggtree(layout = "circular", branch.length = "none", size = 0.1, open.angle = 5) %<+% dat1_97_mod
+
 
 # Add column with alternating binary value. This is based on the ggtree data
 genera_nodes <-
@@ -2772,7 +2783,7 @@ genera_nodes <-
     tree_AMF_97$data %>%
       filter(isTip == "TRUE") %>%
       arrange(y) %>%
-      pull(BestMatch) %>%
+      pull(Taxonomy) %>%
       unique(),
     genera_nodes$clade
   ), ] %>% 
@@ -2781,89 +2792,479 @@ genera_nodes <-
 
 genera_nodes
 
-# Color palette for BestMatch --------------------------------------------------
+# Modifying the taxonomy adding clades
+write.csv(x= genera_nodes, file= file.path(data_path, "datasets/genera_nodes_97.csv"))
+genera_nodes_mod <- read.csv(file=file.path(data_path, "datasets/genera_nodes_97_final.csv"), 
+                        row.names = 1, header = TRUE)
+
+head(genera_nodes_mod)
+levels(as.factor(genera_nodes_mod$Taxonomy))
+
+# Color palette for Taxonomy --------------------------------------------------
+
+
 palette_bestmatch <- c(
-  # --- GLOMERALES (Deep Purples to Sky Blues) ---
-  # Core Glomus & Rhizophagus (Purples)
-  "Glomus"                = "#781156",
-  "Glomus macrocarpum"     = "#A51876",
-  "Glomus tetrastratosum"  = "#D21E96",
-  "Rhizophagus"           = "#E43FAD",
-  "Funneliformis"         = "#EA6CC0",
-  "Septoglomus"           = "#F098D3",
-  "uncultured Glomus"     = "#C2629E", # Moved to Glomerales
-  "Glomeraceae"           = "#4D1136", # Darker version for higher rank
-  
-  # Dominikia & Silvaspora Clade (Deep Blues)
-  "Dominikia"             = "#114578",
-  "Microkamienskia"       = "#185EA5",
-  "Microdominikia litorea"= "#1E78D2",
-  "Silvaspora"            = "#3F91E4",
-  "Oehlia"                = "#6CABEA",
+  # --- ARCHAEOSPORALES (Earth Greens) ---
+  "Ambispora"               = "#787811",
+  "Archaeosporales IV"         = "#D2D21E",
+  "Archaeosporales III"         = "#D2D21E",
+  "Archaeosporales II"         = "#D2D21E",
+  "Archaeosporales I"         = "#D2D21E",
+  "Archaeosporales" = "#D2D21E",
+  "Paraglomus I"              = "#784511", 
+  "Paraglomus II"              = "#784511", 
+  "Paraglomus laccatum"     = "#EAAB6C",
+  "Paraglomus brasilianum"  = "#E4913F",
   
   # --- DIVERSISPORALES (Teals and Seafoams) ---
-  "Diversispora"            = "#117878",
-  "Diversispora versiformis"= "#18A5A5",
-  "Diversisporaceae"        = "#083B3B", # Higher rank
-  "Acaulospora"             = "#3FE4E4",
-  "Acaulospora brasiliensis" = "#6CEAEA",
-  "Dentiscutata heterogama" = "#98F0F0",
-  "Gigaspora"               = "#117845", # Branching into green-teals
-  "Gigaspora margarita"     = "#18A55E",
-  "Gigaspora rosea"         = "#1ED278",
-  "Scutellospora"           = "#3FE491",
-  "Cetraspora gilmorei"     = "#6CEAAB",
-  
-  # --- ARCHAEOSPORALES (Earth Greens) ---
-  "Archaeospora"            = "#4B5D16",
-  "Archaeospora trappei"    = "#787811",
-  "Ambispora"               = "#A5A518",
-  "Archaeosporaceae"        = "#2E330D", # Higher rank
-  "Archaeosporales"         = "#D2D21E", # Higher rank
-  "uncultured Archaeosporales" = "#E4E43F", # Moved here
-  
-  # --- PARAGLOMERALES (Warm Oranges & Browns) ---
-  "Paraglomus"              = "#A55E18",
-  "Paraglomus laccatum"     = "#D2781E",
-  "Paraglomus brasilianum"  = "#E4913F",
-  "Paraglomerales"          = "#784511", # Higher rank
-  "uncultured Paraglomus"   = "#EAAB6C", # Moved here
+  "Gigaspora"               = "#083B3B", 
+  "Dentiscutata"            = "#117845",
+  "Cetraspora"              = "#1ED278",
+  "Scutellospora"           = "#6CEAAB",
+  "Acaulospora"             = "#117878",
+  "Diversispora"            = "#3FE4E4",
   
   # --- ENTROPHOSPORALES & OTHERS (Reds and Pinks) ---
-  "Entrophospora"           = "#781122",
-  "Entrophospora claroidea" = "#A5182F",
-  "Entrophospora drummondii" = "#D21E2C",
-  "Complexispora"           = "#E43F5B",
-  "Glomeromycetes"          = "#EA6C81", # Broadest group in Red
-  "uncultured Glomeromycotina" = "#F0C498"  # Pale beige for the unknown
+  "Entrophospora"           = "#D21E2C",
+  
+  # Outgroup
+  "Mortierella"             = "black",
+  
+  # Dominikia & Silvaspora Clade (Deep Blues)
+  "Dominikia I"               = "#114578",
+  "Dominikia II"                = "#103456",
+  "Glomeraceae I"           = "#185EA5",
+  "Microdominikia litorea I"  = "#1E78D2",
+  "Microdominikia litorea II"  = "#1E78D2",
+  
+  # --- GLOMERALES ---
+  # Group 1 (Warm Magenta/Pink Gradient - Vivid & Deep)
+  "Rhizophagus"             = "#E43FAD", # Your original pink
+  "Glomeraceae II"          = "#FF00FF", # Pure Magenta
+  "Oehlia"                  = "#C71585", # Medium Violet Red
+  "Kamienskia"              = "#8B008B", # Dark Magenta
+  "Microkamienskia"         = "#550055", # Deep Plum
+  
+  # Group 2 (Cold Lavender/Purple Gradient - Blue-ish Purples)
+  "Glomus"               = "#4B0082", # Indigo
+  "Complexispora"           = "#6A5ACD", # Slate Blue
+  "Septoglomus"             = "#9370DB", # Medium Purple
+  "Funneliformis"           = "#B19CD9"  # Light Pastel Purple
 )
-
-# "#000000","#242424","#484848","#6D6D6D","#919191","#B6B6B6"
 
 # Build tree plot ---------------------------------------------------------------
 
 tree_AMF_97 <- 
-  tree_raxml_97_rooted %>% 
-  ggtree(layout = "circular", branch.length = "none", size = 0.1, open.angle = 5) %<+% dat1_97 
+  tree_raxml_AMF_97 %>% 
+  ggtree(layout = "circular", branch.length = "none", size = 0.1, open.angle = 5) %<+% dat1_97_mod 
+
+#max_depth <- max(ggtree(tree_raxml_AMF_97)$data$x, na.rm = TRUE)
+max_depth <- max(tree_AMF_97$data$x, na.rm = TRUE)
+
+# coerce to numeric; empty strings become NA
+tree_AMF_97$data$bootstrap <- suppressWarnings(
+  as.numeric(tree_AMF_97$data$label)
+)
 
 tree_AMF_97 +
   geom_tippoint(
-    aes(fill = BestMatch, size = sqrt(MeanAbundance)),
+    aes(fill = Taxonomy, size = sqrt(MeanAbundance)),
     shape = 21, stroke = 0.1, alpha = 0.85) +
-  geom_tiplab(aes(label=OTU), size=2) +
-  scale_fill_manual(values = bestmatch_colors_97, na.translate = FALSE) +
+  scale_size_continuous(range = c(0.331801/5, 22.456278/5),
+                        name = "Abundance") +
+  geom_cladelab(data = genera_nodes_mod %>% filter(clade != "Mortierella"),
+                mapping = aes(node = node, label = clade, color = clade),
+                parse = TRUE,
+                fontsize = 5,
+                align = TRUE,                          # all bars on one ring
+                angle = "auto", 
+                #horizontal = FALSE, 
+                offset = max_depth * 0.02,             # small offset
+                offset.text = max_depth * 0.02,
+                barsize = 1.5,
+                show.legend = FALSE) +
+geom_text2(aes(subset = !isTip, label = node), size = 2, color = "black")
+
+tree_AMF_97 +
+  geom_tippoint(
+    aes(fill = Taxonomy, size = sqrt(MeanAbundance)),
+    shape = 21, stroke = 0.1, alpha = 0.85) +
+  scale_size_continuous(range = c(0.331801/5, 22.456278/5),
+                        name = "Abundance") +
+  geom_cladelab(data = genera_nodes_mod %>% filter(clade != "Mortierella"),
+                mapping = aes(node = node, label = clade, color = clade),
+                parse = TRUE,
+                fontsize = 5,
+                align = TRUE,                          # all bars on one ring
+                angle = "auto", 
+                #horizontal = FALSE, 
+                offset = max_depth * 0.02,             # small offset
+                offset.text = max_depth * 0.02,
+                barsize = 1.5,
+                show.legend = FALSE) +
+  xlim(NA, max_depth * 1.2) +                          # room for labels, no more
+  guides(fill = guide_legend(ncol = 1, keywidth = 0.2, keyheight = 0.2, order = 1,
+                             override.aes = list(shape = 22, size = 4))) +
+  geom_text2(aes(subset = !isTip & !is.na(bootstrap) & bootstrap >= 70, label = label),
+             size = 2, hjust = -0.2, color = "grey30") +
+  scale_fill_manual(values = palette_bestmatch, na.translate = FALSE) +
+  scale_color_manual(values = palette_bestmatch, na.translate = FALSE) +
+  theme(legend.position = "none")
+
+new_scale_fill() +geom_fruit(
+    axis.params = list(title ="Abundance in site"),
+    data    = dat2_97,
+    geom    = geom_tile,
+    mapping = aes(y = ID, x = Sites, alpha = Abundance, fill = Sites),
+    color   = "grey90", 
+    offset = 0.5, 
+    size = 0.02) +
+  scale_alpha_continuous(
+    range = c(0.3, 22.5), 
+    guide = guide_legend(keywidth = 0.3, keyheight = 0.3, order = 4)
+  ) +
+  scale_fill_manual(
+    values = palette_site,
+    guide  = guide_legend(keywidth = 0.3, keyheight = 0.3, order = 3)
+  )
+
+
+
+
+# Sites factor levels — already set in your data, but make sure dat3 matches
+dat3_97$Sites <- factor(dat3_97$Sites, levels = levels(dat2_97$Sites))
+
+# Site palette — pick 5 distinct colors for your 5 sites
+site_palette <- c("Lux Arbor"   = "#0000FF",
+                  "Lake City"   = "#FFA500",
+                  "Escanaba"    = "#FF0000",
+                  "Rhinelander" = "#006400",
+                  "Hancock"     = "#800080")
+
+max_depth <- max(tree_AMF_97$data$x, na.rm = TRUE)
+
+p <- tree_AMF_97 +
+  # tip points (your existing layer, kept as-is)
+  geom_tippoint(
+    aes(fill = Taxonomy, size = sqrt(MeanAbundance)),
+    shape = 21, stroke = 0.1, alpha = 0.85) +
+  scale_size_continuous(range = c(0.331801/5, 22.456278/5), name = "Abundance") +
+  scale_fill_manual(values = palette_bestmatch, na.translate = FALSE,
+                    guide = guide_legend(ncol = 1, keywidth = 0.3, keyheight = 0.3,
+                                         order = 1, override.aes = list(shape = 22, size = 4))) +
+  scale_color_manual(values = palette_bestmatch, na.translate = FALSE) +
+  
+  # genus clade labels
+  geom_cladelab(data = genera_nodes %>% filter(clade != "Mortierella"),
+                mapping = aes(node = node, label = clade, color = clade),
+                parse = TRUE, fontsize = 2.5, align = TRUE, angle = "auto",
+                offset = max_depth * 0.02, offset.text = max_depth * 0.02,
+                barsize = 0.4, show.legend = FALSE) +
+  
+  # bootstrap labels
+  geom_text2(aes(subset = !isTip & !is.na(bootstrap) & bootstrap >= 70,
+                 label = label),
+             size = 2, hjust = -0.2, color = "grey30") +
+  
+  # Ring 1: per-site abundance heatmap
+  new_scale_fill() +
+  geom_fruit(
+    data    = dat2_97,
+    geom    = geom_tile,
+    mapping = aes(y = ID, x = Sites, alpha = Abundance, fill = Sites),
+    color   = "grey90", 
+    offset = 0.3, 
+    size = 0.02) +
+  scale_alpha_continuous(
+    range = c(0, 22.5), 
+    guide = guide_legend(keywidth = 0.3, keyheight = 0.3, order = 4)
+  )  +
+  
+  # Ring 2: per-site total abundance bars
+  geom_fruit(
+    data = dat3_97,
+    geom = geom_bar,
+    mapping = aes(y = ID, x = TotalAbundance, fill = Sites),
+    pwidth = 0.38,
+    orientation = "y",
+    stat = "identity"
+  ) +
+  scale_fill_manual(values = palette_site,
+                    guide = guide_legend(keywidth = 0.3, keyheight = 0.3, order = 4)) +
+  
+  # tree scale bar
+  geom_treescale(fontsize = 2, linesize = 0.3) +
+  
+  xlim(NA, max_depth * 2.2) +
+  
+  theme(legend.position = c(0.93, 0.5),
+        legend.background = element_rect(fill = NA),
+        legend.title = element_text(size = 6.5),
+        legend.text = element_text(size = 4.5),
+        legend.spacing.y = unit(0.02, "cm"))
+
+p
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+tree_AMF_97 +
+  geom_tippoint(
+    aes(fill = Taxonomy, size = sqrt(MeanAbundance)),
+    shape = 21, stroke = 0.1, alpha = 0.85) +
+  scale_size_continuous(range = c(0.331801/5, 22.456278/5),
+                        name = "Abundance") +
+  scale_fill_manual(values = palette_bestmatch, na.translate = FALSE) +
+  scale_color_manual(values = palette_bestmatch, na.translate = FALSE) +
+  geom_cladelab(data = genera_nodes %>% filter(clade != "Mortierella"),
+                mapping = aes(node = node, label = clade, color = clade),
+                parse = TRUE,
+                fontsize = 2.5,
+                align = TRUE,                          # all bars on one ring
+                angle = "auto",
+                #horizontal = FALSE, 
+                offset = max_depth * 0.02,             # small offset
+                offset.text = max_depth * 0.02,
+                barsize = 0.4,
+                show.legend = FALSE) +
+  xlim(NA, max_depth * 1.2) +                          # room for labels, no more
+  guides(fill = guide_legend(ncol = 1, keywidth = 0.2, keyheight = 0.2, order = 1,
+                             override.aes = list(shape = 22, size = 4))) +
+  geom_text2(aes(subset = !isTip & !is.na(bootstrap) & bootstrap >= 70, label = label),
+             size = 2, hjust = -0.2, color = "grey30") +
+  new_scale_fill() +
+  geom_fruit(
+  data        = dat3_97,
+  geom        = geom_bar,
+  mapping     =  aes(y = ID, x = Sites, fill = Sites, alpha = TotalAbundance),
+  pwidth      = 0.38,
+  orientation = "y",
+  stat        = "identity") +
+  geom_fruit(
+    data    = dat2_97,
+    geom    = geom_tile,
+    mapping = aes(y = ID, x = Sites, alpha = Abundance, fill = Sites),
+    color   = "grey90", offset = 0.04, size = 0.02
+  ) +
+  scale_alpha_continuous(
+    range = c(0, 1),
+    guide = guide_legend(keywidth = 0.3, keyheight = 0.3, order = 4)
+  )  
+
+
+#theme(legend.position = "none")
+
+
+
+
+
+
+
+
+tree_AMF_97 +
+  geom_tippoint(
+    aes(fill = Taxonomy, size = sqrt(MeanAbundance)),
+    shape = 21, stroke = 0.1, alpha = 0.85) +
+  scale_size_continuous(range = c(0.331801/5, 22.456278/5),
+                        name = "Abundance") +
+  scale_fill_manual(values = palette_bestmatch, na.translate = FALSE) +
+  scale_color_manual(values = palette_bestmatch, na.translate = FALSE) +
+  geom_cladelab(data = genera_nodes %>% filter(clade != "Mortierella"),
+                mapping = aes(node = node, label = clade, color = clade),
+                parse = TRUE, fontsize = 2.5, align = TRUE, angle = "auto",
+                offset = max_depth * 0.02, offset.text = max_depth * 0.02,
+                barsize = 0.4, show.legend = FALSE) +
+  geom_text2(aes(subset = !isTip & !is.na(bootstrap) & bootstrap >= 70,
+                 label = label),
+             size = 2, hjust = -0.2, color = "grey30") +
+  
+  # Ring 1: site presence (categorical heatmap)
+  new_scale_fill() +
+  geom_fruit(
+    data = dat2_97,
+    geom = geom_tile,
+    mapping = aes(y = ID, x = Sites, fill = Sites, alpha = Abundance),
+    offset = 0.08,
+    pwidth = 0.15,
+    color = "white", size = 0.05
+  ) +
+  scale_fill_brewer(palette = "Set2", name = "Site") +
+  scale_alpha_continuous(range = c(0, 1), name = "Per-site\nabundance") +
+  
+  # Ring 2: total abundance per site (bars or another tile layer)
+  new_scale_fill() +
+  geom_fruit(
+    data = dat3_97,
+    geom = geom_tile,
+    mapping = aes(y = ID, x = Sites, fill = TotalAbundance),
+    offset = 0.08,
+    pwidth = 0.15,
+    color = "white", size = 0.05
+  ) +
+  scale_fill_viridis_c(name = "Total\nabundance", trans = "sqrt") +
+  
+  #xlim(NA, max_depth * 1.6) +
+  guides(fill = guide_legend(ncol = 1, keywidth = 0.2, keyheight = 0.2, order = 1,
+                             override.aes = list(shape = 22, size = 4)))
+
+
+
+
+tree_AMF_97 +
+  geom_highlight(data=genera_nodes %>% filter(!clade == "Mortierella"), 
+                 aes(node=node, fill=as.factor(highlight)),
+                 alpha=1,
+                 align="right",
+                 extend=0.04,
+                 show.legend=FALSE) +
+  geom_cladelab(data=genera_nodes %>% filter(!clade == "Mortierella"),
+                mapping=aes(node=node, label=clade),
+                fontsize=3,
+                align="TRUE",
+                angle="auto",
+                horizontal = FALSE, 
+                offset=0.04,
+                offset.text=0.01) +
+  geom_tree(linewidth=0.3) +
+  #geom_tippoint() +
+  geom_tippoint(aes(size = sqrt(MeanAbundance)), 
+                shape = 16, color = "darkred", stroke = 0.2, alpha = 0.85, 
+                show.legend=FALSE) +
+  #xlim(0, 0.35) +
+  scale_fill_manual(values=c("#F5F5F5", "#ECECEC")) +
+  scale_size_continuous(range = c(0.331801/5, 22.456278/5),
+                        name = "sqrt(Read Abundance)") 
+
+
+# order genera by their angular position around the tree
+gn <- genera_nodes %>% filter(clade != "Mortierella")
+
+# get angle for each clade's MRCA from the ggtree data
+
+gn <- gn %>%
+  left_join(tree_AMF_97$data %>% 
+              dplyr::select(node, angle), by = "node") %>%
+  arrange(angle) %>%
+  mutate(ring = rep(c(1, 2), length.out = n()))
+
+ring1 <- gn %>% filter(ring == 1)
+ring2 <- gn %>% filter(ring == 2)
+
+
+tree_AMF_97 +
+  geom_tippoint(
+    aes(fill = Taxonomy, size = sqrt(MeanAbundance)),
+    shape = 21, stroke = 0.1, alpha = 0.85) +
+  scale_size_continuous(range = c(0.331801/5, 22.456278/5),
+                        name = "Abundance") +
+  scale_fill_manual(values = palette_bestmatch, na.translate = FALSE) +
+  scale_color_manual(values = palette_bestmatch, na.translate = FALSE) +
+  geom_cladelab(data = ring2,
+                mapping = aes(node = node, label = clade, color = clade),
+                fontsize = 2.2, align = TRUE, angle = "auto",
+                horizontal = FALSE,
+                offset = max_depth * 0.05,
+                offset.text = max_depth * 0.02,
+                barsize = 0.5, show.legend = FALSE) +
+  geom_cladelab(data = ring1,
+                mapping = aes(node = node, label = clade, color = clade),
+                fontsize = 2.2, align = TRUE, angle = "auto",
+                horizontal = FALSE,
+                offset = max_depth * 0.18,
+                offset.text = max_depth * 0.02,
+                barsize = 0.5, show.legend = FALSE) +
+  xlim(NA, max_depth * 1.4)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+tree_AMF_97 <- 
+  tree_raxml_AMF_97 %>% 
+  ggtree(layout = "rectangular", branch.length = "branch.length", size = 0.1, open.angle = 5) %<+% dat1_97_mod 
+
+scaled_tree_raxml_AMF_97 <- tree_raxml_AMF_97
+scaled_tree_raxml_AMF_97$edge.length <- scaled_tree_raxml_AMF_97$edge.length + 0.05
+
+
+
+
+tree_AMF_97 +
+  geom_tippoint(
+    aes(fill = Taxonomy, size = sqrt(MeanAbundance)),
+    shape = 21, stroke = 0.1, alpha = 0.85) +
+  geom_tiplab(aes(label=label), size=2) +
+  scale_fill_manual(values = palette_bestmatch, na.translate = FALSE) +
   geom_text2(aes(subset = !isTip, label = node), size = 2, color = "black") +
   theme(legend.position = "none")
 
-tree_AMF_97 <- 
-  tree_AMF_97 +
+tree_AMF_97 +
   geom_tippoint(
-    aes(fill = BestMatch, size = sqrt(MeanAbundance)),
+    aes(fill = Taxonomy, size = sqrt(MeanAbundance)),
     shape = 21, stroke = 0.1, alpha = 0.85) +
-  scale_fill_manual(values = bestmatch_colors_97, na.translate = FALSE) +
   scale_size_continuous(range = c(0.331801/5, 22.456278/5),
                         name = "sqrt(Read Abundance)") +
-  geom_highlight(data=genera_nodes, 
+  scale_fill_manual(values = palette_bestmatch, na.translate = FALSE) +
+  scale_color_manual(values = palette_bestmatch, na.translate = FALSE) +
+  geom_tree(linewidth=0.1) +
+  geom_cladelab(data=genera_nodes %>% filter(!clade == "Mortierella"),
+                mapping=aes(node=node, label=clade, color=clade),
+                parse = TRUE,
+                fontsize=2,
+                align="FALSE",
+                angle="auto",
+                offset=max_depth * 0.05,
+                offset.text=0.05, 
+                show.legend = FALSE) +
+  guides(fill = guide_legend(ncol=1, keywidth = 0.2, keyheight = 0.2, order = 1,
+                             override.aes = list(shape = 22, size = 3)),
+         shape = guide_legend(ncol=1, keywidth = 0.1, keyheight = 0.1, order = 2,
+                              override.aes = list(shape = 21, size = 3))) 
+
+
+
+tree_AMF_97 +
+  geom_tippoint(
+    aes(fill = Taxonomy, size = sqrt(MeanAbundance)),
+    shape = 21, stroke = 0.1, alpha = 0.85) +
+  scale_fill_manual(values = palette_bestmatch, na.translate = FALSE) +
+  scale_size_continuous(range = c(0.331801/5, 22.456278/5),
+                        name = "sqrt(Read Abundance)") +
+  geom_highlight(data=genera_nodes %>% filter(!clade == "Mortierella"), 
                  aes(node=node, fill=clade),
                  alpha=0.2,
                  align="right",
@@ -2871,7 +3272,7 @@ tree_AMF_97 <-
                  show.legend = FALSE) + # try with TRUE as well
   geom_tree(linewidth=0.3) +
   geom_text2(aes(subset = !isTip, label = node), size = 2, color = "black") +
-  geom_tiplab(aes(label=OTU), size=2) +
+  geom_tiplab(aes(label=label), size=2) +
   geom_cladelab(data=genera_nodes,
                 mapping=aes(node=node, label=clade, color=clade),
                 parse = TRUE,
@@ -2886,18 +3287,18 @@ tree_AMF_97 <-
          shape = guide_legend(ncol=1, keywidth = 0.1, keyheight = 0.1, order = 2,
                              override.aes = list(shape = 21, size = 3))) 
 
-tree_AMF_97
+
 
 
 # Plotting all together
-ggtree(tree_raxml_97_rooted, layout="circular", linetype=NA) %<+% dat1_97 +
-  geom_highlight(data=genera_nodes, 
+ggtree(tree_raxml_AMF_97, layout="circular", size = 0.1) %<+% dat1_97_mod +
+  geom_highlight(data=genera_nodes %>% filter(!clade == "Mortierella"), 
                  aes(node=node, fill=as.factor(highlight)),
                  alpha=1,
                  align="right",
                  extend=0.04,
                  show.legend=FALSE) +
-  geom_cladelab(data=genera_nodes,
+  geom_cladelab(data=genera_nodes %>% filter(!clade == "Mortierella"),
                 mapping=aes(node=node, label=clade),
                 fontsize=2,
                 align="TRUE",
@@ -2916,7 +3317,7 @@ ggtree(tree_raxml_97_rooted, layout="circular", linetype=NA) %<+% dat1_97 +
 
 
 # Plotting all together
-ggtree(tree_raxml_97_rooted, layout="circular", linetype=NA) %<+% dat1_97 +
+ggtree(tree_raxml_AMF_97, layout="circular", size = 0.1) %<+% dat1_97_mod +
   geom_highlight(data=genera_nodes, 
                  aes(node=node, fill=clade),
                  alpha=1,
@@ -2931,8 +3332,10 @@ ggtree(tree_raxml_97_rooted, layout="circular", linetype=NA) %<+% dat1_97 +
                 offset=0.04,
                 offset.text=0.01) +
   geom_tree(linewidth=0.3) +
+  geom_tiplab(aes(fill=Taxonomy), size=2, show.legend = FALSE) +
+scale_fill_manual(values = palette_bestmatch, na.translate = FALSE)
   #geom_tippoint() +
-  geom_tiplab(aes(fill=BestMatch), size=2, show.legend = FALSE) 
+  
 
 
 
@@ -4234,7 +4637,7 @@ ggsave(
   file.path(data_path, "results/Fig_XX_yield.pdf"),
   plot = ggpubr::annotate_figure(
     Figure_X_yield,
-    top = text_grob("EFFECT OF NITROGEN ON SWITCHGRASS YEILD", size = 12, face = "bold")
+    top = text_grob("EFFECT OF NITROGEN ON SWITCHGRASS YIELD", size = 12, face = "bold")
   ),
   device = "pdf"
 )
@@ -5766,4 +6169,61 @@ PlotMaaslin2(maaslin_results = mlin2_site
        y = "Genus")
 
 
+palette_bestmatch <- c(
+  # --- GLOMERALES (Deep Purples to Sky Blues) ---
+  # Core Glomus & Rhizophagus (Purples)
+  "Glomus"                = "#781156",
+  "Glomus macrocarpum"     = "#A51876",
+  "Glomus tetrastratosum"  = "#D21E96",
+  "Rhizophagus"           = "#E43FAD",
+  "Funneliformis"         = "#EA6CC0",
+  "Septoglomus"           = "#F098D3",
+  "uncultured Glomus"     = "#C2629E", # Moved to Glomerales
+  "Glomeraceae"           = "#4D1136", # Darker version for higher rank
+  
+  # Dominikia & Silvaspora Clade (Deep Blues)
+  "Dominikia"             = "#114578",
+  "Microkamienskia"       = "#185EA5",
+  "Microdominikia litorea"= "#1E78D2",
+  "Silvaspora"            = "#3F91E4",
+  "Oehlia"                = "#6CABEA",
+  
+  # --- DIVERSISPORALES (Teals and Seafoams) ---
+  "Diversispora"            = "#117878",
+  "Diversispora versiformis"= "#18A5A5",
+  "Diversisporaceae"        = "#083B3B", # Higher rank
+  "Acaulospora"             = "#3FE4E4",
+  "Acaulospora brasiliensis" = "#6CEAEA",
+  "Dentiscutata heterogama" = "#98F0F0",
+  "Gigaspora"               = "#117845", # Branching into green-teals
+  "Gigaspora margarita"     = "#18A55E",
+  "Gigaspora rosea"         = "#1ED278",
+  "Scutellospora"           = "#3FE491",
+  "Cetraspora gilmorei"     = "#6CEAAB",
+  
+  # --- ARCHAEOSPORALES (Earth Greens) ---
+  "Archaeospora"            = "#4B5D16",
+  "Archaeospora trappei"    = "#787811",
+  "Ambispora"               = "#A5A518",
+  "Archaeosporaceae"        = "#2E330D", # Higher rank
+  "Archaeosporales"         = "#D2D21E", # Higher rank
+  "uncultured Archaeosporales" = "#E4E43F", # Moved here
+  
+  # --- PARAGLOMERALES (Warm Oranges & Browns) ---
+  "Paraglomus"              = "#A55E18",
+  "Paraglomus laccatum"     = "#D2781E",
+  "Paraglomus brasilianum"  = "#E4913F",
+  "Paraglomerales"          = "#784511", # Higher rank
+  "uncultured Paraglomus"   = "#EAAB6C", # Moved here
+  
+  # --- ENTROPHOSPORALES & OTHERS (Reds and Pinks) ---
+  "Entrophospora"           = "#781122",
+  "Entrophospora claroidea" = "#A5182F",
+  "Entrophospora drummondii" = "#D21E2C",
+  "Complexispora"           = "#E43F5B",
+  "Glomeromycetes"          = "#EA6C81", # Broadest group in Red
+  "uncultured Glomeromycotina" = "#F0C498"  # Pale beige for the unknown
+)
+
+# "#000000","#242424","#484848","#6D6D6D","#919191","#B6B6B6"
 
