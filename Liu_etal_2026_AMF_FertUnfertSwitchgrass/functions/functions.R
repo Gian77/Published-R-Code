@@ -203,6 +203,39 @@ blank2na = function(x, na.strings=c('','.','NA','na','N/A','n/a','NaN','nan')) {
 }
 
 
+# Plotting contaminant ASV/OTU -------------------------------------------------
+
+PlotContam <- function(df, contam){
+  # Make phyloseq object of presence-absence in negative controls and true samples
+  physeq_pa <- transform_sample_counts(df, function(abund) 1*(abund>0))
+  physeq_pa_neg <- subset_samples(physeq_pa, is.neg%in%c("TRUE"))
+  physeq_pa_pos <- subset_samples(physeq_pa, is.neg%in%c("FALSE"))
+  # Make data.frame of prevalence in positive and negative samples
+  df_contam <- data.frame(pa.pos=taxa_sums(physeq_pa_pos), 
+                          pa.neg=taxa_sums(physeq_pa_neg),
+                          contaminant=contam$contaminant, 
+                          Pvalue=contam$p)
+  head(df_contam) %T>% print()
+  # plotting 
+  ggplot(data=df_contam, aes(x=pa.neg, y=pa.pos, color=contaminant)) + 
+    geom_point(size=2, alpha=0.7) +
+    labs(x="Prevalence in negative controls", y="Prevalence in true samples") +
+    theme_classic() +
+    scale_colour_manual("Contaminant OTUs", values = c("grey", "red")) +
+    theme(plot.title = element_text(size = 12, face = "bold", hjust = 0.5),
+          plot.subtitle = element_text(size = 10, face = "bold", hjust = 0.5),
+          axis.title = element_text(angle = 0, size = 10, face = "bold"),
+          axis.text.x = element_text(angle =0, size = 8, hjust = 0.5, vjust = 1), 
+          axis.text.y = element_text(angle = 0, size = 7, hjust = 0.5, vjust = 0.5),
+          legend.key.height = unit(0.2, "cm"), legend.key.width = unit(0.3, "cm"), 
+          legend.title = element_text(size = 10, face = "bold"), 
+          legend.text = element_text(size = 8)) -> plot_cont
+  return(plot_cont)
+}
+
+PlotContam(physeq_AMF, contam_AMF)
+
+
 # Finalize OTU/ASVs taxonomy ---------------------------------------------------
 FinalizeTaxonomy <- function(taxonomy){
   taxonomy$Species <- 

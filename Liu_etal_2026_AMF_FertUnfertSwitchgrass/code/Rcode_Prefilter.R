@@ -318,7 +318,7 @@ left_join(
   contam_AMF %>% 
     filter(contaminant == TRUE) %>% 
     rownames_to_column("OTU_ID"), 
-  taxonomy_99_fix%>% 
+  taxonomy_99_fix  %>% 
     rownames_to_column("OTU_ID"),
   by = "OTU_ID") %>% 
   left_join(
@@ -332,8 +332,14 @@ left_join(
       dplyr::select(OTU_ID, Abund),
     by = "OTU_ID")
 
+
+# Plotting contaminats ---------------------------------------------------------
+PlotContam(physeq_AMF, contam_AMF)
+
 # INTERPRETATION. These looks like all real taxa to me. I am not going to 
 # remove any taxa! I will just remove the control sample(s).
+# Additionally we do not have enough negative controls to assume these taxa are
+# resl contaminants.
 
 # Filtering the phyloseq object
 physeq_AMF_clean <-
