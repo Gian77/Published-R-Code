@@ -259,8 +259,8 @@ ncol = 2)
 
 # Model Comparison -------------------------------------------------------------
 # Does fertilizer affect richness? H0: mean richness (FERT) = 0
-summary(run_lmem(alpha_df, hill_q0, "baseline"))
-summary(run_lmem(alpha_df, hill_q0, "fixslope"))
+summary(run_lmem(alpha_df, hill_q0, "baseline", reml = TRUE))
+summary(run_lmem(alpha_df, hill_q0, "fixslope", reml = TRUE))
 summary(run_lmem(alpha_df, hill_q0, "randomslope"))
 
 # Does fertilizer improve fit?
@@ -321,7 +321,7 @@ anova( run_lmem(alpha_df, hill_q1, "fixslope"),
 # (or very near) zero.
 
 # hill_q2 -----------------------------------------------------------------------
-# ***** FIGURE S4 - hill q=2 histograms ***** ----------------------------------
+# ***** FIGURE S5 - hill q=2 histograms ***** ----------------------------------
 
 ggarrange(
 alpha_df %>% 
@@ -347,8 +347,8 @@ ncol = 2)
 
 # Model Comparison -------------------------------------------------------------
 # Does fertilizer affect Shannon? H0: mean Shannon (FERT) = 0
-summary(run_lmem(alpha_df, hill_q2, "baseline"))
-summary(run_lmem(alpha_df, hill_q2, "fixslope"))
+summary(run_lmem(alpha_df, hill_q2, "baseline", reml = TRUE))
+summary(run_lmem(alpha_df, hill_q2, "fixslope", reml = TRUE))
 summary(run_lmem(alpha_df, hill_q2, "randomslope"))
 
 # Does fertilizer improve fit?
@@ -364,8 +364,9 @@ anova( run_lmem(alpha_df, hill_q2, "fixslope"),
 # DHARMA diagnostics -----------------------------------------------------------
 # Generate simulated residuals (n=1000 is standard) and plot.
 
+# ***** FIGURE S6 - diagnostics model hill q=0 ***** ---------------------------
 diagnostics_dharma(
-  model = run_lmem(alpha_df, hill_q0, "baseline"),
+  model = run_lmem(alpha_df, hill_q0, "baseline", reml = TRUE),
   group_var1 = alpha_df$site,
   group_var2 = alpha_df$plot_rep
 )
@@ -376,8 +377,9 @@ diagnostics_dharma(
   group_var2 = alpha_df$plot_rep
 )
 
+# ***** FIGURE S7 - diagnostics model hill q=2 ***** ---------------------------
 diagnostics_dharma(
-  model = run_lmem(alpha_df, hill_q1, "baseline"),
+  model = run_lmem(alpha_df, hill_q2, "baseline", reml = TRUE),
   group_var1 = alpha_df$site,
   group_var2 = alpha_df$plot_rep
 )
@@ -564,7 +566,7 @@ emmeans::emmeans(run_lmem(alpha_df, hill_q0, "fixslope"), ~ fert_status) %>%
   theme_minimal() +
   theme(legend.position = "none")
 
-# Selecting BEST VISUALIZATION APPROACH ----------------------------------------
+# Color palettes ---------------------------------------------------------------
 
 palette_fert <- c("#CC2D35", "#2D3142")
 
