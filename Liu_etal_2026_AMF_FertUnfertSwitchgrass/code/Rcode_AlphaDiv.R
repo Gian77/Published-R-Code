@@ -128,7 +128,6 @@ ggsave(plot = rarefaction_plot,
        path = data_path,
        filename = "figures/Fig_SX_identify_raredepth_plots.pdf")
 
-
 # **********************************************************************--------
 # ***** RAREFACTION CURVES ***** -----------------------------------------------
 
