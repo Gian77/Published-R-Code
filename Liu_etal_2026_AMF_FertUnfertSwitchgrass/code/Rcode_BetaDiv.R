@@ -239,23 +239,54 @@ adonis2(
 )
 
 # 4) Does plot-level (beyond site) impact beta diversity? ----------------------
-adonis2(
-  dist_avg_AMF ~ site_plot,
-  data = meta_AMF_rare,
-  method = "bray",
-  permutations = how(blocks = meta_AMF_rare$site, nperm = 999),
-  by = "margin"
-)
 
 adonis2(
-  dist_avg_AMF ~ site + site_plot,
+  dist_avg_AMF ~ site + site:site_plot,
   data = meta_AMF_rare,
   method = "bray",
-  permutations = how(blocks = meta_AMF_rare$site, nperm = 999),
-  by = "terms"
+  permutations = 999, # Permute freely across the whole dataset here
+  by = "terms"        # Test sequentially: Site first, then Plot within Site
 )
+
+# 1. The Broad Scale: site (R2 = 0.23323, p = 0.001)
+# What it means: As you saw before, regional site identity is a massive driver. 
+# It explains 23.32% of the total variation in your AMF communities.
+
+# The Takeaway: There are distinct, signature AMF communities unique to each 
+# of your 5 geographic locations (Df = 4).
+
+# 2. The Local Scale: site:site_plot (R2 = 0.21351, p = 0.001)
+# What it means: This is the exact answer to your question. Even after you mathematically
+# strip away the massive regional site effects, plot identity within those 
+# sites is highly significant and explains another 21.35% of the total variance.
+
+# The Takeaway: Your plots are not uniform blankets of fungi. There is a high
+# degree of localized spatial structure, patchiness, or environmental 
+# micro-heterogeneity (like localized drainage, host plant vigor, or soil 
+# nutrient pockets) making individual plots within the exact same site 
+# significantly different from one another.
+
+# 3. The Micro Scale: Residual (R2 = 0.55326)
+# What it means: The remaining 55.33% of the variation exists at the sample-to-sample
+# level (e.g., differences between individual soil cores taken within the exact 
+# same physical plot).
+
+# The Takeaway: In microbial ecology, seeing residual variance around 50–60% is 
+# completely standard. It reflects micro-scale soil patchiness, extraction/sequencing
+# noise, and the inherently stochastic (random) nature of microbial community assembly.
+
 
 # 5) Does fertilizer effect vary among plots within sites? ---------------------
+# To test whether the fertilizer effect varies among individual plots within your
+# sites, you need to test a three-way nested interaction.
+
+# Specifically, you want to know if the effect of fert_status depends on the 
+# specific site_plot identity, while recognizing that those plots are nested inside 
+# their respective site.
+
+# Because you are using the combined site_plot variable, you can write this 
+# explicitly using sequential (by = "terms") math. Here is the exact model to run:
+
 adonis2(
   dist_avg_AMF ~ site_plot * fert_status,
   data = meta_AMF_rare,
@@ -263,6 +294,35 @@ adonis2(
   permutations = how(blocks = meta_AMF_rare$site, nperm = 999),
   by = "margin"
 )
+
+adonis2(
+  dist_avg_AMF ~ site + site:site_plot + fert_status + site:site_plot:fert_status,
+  data = meta_AMF_rare,
+  method = "bray",
+  permutations = 99,
+  by = "terms"
+)
+
+
+# 1. Set up an explicit socket cluster (more stable than forking)
+cl <- makeCluster(8) 
+
+# 2. Export the vegan package environment to the workers
+clusterEvalQ(cl, library(vegan))
+
+# 3. Run adonis2 passing the cluster object itself
+model_output <- adonis2(
+  dist_avg_AMF ~ site + site:site_plot + fert_status + site:site_plot:fert_status,
+  data = meta_AMF_rare,
+  method = "bray",
+  permutations = 99,
+  parallel = cl,  # Pass the cluster object here
+  by = "terms"
+)
+
+# 4. ALWAYS stop the cluster to free up your RAM
+stopCluster(cl)
+
 
 # INTERPRETATION. This appears significant, we only have 2 samples per plot 
 # (treatment/control). In this situation the interaction is essentially capturing
@@ -528,7 +588,10 @@ physeq_AMF_rare_Gen %>%
 bar_charts_gen <-
   physeq_AMF_rare_Gen %>%
   psmelt() %>%
-  mutate(Genus = fct_relevel(Genus, "Unclassified", after = Inf)) %>%
+  mutate(
+    Genus = fct_recode(Genus, "Others" = "Unclassified"),
+    Genus = fct_relevel(Genus, "Others", after = Inf)
+  ) %>% 
   ggplot(aes(x = Sample, y = Abundance, fill = Genus)) +
   geom_col(color = "black", linewidth = 0.05) + # width=1 removes gaps between bars
   ggh4x::facet_nested(. ~ site + fert_status, 
@@ -565,7 +628,7 @@ bar_charts_gen
 # ***** FIGURE 3 - Genus Composition ***** -------------------------------------
 
 ggsave(
-  file.path(data_path, "figures/Fig_3_bar_charts_gen_relab.pdf"),
+  file.path(data_path, "figures/Fig_SX_bar_charts_gen_relab.pdf"),
   plot = grid.arrange(
     bar_charts_gen,
     top = text_grob("ARBUSCULAR MYCORRHIZAL FUNGI COMMUNITY COMPOSITION", 
@@ -591,7 +654,10 @@ physeq_AMF_rare_Fam %>%
 bar_charts_fam <-
   physeq_AMF_rare_Fam %>%
   psmelt() %>%
-  mutate(Family = fct_relevel(Family, "Unclassified", after = Inf)) %>%
+  mutate(
+    Family = fct_recode(Family, "Others" = "Unclassified"),
+    Family = fct_relevel(Family, "Others", after = Inf)
+  ) %>%
   ggplot(aes(x = Sample, y = Abundance, fill = Family)) +
   geom_bar(stat = "identity", width = 1) + # width=1 removes gaps between bars
   ggh4x::facet_nested(. ~ site + fert_status, 
@@ -616,7 +682,9 @@ bar_charts_fam <-
     legend.title = element_blank(),
     legend.text = element_text(face = "italic", size = 8)
   ) +
-  scale_fill_manual(values = c(palette_taxa[1:9], "black")) +
+  scale_fill_manual(values = c(palette_taxa[1:7], 
+                               palette_taxa[10:20], 
+                               "white")) +
   labs(y = "DNA reads (%)") +
   guides(
     fill = guide_legend(ncol = 1, 
@@ -627,7 +695,7 @@ bar_charts_fam
 # ***** FIGURE 4 - Family Composition ***** -------------------------------------
 
 ggsave(
-  file.path(data_path, "results/Fig_3_bar_charts_fam_relab.pdf"),
+  file.path(data_path, "figures/Fig_SX_bar_charts_fam_relab.pdf"),
   plot = grid.arrange(
     bar_charts_fam,
     top = text_grob("ARBUSCULAR MYCORRHIZAL FUNGI COMMUNITY COMPOSITION", 

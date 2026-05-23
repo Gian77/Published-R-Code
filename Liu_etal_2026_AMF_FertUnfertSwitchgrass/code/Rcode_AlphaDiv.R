@@ -21,6 +21,7 @@ pkgs <- c(
   "styler",          # Automated R code formatting
   "janitor",         # Data cleaning
   "magrittr",        # Pipe operators (%>%)
+  "parallel",        # {arallel processes}
   
   # --- Sequence Analysis & Phylogenetics ---
   "Biostrings",      # DNA/RNA/AA sequence containers
@@ -842,5 +843,4 @@ pairs(emm_site_adj, adjust = "tukey")
 # differences between sites, because plots are still your experimental units, 
 # and you have 3 pseudoreplicates per plot. Even when site is fixed, the 
 # hierarchical structure does not disappear. 
-
 
