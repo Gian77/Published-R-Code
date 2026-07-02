@@ -41,3 +41,10 @@ Kelley_etal_2024_ArabidopsisDrought/results/*
 
 
 .positai
+
+# Claude Code files
+.claude/
+
+# Generated output — not tracked
+**/results/
+**/figures/

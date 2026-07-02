@@ -15,16 +15,17 @@ URL: https://link.springer.com/article/10.1007/s00248-018-1266-1
 
 ```
 ├── code
-│   └── Rcode_FijiSoil.R
+│   └── Rcode_FijiSoil.R
 ├── datasets
-│   ├── phyloseq_16S.RDS
-│   ├── phyloseq_endophytic.RDS
-│   ├── phyloseq_ITS.RDS
-│   ├── phyloseq_LSU.RDS
-│   ├── phyloseq_pathogenic.RDS
-│   └── phyloseq_symbiont.RDS
+│   ├── phyloseq_16S.RDS
+│   ├── phyloseq_endophytic.RDS
+│   ├── phyloseq_ITS.RDS
+│   ├── phyloseq_LSU.RDS
+│   ├── phyloseq_pathogenic.RDS
+│   └── phyloseq_symbiont.RDS
 ├── functions
-│   └── plot_ordered_bar_byGian.R
+│   └── plot_ordered_bar_byGian.R
+├── misc
 ├── LICENSE.txt
 └── README.md
 ```
