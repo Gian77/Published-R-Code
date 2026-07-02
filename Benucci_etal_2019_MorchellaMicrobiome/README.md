@@ -15,16 +15,18 @@ URL: https://peerj.com/articles/7744/
 
 ```
 ├── code
-│   └── Rcode_MorelOutdoor.R
+│   └── Rcode_MorelOutdoor.R
 ├── datasets
-│   ├── mapping_16s_new.txt
-│   ├── mapping_ITS_new.txt
-│   ├── otus_16s.fasta
-│   ├── otus_ITS.fasta
-│   ├── otu_table_tax_R1_16S_json.biom
-│   └── otu_table_tax_R1_ITS_json.biom
+│   ├── mapping_16s_new.txt
+│   ├── mapping_ITS_new.txt
+│   ├── otus_16s.fasta
+│   ├── otus_ITS.fasta
+│   ├── otu_table_tax_R1_16S_json.biom
+│   └── otu_table_tax_R1_ITS_json.biom
 ├── functions
-│   └── my_venn_diag.R
+│   └── my_venn_diag.R
+├── misc
+├── LICENSE
 └── README.md
 
 ```
