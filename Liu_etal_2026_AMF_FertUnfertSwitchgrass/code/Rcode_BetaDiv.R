@@ -579,10 +579,7 @@ as.matrix(physeq_AMF_rare_Gen@otu_table) %>% as.data.frame()
 as.matrix(physeq_AMF_rare_Gen@sam_data) %>% as.data.frame()
 
 # Create a long format data.frame ----------------------------------------------
-physeq_AMF_rare_Gen %>%
-  psmelt() %>%
-  arrange(Genus) %>%
-  head()
+  
 
 # Plotting 
 bar_charts_gen <-
@@ -624,6 +621,72 @@ bar_charts_gen <-
 
 
 bar_charts_gen
+
+
+# If you at all cost want to perform comparisons between site and fert_status 
+# levels, the safest way is to average within each sample first, then compare 
+# groups at the sample level, not by pooling all reads across a site or fert_status
+# group. That avoids giving extra weight to groups with more samples or deeper 
+# sequencing, and it is the standard approach for microbiome-style relative 
+# abundance data. If you sum abundances across all samples in a group, groups 
+# with more samples will look artificially larger. If you first convert each 
+# sample to relative abundance, each sample contributes equally to the group 
+# summary, which is the fairer comparison when sample counts differ.
+
+df_sample_averages_gen <-
+  physeq_AMF_rare_Gen %>%
+  psmelt() %>%
+  mutate(
+    Genus = fct_recode(Genus, "Others" = "Unclassified"),
+    Genus = fct_relevel(Genus, "Others", after = Inf)
+  ) %>%
+  group_by(Sample, site, fert_status, Genus) %>%
+  summarise(Abundance = sum(Abundance), .groups = "drop") %>% 
+  as.data.frame()
+  
+df_sample_averages_gen
+
+write.table(df_sample_averages_gen, 
+            file.path(data_path,"figures/genus_composition.txt"), 
+                      sep = "\t", 
+                      row.names = FALSE, 
+                      quote = FALSE)
+
+# Then, if you want one value per genus per site/fert_status I woudl go like this:
+# for descriptive reporting in the manuscript text, saying something like mean ± SE
+# relative abundance by site and fert_status is reasonable, as long as you are 
+# clear that the unit of replication is the sample, not the pooled reads. 
+# For microbiome-style data, reporting sample-level summarized abundances is more
+# defensible than pooling across uneven group sizes, because each sample
+# contributes equally.
+
+df_summary_gen <-
+  physeq_AMF_rare_Gen %>%
+  psmelt() %>%
+  mutate(
+    Genus = fct_recode(Genus, "Others" = "Unclassified"),
+    Genus = fct_relevel(Genus, "Others", after = Inf)
+  ) %>%
+  group_by(Sample, site, fert_status, Genus) %>%
+  summarise(Abundance = sum(Abundance), .groups = "drop") %>% 
+  group_by(site, fert_status, Genus) %>%
+  summarise(
+    mean_abundance = mean(Abundance),
+    median_abundance = median(Abundance),
+    se_abundance = sd(Abundance) / sqrt(n()),
+    n_samples = n(),
+    .groups = "drop"
+  ) %>% 
+  as.data.frame()
+
+df_summary_gen
+
+write.table(df_summary_gen, 
+            file.path(data_path,"figures/genus_composition_summary.txt"), 
+            sep = "\t", 
+            row.names = FALSE, 
+            quote = FALSE)
+
 
 # ***** FIGURE 3 - Genus Composition ***** -------------------------------------
 

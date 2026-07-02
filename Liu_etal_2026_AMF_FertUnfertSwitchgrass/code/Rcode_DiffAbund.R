@@ -496,6 +496,9 @@ Fig_4_diff_abund_heat <-
     plot.subtitle = ggtext::element_markdown(lineheight = 1.2)
   )
 
+
+# ***** FIGURE 3 - Diferential Abundance ***** ---------------------------------
+
 ggarrange(
   bar_charts_gen,
   Fig_4_diff_abund_heat,
@@ -507,14 +510,15 @@ ggarrange(
 
 
 ggsave(
-  file.path(data_path, "results/Fig_3_Compos_DiffAbund.pdf"),
+  file.path(data_path, "figures/Fig_3_Compos_DiffAbund.pdf"),
   plot = grid.arrange(
     ggarrange(
       bar_charts_gen,
       Fig_4_diff_abund_heat,
       ncol = 1, 
       nrow = 2,
-      heights = c(0.5, 1), 
+      heights = c(0.6, 1),
+      widths = c(1, 0.6),
       labels = c("A", "B")
     ),
     top = text_grob("ARBUSCULAR MYCORRHIZAL FUNGI COMMUNITY COMPOSITION", 
@@ -524,5 +528,16 @@ ggsave(
 )
 
 
+
+
+# Need to modify this if want to add the title!
+ggsave(
+  file.path(data_path, "results/Fig_2_betadiv_wide.pdf"),
+  plot = grid.arrange(
+    Figure_2_beta,
+    top = text_grob("BETA DIVERSITY", size = 12, face = "bold")
+  ),
+  device = "pdf"
+)
 
 

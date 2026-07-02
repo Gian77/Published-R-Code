@@ -39,11 +39,13 @@ Kelley_etal_2024_ArabidopsisDrought/datasets/*
 Kelley_etal_2024_ArabidopsisDrought/results/
 Kelley_etal_2024_ArabidopsisDrought/results/*
 
-
 .positai
 
 # Claude Code files
 .claude/
+plan/
+plan/*
+plan/standardize_dirs.sh
 
 # Generated output — not tracked
 **/results/
